@@ -1,0 +1,22 @@
+version: '3.0'
+
+services:
+
+  gobstuf:
+    build: src
+    ports:
+      - "8144:8000"
+    container_name: gobstuf
+    environment:
+      UWSGI_HTTP: ":8000"
+      UWSGI_MODULE: "gobstuf.wsgi"
+      UWSGI_CALLABLE: "app"
+      UWSGI_MASTER: "1"
+      UWSGI_HARAKIRI: "3600"
+      UWSGI_PROCESSES: "4"
+      UWSGI_LAZY: "1"
+      UWSGI_ENABLE_THREADS: ""
+      UWSGI_THREADS: ""
+      UWSGI_MAX_WORKER_LIFETIME: "1800"
+      UWSGI_HTTP_TIMEOUT: "4000"
+    env_file: .env
