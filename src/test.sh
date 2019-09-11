@@ -10,7 +10,7 @@ echo "Running style checks"
 flake8
 
 echo "Running unit tests"
-pytest
+pytest tests/
 
 echo "Running coverage tests"
-pytest --cov=gobapi --cov-report html --cov-fail-under=0 tests/
+pytest --cov=gobstuf --cov-report html --cov-fail-under=0
