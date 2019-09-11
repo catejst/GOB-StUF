@@ -2,13 +2,28 @@
 
 GOB StUF provides for StUF access
 
-It serves as a proxy and transparantly forwards request to a StUF server.
+It serves as a proxy and transparantly forwards request to a StUF server
 
 # Requirements
 
     * docker-compose >= 1.17
     * docker ce >= 18.03
     * python = 2.7
+    
+# Notes
+
+* Both a certificate and a VPN might also be required to access the underlying StUF service.
+
+* [SoapUI](https://www.soapui.org) can be used to test the StUF service.
+
+The service definition that is exposed is:
+```
+http://localhost:<<GOB_STUF_PORT>><<ROUTE_NETLOC>>?wsdl
+```
+eg:
+```
+http://localhost:8165/SomePath/MijnService?wsdl
+```
     
 # Installation
 
@@ -32,7 +47,7 @@ Start the StUF service
 ```
 
 The service is default exposed at:
-- http://127.0.0.1:8144/
+- http://127.0.0.1:8165/
 
 The IP address of the server is also reported at stdout when starting the API from the command line
 

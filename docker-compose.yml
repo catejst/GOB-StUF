@@ -5,7 +5,7 @@ services:
   gobstuf:
     build: src
     ports:
-      - "8144:8000"
+      - "8165:8000"
     container_name: gobstuf
     environment:
       UWSGI_HTTP: ":8000"
