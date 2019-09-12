@@ -2,9 +2,17 @@ import os
 
 
 def _getenv(varname, default_value=None):
+    """
+    Returns the value of the environment variable "varname"
+    or the default value if the environment variable is not set
+
+    :param varname: name of the environment variable
+    :param default_value: value to return if variable is not set
+    :raises AssertionError: if variable not set or value is empty
+    :return: the value of the given variable
+    """
     value = os.getenv(varname, default_value)
     assert value, f"Environment variable '{varname}' not set or empty"
-    print(f"{varname}='{value}'")
     return value
 
 
