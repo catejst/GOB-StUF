@@ -13,6 +13,10 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(AssertionError):
             _getenv("SOME UNKNOWN VARIABLE")
 
+        # Test for optional value
+        value = _getenv("UNSET VARIABLE", is_optional=True)
+        self.assertIsNone(value)
+
         # Test for variable is not set but default value is given
         value = _getenv("SOME UNKNOWN VARIABLE", "DEFAULT VALUE")
         self.assertEqual(value, "DEFAULT VALUE")

@@ -31,7 +31,11 @@ def _routed_url(url):
                                path=split_result.path,
                                query=split_result.query,
                                fragment=split_result.fragment)
-    return urlunsplit(split_result)
+    routed_url = urlunsplit(split_result)
+
+    # The root wsdl should be requested as a parameter to the url path
+    routed_url = routed_url.replace(r"/?wsdl", r"?wsdl")
+    return routed_url
 
 
 def _update_response(text):
@@ -45,6 +49,18 @@ def _update_response(text):
     """
     pattern = ROUTE_NETLOC + r"(:\d{2,5})?"
     return re.sub(pattern, f"localhost:{GOB_STUF_PORT}", text)
+
+
+def _update_request(text):
+    """
+    Update any request data for the underlying SOAP API so that
+    the address of this StUF API is changed to the address of the underlying api (domain + optional port number)
+
+    :param text: any text, normally a XML string
+    :return: the text where any reference to ourself is changed to the underlying SOAP API
+    """
+    pattern = f"localhost:{GOB_STUF_PORT}"
+    return re.sub(pattern, ROUTE_NETLOC, text)
 
 
 def _get_stuf(url):
@@ -75,7 +91,7 @@ def _post_stuf(url, data, headers):
         "Soapaction": soap_action,
         "Content-Type": content_type
     }
-    return cert_post(url, data, headers)
+    return cert_post(url, data=data, headers=headers)
 
 
 def _stuf():
@@ -93,7 +109,8 @@ def _stuf():
     if method == 'GET':
         response = _get_stuf(url)
     elif method == 'POST':
-        response = _post_stuf(url, request.data, request.headers)
+        data = _update_request(request.data.decode())
+        response = _post_stuf(url, data, request.headers)
 
     text = response.text
     text = _update_response(text)
@@ -115,6 +132,8 @@ def get_app():
         (f'{ROUTE_PATH}', _stuf, ['GET', 'POST']),
         (f'{ROUTE_PATH}/', _stuf, ['GET', 'POST']),
     ]
+
+    print(f"StUF endpoint: localhost:{GOB_STUF_PORT}{ROUTE_PATH}")
 
     app = Flask(__name__)
     CORS(app)

@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from gobstuf.api import _health, _routed_url, _update_response
+from gobstuf.api import _health, _routed_url, _update_response, _update_request
 from gobstuf.api import _get_stuf, _post_stuf, _stuf
 from gobstuf.api import get_app, run
 
@@ -23,6 +23,12 @@ class TestAPI(unittest.TestCase):
         result = _routed_url("proto://domain/path?args")
         self.assertEqual(result, "ROUTE_SCHEME://ROUTE_NETLOC/path?args")
 
+        result = _routed_url("proto://domain/path?wsdl")
+        self.assertEqual(result, "ROUTE_SCHEME://ROUTE_NETLOC/path?wsdl")
+
+        result = _routed_url("proto://domain/path/?wsdl")
+        self.assertEqual(result, "ROUTE_SCHEME://ROUTE_NETLOC/path?wsdl")
+
     def test_update_response(self):
         result = _update_response("text")
         self.assertEqual(result, "text")
@@ -39,6 +45,15 @@ class TestAPI(unittest.TestCase):
         for n in [0, 123456]:
             result = _update_response(f"...ROUTE_NETLOC:{n}...")
             self.assertNotEqual(result, expect)
+
+    def test_update_request(self):
+        result = _update_request("...localhost:GOB_STUF_PORT...")
+        self.assertEqual(result, "...ROUTE_NETLOC...")
+
+        # Only convert full references
+        result = _update_request("...localhost...")
+        self.assertEqual(result, "...localhost...")
+
 
     @mock.patch("gobstuf.api.cert_get")
     def test_get_stuf(self, mock_get):
@@ -66,7 +81,7 @@ class TestAPI(unittest.TestCase):
 
         response = _post_stuf(url, data, headers)
         self.assertEqual(response, "post")
-        mock_post.assert_called_with(url, data, expect_headers)
+        mock_post.assert_called_with(url, data=data, headers=expect_headers)
 
         for h in [{},
                   {"Soapaction": "Any action"},
@@ -91,7 +106,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.data, b"get")
 
         mock_flask.request.method = 'POST'
-        mock_flask.request.data = "any data"
+        mock_flask.request.data = b"any data"
         mock_flask.request.headers = {}
 
         response = _stuf()

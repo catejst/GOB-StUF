@@ -27,11 +27,11 @@ class TestConfig(unittest.TestCase):
     def test_post(self, mock_post):
         mock_post.return_value = MockResponse()
 
-        cert_post("any url", "any data", {"a": 0})
+        cert_post("any url", data="any data", headers={"a": 0})
         mock_post.assert_called_with("any url", data="any data", headers={"a": 0}, pkcs12_filename="PKCS12_FILENAME", pkcs12_password="PKCS12_PASSWORD")
 
         # headers is a default argument
-        response = cert_post("any url", "any data")
+        response = cert_post("any url", data="any data", headers={})
         mock_post.assert_called_with("any url", data="any data", headers={}, pkcs12_filename="PKCS12_FILENAME", pkcs12_password="PKCS12_PASSWORD")
 
         self.assertIsInstance(response, MockResponse)

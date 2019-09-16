@@ -3,22 +3,36 @@ from requests_pkcs12 import get, post
 from gobstuf.config import PKCS12_FILENAME, PKCS12_PASSWORD
 
 
-def cert_get(url):
+def _add_cert_info(kwargs):
+    """
+    Update get/post arguments with certificate info
+
+    :param kwargs: dictionary with get/post arguments
+    :return: None
+    """
+    if PKCS12_FILENAME:
+        kwargs.update({
+            'pkcs12_filename': PKCS12_FILENAME,
+            'pkcs12_password': PKCS12_PASSWORD
+        })
+    return kwargs
+
+
+def cert_get(url, **kwargs):
     """
     Get request with certificate
 
     :param url: url to get
     :return: request response
     """
-    print(f"CERT GET {url}")
-    response = get(url,
-                   pkcs12_filename=PKCS12_FILENAME,
-                   pkcs12_password=PKCS12_PASSWORD)
-    print(f"CERT RESPONSE {response.status_code}, {response.reason}")
+    print(f"GET {url}")
+    kwargs = _add_cert_info(kwargs)
+    response = get(url, **kwargs)
+    print(f"RESPONSE {response.status_code}, {response.reason}")
     return response
 
 
-def cert_post(url, data, headers=None):
+def cert_post(url, **kwargs):
     """
     Post request with certificate
 
@@ -27,11 +41,8 @@ def cert_post(url, data, headers=None):
     :param headers: optional headers
     :return: request response
     """
-    print(f"CERT POST {url}")
-    response = post(url,
-                    data=data,
-                    headers=headers or {},
-                    pkcs12_filename=PKCS12_FILENAME,
-                    pkcs12_password=PKCS12_PASSWORD)
-    print(f"CERT RESPONSE {response.status_code}, {response.reason}")
+    print(f"POST {url}")
+    kwargs = _add_cert_info(kwargs)
+    response = post(url, **kwargs)
+    print(f"RESPONSE {response.status_code}, {response.reason}")
     return response
