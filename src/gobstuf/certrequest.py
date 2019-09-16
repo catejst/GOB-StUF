@@ -5,10 +5,10 @@ from gobstuf.config import PKCS12_FILENAME, PKCS12_PASSWORD
 
 def _add_cert_info(kwargs):
     """
-    Update get/post arguments with certificate info
+    Update get/post arguments with any certificate info
 
     :param kwargs: dictionary with get/post arguments
-    :return: None
+    :return: The updated dictionary
     """
     if PKCS12_FILENAME:
         kwargs.update({
