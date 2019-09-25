@@ -12,6 +12,9 @@ RUN rm requirements.txt
 # Copy gob StUF module
 COPY gobstuf gobstuf
 
+# Remove gobcore tests
+RUN rm -rf /app/src/gobcore/tests
+
 # Copy tests
 COPY tests tests
 COPY .flake8 .flake8
