@@ -7,8 +7,10 @@ from gobstuf.api import get_app, run
 
 class MockResponse:
 
-    def __init__(self, text):
+    def __init__(self, text, status_code=200):
         self.text = text
+        self.status_code = status_code
+
 
 class TestAPI(unittest.TestCase):
 
@@ -91,10 +93,11 @@ class TestAPI(unittest.TestCase):
                 headers = h
                 response = _post_stuf(url, data, headers)
 
+    @mock.patch("gobstuf.api.AuditLogger")
     @mock.patch("gobstuf.api._get_stuf", return_value=MockResponse("get"))
     @mock.patch("gobstuf.api._post_stuf", return_value=MockResponse("post"))
     @mock.patch("gobstuf.api.flask")
-    def test_stuf(self, mock_flask, mock_get, mock_post):
+    def test_stuf(self, mock_flask, mock_post, mock_get, mock_audit_logger):
         mock_flask.request.method = 'Any method'
         with self.assertRaises(AssertionError):
             _stuf()
@@ -107,10 +110,28 @@ class TestAPI(unittest.TestCase):
 
         mock_flask.request.method = 'POST'
         mock_flask.request.data = b"any data"
-        mock_flask.request.headers = {}
+        mock_flask.request.headers = {
+            'Soapaction': 'zeepactie',
+        }
+        mock_flask.request.remote_addr = '1.2.3.4'
+
+        mock_post.return_value = type('PostResponse', (object,), {'status_code': 123, 'text': 'response text'})
 
         response = _stuf()
-        self.assertEqual(response.data, b"post")
+        self.assertEqual(response.data, b"response text")
+
+        # Make sure audit log is called
+        audit_logger_instance = mock_audit_logger.get_instance.return_value
+        audit_logger_instance.log_request.assert_called_with(
+            '1.2.3.4',
+            'ROUTE_SCHEME://ROUTE_NETLOC/any url',
+            {
+                'soapaction': 'zeepactie',
+                'remote_response_code': 123,
+                'original_url': 'any url',
+                'method': 'POST',
+            }
+        )
 
     @mock.patch("gobstuf.api.CORS", mock.MagicMock())
     @mock.patch("gobstuf.api.Flask")

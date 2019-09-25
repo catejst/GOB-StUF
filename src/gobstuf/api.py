@@ -6,6 +6,8 @@ from flask_cors import CORS
 
 from urllib.parse import urlsplit, urlunsplit, SplitResult
 
+from gobcore.logging.audit_logger import AuditLogger
+
 from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH
 from gobstuf.certrequest import cert_get, cert_post
 
@@ -100,6 +102,8 @@ def _stuf():
 
     :return: XML response
     """
+    audit_logger = AuditLogger.get_instance()
+
     request = flask.request
 
     method = request.method
@@ -114,6 +118,15 @@ def _stuf():
 
     text = response.text
     text = _update_response(text)
+
+    extra_data = {
+        'soapaction': request.headers.get('Soapaction'),
+        'remote_response_code': response.status_code,
+        'original_url': request.url,
+        'method': method,
+    }
+
+    audit_logger.log_request(request.remote_addr, url, extra_data)
 
     return Response(text, mimetype="text/xml")
 
