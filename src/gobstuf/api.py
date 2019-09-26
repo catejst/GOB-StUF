@@ -1,4 +1,5 @@
 import re
+import uuid
 
 import flask
 from flask import Flask, Response
@@ -10,6 +11,7 @@ from gobcore.logging.audit_logger import AuditLogger
 
 from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH
 from gobstuf.certrequest import cert_get, cert_post
+from werkzeug.exceptions import BadRequest, MethodNotAllowed, HTTPException
 
 
 def _health():
@@ -86,14 +88,31 @@ def _post_stuf(url, data, headers):
     """
     soap_action = headers.get("Soapaction")
     content_type = headers.get("Content-Type", "")
-    assert soap_action is not None, "Missing Soapaction in header"
-    assert "text/xml" in content_type, f"Wrong content {content_type}; text/xml expected"
+
+    if soap_action is None:
+        raise BadRequest("Missing Soapaction in header")
+
+    if "text/xml" not in content_type:
+        raise BadRequest(f"Wrong content {content_type}; text/xml expected")
 
     headers = {
         "Soapaction": soap_action,
         "Content-Type": content_type
     }
     return cert_post(url, data=data, headers=headers)
+
+
+def _handle_stuf_request(request, routed_url):
+    method = request.method
+    if method == 'GET':
+        response = _get_stuf(routed_url)
+    elif method == 'POST':
+        data = _update_request(request.data.decode())
+        response = _post_stuf(routed_url, data, request.headers)
+    else:
+        raise MethodNotAllowed(f"Unknown method {method}, GET or POST required")
+
+    return response
 
 
 def _stuf():
@@ -105,28 +124,31 @@ def _stuf():
     audit_logger = AuditLogger.get_instance()
 
     request = flask.request
-
-    method = request.method
-    assert method in ['GET', 'POST'], f"Unknown method {method}, GET or POST required"
-
     url = _routed_url(request.url)
-    if method == 'GET':
-        response = _get_stuf(url)
-    elif method == 'POST':
-        data = _update_request(request.data.decode())
-        response = _post_stuf(url, data, request.headers)
 
-    text = response.text
-    text = _update_response(text)
+    request_uuid = str(uuid.uuid4())
 
-    extra_data = {
+    request_log_data = {
         'soapaction': request.headers.get('Soapaction'),
-        'remote_response_code': response.status_code,
         'original_url': request.url,
-        'method': method,
+        'method': request.method,
     }
+    audit_logger.log_request(request.remote_addr, url, request_log_data, request_uuid)
 
-    audit_logger.log_request(request.remote_addr, url, extra_data)
+    response_log_data = {**request_log_data}
+
+    try:
+        response = _handle_stuf_request(request, url)
+    except HTTPException as e:
+        # If Exception occurs, log exception and re-raise
+        response_log_data['exception'] = str(e)
+        audit_logger.log_response(request.remote_addr, url, response_log_data, request_uuid)
+        raise e
+
+    # Successful
+    response_log_data['remote_response_code'] = response.status_code
+    audit_logger.log_response(request.remote_addr, url, response_log_data, request_uuid)
+    text = _update_response(response.text)
 
     return Response(text, mimetype="text/xml")
 

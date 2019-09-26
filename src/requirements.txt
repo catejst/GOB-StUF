@@ -1,7 +1,7 @@
 flake8==3.7.8
 Flask==1.1.1
 Flask-Cors==3.0.8
--e git+https://github.com/Amsterdam/GOB-Core.git@v0.8.10a#egg=gobcore
+-e git+https://github.com/Amsterdam/GOB-Core.git@v0.8.10c#egg=gobcore
 pytest==5.1.2
 pytest-cov==2.7.1
 requests==2.22.0
