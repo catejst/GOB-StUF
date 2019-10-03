@@ -8,6 +8,7 @@ services:
       - "8165:8000"
     container_name: gobstuf
     environment:
+      MESSAGE_BROKER_ADDRESS: rabbitmq
       UWSGI_HTTP: ":8000"
       UWSGI_MODULE: "gobstuf.wsgi"
       UWSGI_CALLABLE: "app"
@@ -20,3 +21,8 @@ services:
       UWSGI_MAX_WORKER_LIFETIME: "1800"
       UWSGI_HTTP_TIMEOUT: "4000"
     env_file: .env
+
+networks:
+  default:
+    external:
+      name: gob-network
