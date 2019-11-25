@@ -92,4 +92,27 @@ if (BRANCH == "master") {
         }
     }
 
+    node {
+        stage('Push production image') {
+            tryStep "image tagging", {
+                docker.withRegistry('https://repo.secure.amsterdam.nl','docker-registry') {
+                    def image = docker.image("datapunt/gob_stuf:${env.BUILD_NUMBER}")
+                    image.pull()
+                    image.push("production")
+                }
+            }
+        }
+    }
+
+    node {
+        stage("Deploy to PROD") {
+            tryStep "deployment", {
+                build job: 'Subtask_Openstack_Playbook',
+                    parameters: [
+                        [$class: 'StringParameterValue', name: 'INVENTORY', value: 'production'],
+                        [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy-gob-stuf.yml'],
+                    ]
+            }
+        }
+    }
 }
