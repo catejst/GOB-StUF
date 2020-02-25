@@ -17,7 +17,7 @@ def tryStep(String message, Closure block, Closure tearDown = null) {
 }
 
 
-node('GOBBUILD') {
+node() {
     withEnv(["DOCKER_IMAGE_NAME=datapunt/gob_stuf:${env.BUILD_NUMBER}"
             ]) {
 
