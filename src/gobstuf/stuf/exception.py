@@ -1,0 +1,2 @@
+class NoStufAnswerException(Exception):
+    pass
