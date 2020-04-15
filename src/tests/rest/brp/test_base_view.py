@@ -124,7 +124,7 @@ class TestStufRestView(TestCase):
 
         view._json_response.assert_called_with({
             'status': 403,
-            'title': 'MKS authorisatie mislukt',
+            'title': 'U bent niet geautoriseerd voor deze operatie.',
         }, 403)
 
     @patch("gobstuf.rest.brp.base_view.request")
