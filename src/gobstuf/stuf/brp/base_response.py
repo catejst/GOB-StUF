@@ -38,6 +38,10 @@ class StufMappedResponse(StufResponse):
 
     """
     def get_object_elm(self):
+        """Returns the object wrapper element from the response message.
+
+        :return:
+        """
         answer_object = self.stuf_message.find_elm(self.answer_section)
 
         if not answer_object:
@@ -46,6 +50,11 @@ class StufMappedResponse(StufResponse):
         return self.stuf_message.find_elm(self.object_elm, answer_object)
 
     def get_mapped_object(self):
+        """Returns a dict with key -> value pairs for the keys in mapping with the value extracted
+        from the response message.
+
+        :return:
+        """
         obj = self.get_object_elm()
         return {k: self.stuf_message.get_elm_value(v, obj) for k, v in self.mapping.items()}
 

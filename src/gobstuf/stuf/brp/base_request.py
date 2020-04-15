@@ -67,14 +67,28 @@ class StufRequest(ABC):
             self.stuf_message = StufMessage(f.read())
 
     def _template_path(self):
+        """Returns absolute path to the template file
+
+        :return:
+        """
         return os.path.join(TEMPLATE_DIR, self.template)
 
     def time_str(self, dt: datetime.datetime):
+        """Returns formatted time string
+
+        :param dt:
+        :return:
+        """
         # %f returns microseconds. We want milliseconds precision, so cut off at 17 characters:
         # yyyy mm dd hh mm ss mmm = 4 + 2 + 2 + 2 + 2 + 2 + 3 = 17 characters
         return dt.strftime('%Y%m%d%H%M%S%f')[:17]
 
     def ref_str(self, dt: datetime.datetime):
+        """Returns the reference for this message based on dt
+
+        :param dt:
+        :return:
+        """
         return f"GOB{dt.strftime('%Y%m%d%H%M%S%f')}"
 
     def set_element(self, path: str, value: str):
@@ -82,6 +96,11 @@ class StufRequest(ABC):
         self.stuf_message.set_elm_value(full_path, value)
 
     def to_string(self):
+        """String (XML) representation of this request. Sets tijdstip_bericht and referentienummer to
+        current datetime value.
+
+        :return:
+        """
         now = datetime.datetime.utcnow().astimezone(tz=pytz.timezone(self.default_tz))
         self.set_element(self.tijdstip_bericht_path, self.time_str(now))
         self.set_element(self.referentienummer_path, self.ref_str(now))

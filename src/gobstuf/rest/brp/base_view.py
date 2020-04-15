@@ -36,11 +36,14 @@ class StufRestView(MethodView):
     decorators = [headers_required_decorator([MKS_USER_HEADER, MKS_APPLICATION_HEADER])]
 
     def get(self, **kwargs):
-        """
+        """kwargs contains the URL parameters, for example {'bsn': xxxx'} when the requested resource is
+        /brp/ingeschrevenpersonen/<bsn>
 
         :param kwargs: Dictionary with URL parameters
         :return:
         """
+
+        # Request MKS with given request_template
         request_template = self.request_template(
             request.headers.get(MKS_USER_HEADER),
             request.headers.get(MKS_APPLICATION_HEADER),
@@ -51,17 +54,25 @@ class StufRestView(MethodView):
         try:
             response.raise_for_status()
         except HTTPError:
+            # Received error status code from MKS (always 500)
             response_obj = StufErrorResponse(response.text)
             return self._error_response(response_obj)
 
+        # Map MKS response back to REST response.
         response_obj = self.response_template(response.text)
 
         try:
             return self._json_response(response_obj.get_mapped_object())
         except NoStufAnswerException:
+            # Return 404, answer section is empty
             return self._not_found_response(**kwargs)
 
     def _make_request(self, request_template: StufRequest):
+        """Makes the MKS request
+
+        :param request_template:
+        :return:
+        """
         soap_headers = {
             'Soapaction': request_template.soap_action,
             'Content-Type': 'text/xml'
@@ -71,10 +82,21 @@ class StufRestView(MethodView):
         return cert_post(url, data=request_template.to_string(), headers=soap_headers)
 
     def _json_response(self, data: dict, status_code: int = 200):
+        """Builds an HAL JSON formatted Flask response object.
+
+        :param data:
+        :param status_code:
+        :return:
+        """
         doc = Document(data=data)
         return Response(response=doc.to_json(), content_type='application/hal+json'), status_code
 
     def _error_response(self, response_obj: StufErrorResponse):
+        """Builds the error response based on the error response received from MKS
+
+        :param response_obj:
+        :return:
+        """
         code = response_obj.get_error_code()
 
         if code == 'Fo02':
@@ -105,13 +127,26 @@ class StufRestView(MethodView):
     @property
     @abstractmethod
     def request_template(self):
+        """The StufRequestTemplate used to query MKS
+
+        :return:
+        """
         pass  # pragma: no cover
 
     @property
     @abstractmethod
     def response_template(self):
+        """The StufResponse returned from MKS.
+
+        :return:
+        """
         pass  # pragma: no cover
 
     @abstractmethod
     def get_not_found_message(self, **kwargs):
+        """Should return a 'not found' message.
+
+        :param kwargs: the URL parameters for this request
+        :return:
+        """
         pass  # pragma: no cover
