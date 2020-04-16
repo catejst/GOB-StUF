@@ -8,4 +8,4 @@ class IngeschrevenpersonenView(StufRestView):
     response_template = IngeschrevenpersonenStufResponse
 
     def get_not_found_message(self, **kwargs):
-        return f"Ingeschreven persoon niet gevonden met burgerservicenummer {kwargs['bsn']}"
+        return f"Ingeschreven persoon niet gevonden met burgerservicenummer {kwargs['bsn']}."

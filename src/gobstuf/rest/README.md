@@ -24,3 +24,13 @@ This setup makes it possible to easily define a new resource with MKS mapping by
 Don't forget to add the route to ```rest/brp/routes.py``` and you're done.
 
 More on the ```StufRequest``` and ```StufResponse``` objects [here](../stuf/brp/README.md)
+
+### Existing endpoints:
+
+####/brp/ingeschrevenpersonen/[bsn]
+
+Returns person for supplied BSN.
+
+```
+curl -H "MKS_APPLICATIE: <applicatie>" -H "MKS_GEBRUIKER: <gebruiker>" http://<API>/brp/ingeschrevenpersonen/<BSN>
+```

@@ -1,6 +1,8 @@
 import os
 import pytz
 import datetime
+import random
+import sys
 
 from abc import ABC, abstractmethod
 
@@ -83,14 +85,6 @@ class StufRequest(ABC):
         # yyyy mm dd hh mm ss mmm = 4 + 2 + 2 + 2 + 2 + 2 + 3 = 17 characters
         return dt.strftime('%Y%m%d%H%M%S%f')[:17]
 
-    def ref_str(self, dt: datetime.datetime):
-        """Returns the reference for this message based on dt
-
-        :param dt:
-        :return:
-        """
-        return f"GOB{dt.strftime('%Y%m%d%H%M%S%f')}"
-
     def set_element(self, path: str, value: str):
         full_path = self.content_root_elm + " " + path
         self.stuf_message.set_elm_value(full_path, value)
@@ -101,9 +95,10 @@ class StufRequest(ABC):
 
         :return:
         """
-        now = datetime.datetime.utcnow().astimezone(tz=pytz.timezone(self.default_tz))
-        self.set_element(self.tijdstip_bericht_path, self.time_str(now))
-        self.set_element(self.referentienummer_path, self.ref_str(now))
+        timestr = self.time_str(datetime.datetime.utcnow().astimezone(tz=pytz.timezone(self.default_tz)))
+
+        self.set_element(self.tijdstip_bericht_path, timestr)
+        self.set_element(self.referentienummer_path, f"GOB{timestr}_{random.randint(0, sys.maxsize)}")
 
         return self.stuf_message.to_string()
 

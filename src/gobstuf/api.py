@@ -169,8 +169,6 @@ def get_app():
         (f'{ROUTE_PATH}/', _stuf, ['GET', 'POST']),
     ]
 
-    print(f"StUF endpoint: localhost:{GOB_STUF_PORT}{ROUTE_PATH}")
-
     app = Flask(__name__)
     CORS(app)
 
@@ -179,6 +177,10 @@ def get_app():
 
     for route, view_func in REST_ROUTES:
         app.add_url_rule(route, view_func=view_func)
+
+    print("Available endpoints:")
+    for route in ROUTES + REST_ROUTES:
+        print(route[0])
 
     return app
 

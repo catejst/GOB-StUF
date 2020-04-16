@@ -57,12 +57,6 @@ class StufRequestTest(TestCase):
 
         self.assertEqual('20200409125959088', req.time_str(dt))
 
-    def test_ref_str(self):
-        dt = datetime.datetime.utcnow().replace(2020, 4, 9, 12, 59, 59, 88402, tzinfo=None)
-
-        req = StufRequestImpl('', '', {})
-        self.assertEqual('GOB20200409125959088402', req.ref_str(dt))
-
     def test_set_element(self):
         req = StufRequestImpl('', '', {})
         req.stuf_message = MagicMock()
@@ -71,18 +65,19 @@ class StufRequestTest(TestCase):
         req.stuf_message.set_elm_value.assert_called_with('A B C THE PATH', 'the value')
 
     @patch("gobstuf.stuf.brp.base_request.datetime")
-    def test_to_string(self, mock_datetime):
+    @patch("gobstuf.stuf.brp.base_request.random")
+    def test_to_string(self, mock_random, mock_datetime):
+        mock_random.randint.return_value = 12345
         req = StufRequestImpl('', '', {})
         req.stuf_message = MagicMock()
         req.set_element = MagicMock()
-        req.time_str = MagicMock()
-        req.ref_str = MagicMock()
+        req.time_str = MagicMock(return_value='TIMESTR')
 
         self.assertEqual(req.stuf_message.to_string(), req.to_string())
 
         req.set_element.assert_has_calls([
             call(req.tijdstip_bericht_path, req.time_str()),
-            call(req.referentienummer_path, req.ref_str()),
+            call(req.referentienummer_path, 'GOBTIMESTR_12345'),
         ])
 
     def test_str(self):

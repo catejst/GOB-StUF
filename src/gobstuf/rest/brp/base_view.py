@@ -1,6 +1,6 @@
+import json
 from flask.views import MethodView
-from flask import request, abort, Response
-from flask_hal.document import Document
+from flask import request, abort, Response, jsonify
 from requests.exceptions import HTTPError
 from abc import abstractmethod
 
@@ -16,6 +16,11 @@ MKS_APPLICATION_HEADER = 'MKS_APPLICATIE'
 
 
 def headers_required_decorator(headers):
+    """Decorator used in StufRestView to check that MKS headers are set
+
+    :param headers:
+    :return:
+    """
     def headers_required(f):
         def decorator(*args, **kwargs):
             if not all([request.headers.get(h) for h in headers]):
@@ -33,6 +38,8 @@ class StufRestView(MethodView):
 
     Should be extended with a request_template and response_template.
     """
+
+    # Decorator makes sure the MKS headers are set
     decorators = [headers_required_decorator([MKS_USER_HEADER, MKS_APPLICATION_HEADER])]
 
     def get(self, **kwargs):
@@ -88,8 +95,9 @@ class StufRestView(MethodView):
         :param status_code:
         :return:
         """
-        doc = Document(data=data)
-        return Response(response=doc.to_json(), content_type='application/hal+json'), status_code
+        data['_links'] = {'self': {'href': request.url}}
+
+        return Response(response=json.dumps(data), content_type='application/hal+json'), status_code
 
     def _error_response(self, response_obj: StufErrorResponse):
         """Builds the error response based on the error response received from MKS
@@ -108,21 +116,24 @@ class StufRestView(MethodView):
             return self._json_response(data, 403)
 
         # Other unknown code
+        print(f"MKS error {response_obj.get_error_code()}. Code {response_obj.get_error_string()}")
+
         return self._json_response({
-            'mks_code': response_obj.get_error_code(),
-            'mks_error': response_obj.get_error_string(),
+            'error': 'Error occurred when requesting external system. See logs for more information.'
         }, 400)
 
     def _not_found_response(self, **kwargs):
         data = {
-            'title': 'Opgevraagde resource bestaat niet',
+            'type': 'https://docs.microsoft.com/en-us/dotnet/api/system.net.httpstatuscode?'
+                    '#System_Net_HttpStatusCode_NotFound',
+            'title': 'Opgevraagde resource bestaat niet.',
             'status': 404,
             'detail': self.get_not_found_message(**kwargs),
             'instance': request.url,
             'code': 'notFound',
         }
 
-        return self._json_response(data, 404)
+        return jsonify(data), 404
 
     @property
     @abstractmethod

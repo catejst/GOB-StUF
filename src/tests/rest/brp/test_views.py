@@ -17,6 +17,6 @@ class TestIngeschrevenpersonenView(TestCase):
 
     def test_get_not_found_message(self):
         kwargs = {'bsn': 'BEE ES EN'}
-        self.assertEqual('Ingeschreven persoon niet gevonden met burgerservicenummer BEE ES EN',
+        self.assertEqual('Ingeschreven persoon niet gevonden met burgerservicenummer BEE ES EN.',
                          IngeschrevenpersonenView().get_not_found_message(**kwargs))
 
