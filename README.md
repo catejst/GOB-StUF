@@ -16,6 +16,7 @@ It serves as a proxy and transparantly forwards requests to a StUF server
 
 * [SoapUI](https://www.soapui.org) can be used to test the StUF service.
 
+# StUF endpoint
 The service definition that is exposed is:
 ```
 http://localhost:<<GOB_STUF_PORT>><<ROUTE_NETLOC>>?wsdl
@@ -26,6 +27,12 @@ http://localhost:8165/SomePath/MijnService?wsdl
 ```
 
 The StUF endpoint is reported at startup of the service.
+
+# REST endpoints
+This service also exposes REST endpoints that in the background perform StUF requests to
+obtain the requested data.
+
+See [REST endpoints](src/gobstuf/rest/README.md) for a more detailed explanation.
     
 # Installation
 
