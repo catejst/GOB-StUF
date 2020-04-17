@@ -11,6 +11,7 @@ from gobcore.logging.audit_logger import AuditLogger
 
 from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH
 from gobstuf.certrequest import cert_get, cert_post
+from gobstuf.rest.routes import REST_ROUTES
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, HTTPException
 
 
@@ -168,13 +169,18 @@ def get_app():
         (f'{ROUTE_PATH}/', _stuf, ['GET', 'POST']),
     ]
 
-    print(f"StUF endpoint: localhost:{GOB_STUF_PORT}{ROUTE_PATH}")
-
     app = Flask(__name__)
     CORS(app)
 
     for route, view_func, methods in ROUTES:
         app.route(rule=route, methods=methods)(view_func)
+
+    for route, view_func in REST_ROUTES:
+        app.add_url_rule(route, view_func=view_func)
+
+    print("Available endpoints:")
+    for route in ROUTES + REST_ROUTES:
+        print(route[0])
 
     return app
 
