@@ -115,7 +115,9 @@ class TestStufRestView(TestCase):
         # Test with status code specified
         self.assertEqual((mock_response.return_value, 123), view._json_response(data, 123))
 
-    def test_error_response(self):
+    @patch("gobstuf.rest.brp.base_view.request")
+    def test_error_response(self, mock_request):
+        mock_request.url = 'REQUEST_URL'
         view = StufRestView()
         response_arg = MagicMock()
         view._json_response = MagicMock()
@@ -124,7 +126,14 @@ class TestStufRestView(TestCase):
 
         # Generic error
         view._json_response.assert_called_with({
-            'error': 'Error occurred when requesting external system. See logs for more information.',
+            'invalid_params': [],
+            'type': 'https://docs.microsoft.com/en-us/dotnet/api/system.net.httpstatuscode?'
+                    '#System_Net_HttpStatusCode_BadRequest',
+            'title': 'Error occurred when requesting external system. See logs for more information.',
+            'status': 400,
+            'detail': '',
+            'instance': 'REQUEST_URL',
+            'code': '',
         }, 400)
 
         # Fo02 MKS error

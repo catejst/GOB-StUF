@@ -119,7 +119,14 @@ class StufRestView(MethodView):
         print(f"MKS error {response_obj.get_error_code()}. Code {response_obj.get_error_string()}")
 
         return self._json_response({
-            'error': 'Error occurred when requesting external system. See logs for more information.'
+            'invalid_params': [],
+            'type': 'https://docs.microsoft.com/en-us/dotnet/api/system.net.httpstatuscode?'
+                    '#System_Net_HttpStatusCode_BadRequest',
+            'title': 'Error occurred when requesting external system. See logs for more information.',
+            'status': 400,
+            'detail': '',
+            'instance': request.url,
+            'code': '',
         }, 400)
 
     def _not_found_response(self, **kwargs):
