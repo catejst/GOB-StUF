@@ -9,7 +9,7 @@ from urllib.parse import urlsplit, urlunsplit, SplitResult
 
 from gobcore.logging.audit_logger import AuditLogger
 
-from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH
+from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH, API_BASE_PATH
 from gobstuf.certrequest import cert_get, cert_post
 from gobstuf.rest.routes import REST_ROUTES
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, HTTPException
@@ -165,22 +165,23 @@ def get_app():
         ('/status/health/', _health, ['GET']),
 
         # StUF endpoints
-        (f'{ROUTE_PATH}', _stuf, ['GET', 'POST']),
-        (f'{ROUTE_PATH}/', _stuf, ['GET', 'POST']),
+        (f'{API_BASE_PATH}{ROUTE_PATH}', _stuf, ['GET', 'POST']),
+        (f'{API_BASE_PATH}{ROUTE_PATH}/', _stuf, ['GET', 'POST']),
     ]
 
     app = Flask(__name__)
     CORS(app)
 
+    print("Available endpoints:")
+
     for route, view_func, methods in ROUTES:
         app.route(rule=route, methods=methods)(view_func)
+        print(route)
 
     for route, view_func in REST_ROUTES:
-        app.add_url_rule(route, view_func=view_func)
-
-    print("Available endpoints:")
-    for route in ROUTES + REST_ROUTES:
-        print(route[0])
+        full_route = f"{API_BASE_PATH}{route}"
+        app.add_url_rule(f"{full_route}", view_func=view_func)
+        print(f"{full_route}")
 
     return app
 

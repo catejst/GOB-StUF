@@ -27,3 +27,5 @@ ROUTE_SCHEME = _getenv("ROUTE_SCHEME", default_value="https")
 # Optional parameters
 PKCS12_FILENAME = _getenv("PKCS12_FILENAME", is_optional=True)
 PKCS12_PASSWORD = _getenv("PKCS12_PASSWORD", is_optional=True)
+
+API_BASE_PATH = _getenv("BASE_PATH", default_value="", is_optional=True)
