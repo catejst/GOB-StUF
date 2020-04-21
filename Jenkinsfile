@@ -18,7 +18,8 @@ def tryStep(String message, Closure block, Closure tearDown = null) {
 
 
 node() {
-    withEnv(["DOCKER_IMAGE_NAME=datapunt/gob_stuf:${env.BUILD_NUMBER}"
+    withEnv(["DOCKER_IMAGE_NAME=datapunt/gob_stuf:${env.BUILD_NUMBER}",
+             "DOCKER_REGISTRY_HOST=https://docker-registry.secure.amsterdam.nl"
             ]) {
 
         stage("Checkout") {
@@ -37,7 +38,7 @@ node() {
 
         stage("Build image") {
             tryStep "build", {
-                docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
+                docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker-registry') {
                     def image = docker.build("${DOCKER_IMAGE_NAME}",
                         "--no-cache " +
                         "--shm-size 1G " +
@@ -54,7 +55,7 @@ node() {
 
             stage('Push develop image') {
                 tryStep "image tagging", {
-                    docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
+                    docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker-registry') {
                        def image = docker.image("${DOCKER_IMAGE_NAME}")
                        image.pull()
                        image.push("develop")
@@ -67,7 +68,7 @@ node() {
 
             stage('Push acceptance image') {
                 tryStep "image tagging", {
-                    docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
+                    docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker-registry') {
                         def image = docker.image("${DOCKER_IMAGE_NAME}")
                         image.pull()
                         image.push("acceptance")
