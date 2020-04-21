@@ -18,7 +18,8 @@ def tryStep(String message, Closure block, Closure tearDown = null) {
 
 
 node() {
-    withEnv(["DOCKER_IMAGE_NAME=datapunt/gob_stuf:${env.BUILD_NUMBER}"
+    withEnv(["DOCKER_IMAGE_NAME=datapunt/gob_stuf:${env.BUILD_NUMBER}",
+             "DOCKER_REGISTRY_HOST=https://docker-registry.secure.amsterdam.nl"
             ]) {
 
         stage("Checkout") {
