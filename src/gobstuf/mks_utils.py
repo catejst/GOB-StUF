@@ -44,7 +44,7 @@ class MKSConverter:
 
     @classmethod
     def _dd(cls, mks_datum):
-        return mks_datum[6:8]
+        return mks_datum[6:8] if cls._is_mks_datum(mks_datum) else None
 
     @classmethod
     def as_datum(cls, mks_datum):

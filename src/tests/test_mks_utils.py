@@ -25,7 +25,7 @@ class TestMKSConverter(TestCase):
 
     def test_dd(self):
         self.assertEqual(MKSConverter._dd("20200422"), "22")
-        self.assertEqual(MKSConverter._mm("202004221"), None)
+        self.assertEqual(MKSConverter._dd("202004221"), None)
 
     def test_as_datum(self):
         self.assertEqual(MKSConverter.as_datum("20200422"), "2020-04-22")
