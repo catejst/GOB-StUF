@@ -49,14 +49,69 @@ class StufMappedResponse(StufResponse):
 
         return self.stuf_message.find_elm(self.object_elm, answer_object)
 
-    def get_mapped_object(self):
-        """Returns a dict with key -> value pairs for the keys in mapping with the value extracted
+    def get_answer_object(self):
+        """
+        The answer object is created from the StUF response
+
+        The response is mapped on the response object
+        and then filtered
+
+        :return: the object to be returned as answer to the REST call
+        :raises: NoStufAnswerException if the object is empty
+        """
+        mapped_object = self.get_mapped_object()
+        answer_object = self.get_filtered_object(mapped_object)
+
+        if not answer_object:
+            raise NoStufAnswerException()
+
+        return answer_object
+
+    def get_filtered_object(self, mapped_object):
+        """
+        Filter the mapped object on the mapped attribute values
+        Default implementation is to not filter anything and to return the object unchanged
+        :param mapped_object:
+        :return:
+        """
+        return mapped_object
+
+    def get_mapped_object(self, obj=None, mapping=None):
+        """
+        Returns a dict with key -> value pairs for the keys in mapping with the value extracted
         from the response message.
+
+        The mapping is a (possibly nested) dictionary
+        Each key is mapped upon the specified element value
+
+        Optionally a tuple can be specified (method, element value).
+        The element value is the passed as an argument to the given method
+
+        Nested mappings are resolved by recursive calls to this method
 
         :return:
         """
-        obj = self.get_object_elm()
-        return {k: self.stuf_message.get_elm_value(v, obj) for k, v in self.mapping.items()}
+        # Initially obj and mapping are None
+        # On a recursive call these two parameters will have a value
+        obj = obj or self.get_object_elm()
+        mapping = mapping or self.mapping
+
+        result = {}
+        for k, v in mapping.items():
+            if isinstance(v, dict):
+                # the values are resolved at a nested level by recursively calling this method
+                # Example: 'naam': {'voornamen': '<attribute>', 'geslachtsnaam': '<attribute>'}
+                result[k] = self.get_mapped_object(obj, mapping[k])
+            elif isinstance(v, tuple):
+                # The value is resolved by a function call with the attribute value as a parameter
+                # Example: 'naamlengte': (len, '<attribute>')
+                # will result in 'naamlengte': len(<attribute value>)
+                method, attribute = v
+                result[k] = method(self.stuf_message.get_elm_value(attribute, obj))
+            else:
+                # Plain attribute value
+                result[k] = self.stuf_message.get_elm_value(v, obj)
+        return result
 
     @property
     @abstractmethod

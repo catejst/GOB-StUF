@@ -64,6 +64,25 @@ class StufRequestTest(TestCase):
         req.set_element('THE PATH', 'the value')
         req.stuf_message.set_elm_value.assert_called_with('A B C THE PATH', 'the value')
 
+    def test_validate(self):
+        # Default validation is to return no errors: None
+        req = StufRequestImpl('', '', {})
+        self.assertIsNone(req.validate({}))
+
+    def test_params_errors(self):
+        req = StufRequestImpl('', '', {})
+        result = req.params_errors([], [])
+        self.assertEqual(result, {
+            "invalid-params": [],
+            "title": "Een of meerdere parameters zijn niet correct.",
+            "detail": f"De foutieve parameter(s) zijn: .",
+            "code": "paramsValidation"
+        })
+        result = req.params_errors(['name1', 'name2'], [])
+        self.assertEqual(result['detail'], "De foutieve parameter(s) zijn: name1, name2.")
+        result = req.params_errors([], ['params1', 'params2'])
+        self.assertEqual(result['invalid-params'], ['params1', 'params2'])
+
     @patch("gobstuf.stuf.brp.base_request.datetime")
     @patch("gobstuf.stuf.brp.base_request.random")
     def test_to_string(self, mock_random, mock_datetime):
