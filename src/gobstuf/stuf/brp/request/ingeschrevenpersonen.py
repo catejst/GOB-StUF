@@ -13,7 +13,14 @@ class IngeschrevenpersonenStufRequest(StufRequest):
     }
 
     def validate(self, args):
-        # print("VALIDATE BSN")
+        """
+        Validate the request arguments
+
+        The BSN should have the correct length, if not return an params error
+
+        :param args:
+        :return:
+        """
         bsn = args['bsn']
         if len(bsn) != self.BSN_LENGTH:
             name = "burgerservicenummer"
