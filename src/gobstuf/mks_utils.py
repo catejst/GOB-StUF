@@ -23,11 +23,16 @@ class MKSConverter:
 
     @classmethod
     def _is_mks_datum(cls, mks_datum):
+        if not mks_datum or len(mks_datum) != len(cls._MKS_DATUM_FORMAT):
+            # Minimal requirement is that the length is OK
+            return False
+
         try:
+            # Simply try to parse the date, if that succeeds then return True
             datetime.datetime.strptime(mks_datum, cls._MKS_DATUM_PARSE_FORMAT)
+            return True
         except (ValueError, TypeError):
             return False
-        return len(mks_datum) == len(cls._MKS_DATUM_FORMAT)
 
     @classmethod
     def _yyyy(cls, mks_datum):

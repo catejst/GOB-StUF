@@ -13,7 +13,7 @@ class TestMKSConverter(TestCase):
         self.assertFalse(MKSConverter._is_mks_datum("202004221"))
         self.assertFalse(MKSConverter._is_mks_datum(None))
         self.assertFalse(MKSConverter._is_mks_datum(""))
-        self.assertFalse(MKSConverter._is_mks_datum("some string"))
+        self.assertFalse(MKSConverter._is_mks_datum("yyyymmdd"))
 
     def test_yyyy(self):
         self.assertEqual(MKSConverter._yyyy("20200422"), "2020")
