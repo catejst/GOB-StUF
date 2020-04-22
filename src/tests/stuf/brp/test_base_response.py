@@ -78,6 +78,28 @@ class StufMappedResponseTest(TestCase):
 
     def test_get_filtered_object(self):
         resp = StufMappedResponseImpl('msg')
-        obj = 'any object'
-        # Default filtering is return all
-        self.assertEqual(resp.get_filtered_object(obj), obj)
+        obj = {
+            'any key': 'any value',
+            'any null': None,
+            'sub': {
+                'any sub key': 'any sub value',
+                'any sub null': None,
+                'sub sub1': {
+                    'any sub sub null': None
+                },
+                'sub sub2': {
+                    'any sub sub': 'any sub sub value'
+                }
+            }
+        }
+        expect = {
+            'any key': 'any value',
+            'sub': {
+                'any sub key': 'any sub value',
+                'sub sub2': {
+                    'any sub sub': 'any sub sub value'
+                }
+            }
+        }
+        # Default filtering is return all non null values
+        self.assertEqual(resp.get_filtered_object(obj), expect)

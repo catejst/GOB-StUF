@@ -130,7 +130,7 @@ class StufRestView(MethodView):
             'invalid-params': [],
             'type': 'https://docs.microsoft.com/en-us/dotnet/api/system.net.httpstatuscode?'
                     '#System_Net_HttpStatusCode_BadRequest',
-            "title": '',
+            'title': '',
             'status': 400,
             'detail': '',
             'instance': request.url,

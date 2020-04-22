@@ -70,11 +70,32 @@ class StufMappedResponse(StufResponse):
     def get_filtered_object(self, mapped_object):
         """
         Filter the mapped object on the mapped attribute values
-        Default implementation is to not filter anything and to return the object unchanged
+        Default implementation is to filter out any null values
+
+        Any derived class that implements this method should call this super method on its result
+        super().get_filtered_object(result)
+
         :param mapped_object:
         :return:
         """
-        return mapped_object
+        def filter_none_values(obj):
+            """
+            Recursively filter out any None values of the given object
+
+            :param obj:
+            :return:
+            """
+            result = {}
+            for k, v in obj.items():
+                if isinstance(v, dict):
+                    value = filter_none_values(v)
+                    if value:
+                        result[k] = value
+                elif v is not None:
+                    result[k] = v
+            return result
+
+        return filter_none_values(mapped_object) if mapped_object else mapped_object
 
     def get_mapped_object(self, obj=None, mapping=None):
         """
