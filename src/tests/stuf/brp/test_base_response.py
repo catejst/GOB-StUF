@@ -22,6 +22,11 @@ class StufMappedResponseImpl(StufMappedResponse):
     mapping = {
         'attr1': 'XML PATH A',
         'attr2': 'XML PATH B',
+        'attr3': {
+            'attr3a': 'XML PATH C - a',
+            'attr3b': 'XML PATH C - b'
+        },
+        'attr4': (len, 'XML PATH D')
     }
 
 
@@ -40,19 +45,61 @@ class StufMappedResponseTest(TestCase):
         with self.assertRaises(NoStufAnswerException):
             resp.get_object_elm()
 
+    def _get_expected_mapped_result(self, resp):
+        return {
+            'attr1': resp.stuf_message.get_elm_value(resp.mapping['attr1']),
+            'attr2': resp.stuf_message.get_elm_value(resp.mapping['attr2']),
+            'attr3': {
+                'attr3a': resp.stuf_message.get_elm_value(resp.mapping['attr3']['attr3a']),
+                'attr3b': resp.stuf_message.get_elm_value(resp.mapping['attr3']['attr3b']),
+            },
+            'attr4': len(resp.stuf_message.get_elm_value(resp.mapping['attr4'][1]))
+        }
+
     def test_get_mapped_object(self):
         resp = StufMappedResponseImpl('msg')
         resp.get_object_elm = MagicMock()
+        resp.stuf_message.get_elm_value = lambda a, o=None: f"value {a}"
 
         result = resp.get_mapped_object()
-        expected = {
-            'attr1': resp.stuf_message.get_elm_value(),
-            'attr2': resp.stuf_message.get_elm_value(),
+        self.assertEqual(result, self._get_expected_mapped_result(resp))
+
+    def test_get_answer_object(self):
+        resp = StufMappedResponseImpl('msg')
+        resp.get_object_elm = MagicMock()
+
+        result = resp.get_answer_object()
+        self.assertEqual(result, self._get_expected_mapped_result(resp))
+
+        resp.get_filtered_object = MagicMock()
+        resp.get_filtered_object.return_value = None
+        with self.assertRaises(NoStufAnswerException):
+            result = resp.get_answer_object()
+
+    def test_get_filtered_object(self):
+        resp = StufMappedResponseImpl('msg')
+        obj = {
+            'any key': 'any value',
+            'any null': None,
+            'sub': {
+                'any sub key': 'any sub value',
+                'any sub null': None,
+                'sub sub1': {
+                    'any sub sub null': None
+                },
+                'sub sub2': {
+                    'any sub sub': 'any sub sub value'
+                }
+            }
         }
-        self.assertEqual(expected, result)
-
-        resp.stuf_message.get_elm_value.assert_has_calls([
-            call('XML PATH A', resp.get_object_elm()),
-            call('XML PATH B', resp.get_object_elm()),
-        ])
-
+        expect = {
+            'any key': 'any value',
+            'sub': {
+                'any sub key': 'any sub value',
+                'sub sub2': {
+                    'any sub sub': 'any sub sub value'
+                }
+            }
+        }
+        # Default filtering is return all non null values
+        self.assertEqual(resp.get_filtered_object(obj), expect)

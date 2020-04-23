@@ -73,7 +73,7 @@ class StufMessage:
         :return:
         """
         elm = self.find_elm(elements_str, tree)
-        return elm.text
+        return None if elm is None else elm.text
 
     def to_string(self):
         return ET.tostring(self.tree, encoding='unicode')

@@ -56,6 +56,10 @@ class StufRestView(MethodView):
             request.headers.get(MKS_APPLICATION_HEADER),
             kwargs
         )
+        errors = request_template.validate(kwargs)
+        if errors:
+            return self._bad_request_response(**errors)
+
         response = self._make_request(request_template)
 
         try:
@@ -69,7 +73,7 @@ class StufRestView(MethodView):
         response_obj = self.response_template(response.text)
 
         try:
-            return self._json_response(response_obj.get_mapped_object())
+            return self._json_response(response_obj.get_answer_object())
         except NoStufAnswerException:
             # Return 404, answer section is empty
             return self._not_found_response(**kwargs)
@@ -113,21 +117,28 @@ class StufRestView(MethodView):
                 'status': 403,
                 'title': 'U bent niet geautoriseerd voor deze operatie.',
             }
-            return self._json_response(data, 403)
+            return jsonify(data), 403
 
         # Other unknown code
         print(f"MKS error {response_obj.get_error_code()}. Code {response_obj.get_error_string()}")
 
-        return self._json_response({
-            'invalid_params': [],
+        return self._bad_request_response(
+            title='Error occurred when requesting external system. See logs for more information.')
+
+    def _bad_request_response(self, **kwargs):
+        data = {
+            'invalid-params': [],
             'type': 'https://docs.microsoft.com/en-us/dotnet/api/system.net.httpstatuscode?'
                     '#System_Net_HttpStatusCode_BadRequest',
-            'title': 'Error occurred when requesting external system. See logs for more information.',
+            'title': '',
             'status': 400,
             'detail': '',
             'instance': request.url,
-            'code': '',
-        }, 400)
+            "code": '',
+            **kwargs
+        }
+
+        return jsonify(data), 400
 
     def _not_found_response(self, **kwargs):
         data = {

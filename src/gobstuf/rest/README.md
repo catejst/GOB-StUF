@@ -34,3 +34,13 @@ Returns person for supplied BSN.
 ```
 curl -H "MKS_APPLICATIE: <applicatie>" -H "MKS_GEBRUIKER: <gebruiker>" http://<API>/brp/ingeschrevenpersonen/<BSN>
 ```
+
+The API returns data in the same format as the 
+[Haal-Centraal-BRP API](https://github.com/VNG-Realisatie/Haal-Centraal-BRP-bevragen/blob/master/docs/getting-started.md)
+
+In order to use this API you need an API key.
+
+An example that uses the Haal-Centraal-API is:
+```
+curl -H "x-api-key: <api key>" https://www.haalcentraal.nl/haalcentraal/api/brp/ingeschrevenpersonen/999993847
+```

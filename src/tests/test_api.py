@@ -109,7 +109,7 @@ class TestAPI(unittest.TestCase):
         mock_post_stuf.assert_called_with(routed_url, mock_update_request.return_value, request.headers)
 
         request = type('MockInvalidMethod', (object,), {'method': 'INVALID'})
-        with self.assertRaisesRegexp(MethodNotAllowed, '405 Method Not Allowed'):
+        with self.assertRaisesRegex(MethodNotAllowed, '405 Method Not Allowed'):
             _handle_stuf_request(request, routed_url)
 
 

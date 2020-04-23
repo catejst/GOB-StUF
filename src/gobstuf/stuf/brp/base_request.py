@@ -102,6 +102,30 @@ class StufRequest(ABC):
 
         return self.stuf_message.to_string()
 
+    def validate(self, args):
+        """
+        Validate the request arguments. The default implementation is to return no errors (None)
+
+        :param args:
+        :return: None if no errors, else a params error result
+        """
+        return None
+
+    def params_errors(self, names, invalid_params):
+        """
+        If a request argument parameter(s) validation fails a params error object is returned
+
+        :param names: the names of the failing parameters, eg ['bsn', ...]
+        :param invalid_params: the specs of the failing parameters, ([{name, code, reason}, ...])
+        :return:
+        """
+        return {
+            "invalid-params": invalid_params,
+            "title": "Een of meerdere parameters zijn niet correct.",
+            "detail": f"De foutieve parameter(s) zijn: {', '.join(names)}.",
+            "code": "paramsValidation"
+        }
+
     def __str__(self):
         return self.to_string()
 

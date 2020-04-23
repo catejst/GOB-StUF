@@ -116,17 +116,17 @@ class TestStufRestView(TestCase):
         self.assertEqual((mock_response.return_value, 123), view._json_response(data, 123))
 
     @patch("gobstuf.rest.brp.base_view.request")
-    def test_error_response(self, mock_request):
+    @patch("gobstuf.rest.brp.base_view.jsonify")
+    def test_error_response(self, mock_jsonify, mock_request):
         mock_request.url = 'REQUEST_URL'
         view = StufRestView()
         response_arg = MagicMock()
-        view._json_response = MagicMock()
 
-        self.assertEqual(view._json_response(), view._error_response(response_arg))
+        self.assertEqual((mock_jsonify.return_value, 400), view._error_response(response_arg))
 
         # Generic error
-        view._json_response.assert_called_with({
-            'invalid_params': [],
+        mock_jsonify.assert_called_with({
+            'invalid-params': [],
             'type': 'https://docs.microsoft.com/en-us/dotnet/api/system.net.httpstatuscode?'
                     '#System_Net_HttpStatusCode_BadRequest',
             'title': 'Error occurred when requesting external system. See logs for more information.',
@@ -134,16 +134,16 @@ class TestStufRestView(TestCase):
             'detail': '',
             'instance': 'REQUEST_URL',
             'code': '',
-        }, 400)
+        })
 
         # Fo02 MKS error
         response_arg.get_error_code.return_value = 'Fo02'
         view._error_response(response_arg)
 
-        view._json_response.assert_called_with({
+        mock_jsonify.assert_called_with({
             'status': 403,
             'title': 'U bent niet geautoriseerd voor deze operatie.',
-        }, 403)
+        })
 
     @patch("gobstuf.rest.brp.base_view.request")
     @patch("gobstuf.rest.brp.base_view.jsonify")
@@ -174,8 +174,11 @@ class TestStufRestView(TestCase):
             MKS_APPLICATION_HEADER: 'application',
         }
 
+        mock_request_template = MagicMock()
+        mock_request_template.return_value.validate.return_value = None
+
         class StuffRestViewImpl(StufRestView):
-            request_template = MagicMock()
+            request_template = mock_request_template
             response_template = MagicMock()
 
         view = StuffRestViewImpl()
@@ -189,7 +192,7 @@ class TestStufRestView(TestCase):
         view._make_request.assert_called_with(view.request_template.return_value)
 
         view.response_template.assert_called_with(view._make_request.return_value.text)
-        view._json_response.assert_called_with(view.response_template.return_value.get_mapped_object.return_value)
+        view._json_response.assert_called_with(view.response_template.return_value.get_answer_object.return_value)
 
         # Error response
         view._make_request.return_value.raise_for_status.side_effect = HTTPError
@@ -199,7 +202,13 @@ class TestStufRestView(TestCase):
 
         # 404 response
         view._make_request = MagicMock()
-        view.response_template.return_value.get_mapped_object.side_effect = NoStufAnswerException
+        view.response_template.return_value.get_answer_object.side_effect = NoStufAnswerException
         view._not_found_response = MagicMock()
 
         self.assertEqual(view._not_found_response(), view.get(a=1, b=2))
+
+        # 400 Bad Request
+        mock_request_template.return_value.validate.return_value = {'error': 'any error', 'code': 'any code'}
+        view._bad_request_response = MagicMock()
+        self.assertEqual(view._bad_request_response.return_value, view.get(a=1, b=2))
+        view._bad_request_response.assert_called_with(error='any error', code='any code')
