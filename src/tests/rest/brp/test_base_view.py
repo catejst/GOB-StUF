@@ -89,86 +89,29 @@ class TestStufRestView(TestCase):
             }
         )
 
-    @patch("gobstuf.rest.brp.base_view.Response")
     @patch("gobstuf.rest.brp.base_view.request")
-    @patch("gobstuf.rest.brp.base_view.json")
-    def test_json_response(self, mock_json, mock_request, mock_response):
-        mock_request.url = 'REQUEST URL'
-        mock_json.dumps = MagicMock(side_effect=lambda x: x)
-        data = {'some': 'dict'}
-
-        view = StufRestView()
-        self.assertEqual((mock_response.return_value, 200), view._json_response(data))
-        mock_response.assert_called_with(
-            response={
-                'some': 'dict',
-                '_links': {
-                    'self': {
-                        'href': 'REQUEST URL'
-                    }
-                }
-            },
-            content_type='application/hal+json'
-        )
-        mock_json.dumps.assert_called_once()
-
-        # Test with status code specified
-        self.assertEqual((mock_response.return_value, 123), view._json_response(data, 123))
-
-    @patch("gobstuf.rest.brp.base_view.request")
-    @patch("gobstuf.rest.brp.base_view.jsonify")
-    def test_error_response(self, mock_jsonify, mock_request):
+    @patch("gobstuf.rest.brp.base_view.RESTResponse")
+    def test_error_response(self, mock_rest_response, mock_request):
         mock_request.url = 'REQUEST_URL'
         view = StufRestView()
         response_arg = MagicMock()
 
-        self.assertEqual((mock_jsonify.return_value, 400), view._error_response(response_arg))
+        self.assertEqual(mock_rest_response.bad_request.return_value,
+                         view._error_response(response_arg))
 
         # Generic error
-        mock_jsonify.assert_called_with({
-            'invalid-params': [],
-            'type': 'https://docs.microsoft.com/en-us/dotnet/api/system.net.httpstatuscode?'
-                    '#System_Net_HttpStatusCode_BadRequest',
-            'title': 'Error occurred when requesting external system. See logs for more information.',
-            'status': 400,
-            'detail': '',
-            'instance': 'REQUEST_URL',
-            'code': '',
-        })
+        mock_rest_response.bad_request.assert_called_with()
 
         # Fo02 MKS error
         response_arg.get_error_code.return_value = 'Fo02'
         view._error_response(response_arg)
 
-        mock_jsonify.assert_called_with({
-            'status': 403,
-            'title': 'U bent niet geautoriseerd voor deze operatie.',
-        })
-
-    @patch("gobstuf.rest.brp.base_view.request")
-    @patch("gobstuf.rest.brp.base_view.jsonify")
-    def test_not_found_response(self, mock_jsonify, mock_request):
-        mock_request.url = 'REQUEST URL'
-        view = StufRestView()
-        view.get_not_found_message = MagicMock()
-
-        kwargs = {'kw': 'ar', 'g': 's'}
-
-        self.assertEqual((mock_jsonify.return_value, 404), view._not_found_response(**kwargs))
-
-        mock_jsonify.assert_called_with({
-            'type': 'https://docs.microsoft.com/en-us/dotnet/api/system.net.httpstatuscode?'
-                    '#System_Net_HttpStatusCode_NotFound',
-            'title': 'Opgevraagde resource bestaat niet.',
-            'status': 404,
-            'detail': view.get_not_found_message(),
-            'instance': 'REQUEST URL',
-            'code': 'notFound'
-        })
+        mock_rest_response.forbidden.assert_called_with()
 
     @patch("gobstuf.rest.brp.base_view.request")
     @patch("gobstuf.rest.brp.base_view.StufErrorResponse")
-    def test_get(self, mock_response, mock_request):
+    @patch("gobstuf.rest.brp.base_view.RESTResponse")
+    def test_get(self, mock_rest_response, mock_response, mock_request):
         mock_request.headers = {
             MKS_USER_HEADER: 'user',
             MKS_APPLICATION_HEADER: 'application',
@@ -187,12 +130,12 @@ class TestStufRestView(TestCase):
         view._json_response = MagicMock()
 
         # Success response
-        self.assertEqual(view._json_response.return_value, view.get(a=1, b=2))
+        self.assertEqual(mock_rest_response.ok.return_value, view.get(a=1, b=2))
         view.request_template.assert_called_with('user', 'application', {'a': 1, 'b': 2})
         view._make_request.assert_called_with(view.request_template.return_value)
 
         view.response_template.assert_called_with(view._make_request.return_value.text)
-        view._json_response.assert_called_with(view.response_template.return_value.get_answer_object.return_value)
+        mock_rest_response.ok.assert_called_with(view.response_template.return_value.get_answer_object.return_value)
 
         # Error response
         view._make_request.return_value.raise_for_status.side_effect = HTTPError
@@ -205,10 +148,10 @@ class TestStufRestView(TestCase):
         view.response_template.return_value.get_answer_object.side_effect = NoStufAnswerException
         view._not_found_response = MagicMock()
 
-        self.assertEqual(view._not_found_response(), view.get(a=1, b=2))
+        self.assertEqual(mock_rest_response.not_found(), view.get(a=1, b=2))
 
         # 400 Bad Request
         mock_request_template.return_value.validate.return_value = {'error': 'any error', 'code': 'any code'}
         view._bad_request_response = MagicMock()
-        self.assertEqual(view._bad_request_response.return_value, view.get(a=1, b=2))
-        view._bad_request_response.assert_called_with(error='any error', code='any code')
+        self.assertEqual(mock_rest_response.bad_request.return_value, view.get(a=1, b=2))
+        mock_rest_response.bad_request.assert_called_with(error='any error', code='any code')
