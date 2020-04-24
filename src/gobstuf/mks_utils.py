@@ -95,6 +95,16 @@ class MKSConverter:
         }.get(mks_geslachtsaanduiding.lower(), 'onbekend')
 
     @classmethod
+    def as_aanduiding_naamgebruik(cls, mks_aanduiding_naamgebruik):
+        mks_aanduiding_naamgebruik = mks_aanduiding_naamgebruik or ""
+        return {
+            'e': 'eigen',
+            'n': 'eigen_partner',
+            'p': 'partner',
+            'v': 'partner_eigen'
+        }.get(mks_aanduiding_naamgebruik.lower())
+
+    @classmethod
     def as_code(cls, length):
         """
         Returns a function to convert a code to a zero padded string of length <length>

@@ -80,9 +80,26 @@ class TestMKSConverter(TestCase):
         self.assertEqual(MKSConverter.as_leeftijd("20190421"), 1)
 
     def test_as_geslachtsaanduiding(self):
-        for a in ['v', 'V']:
-            self.assertEqual(MKSConverter.as_geslachtsaanduiding(a), 'vrouw')
-        for a in ['m', 'M']:
-            self.assertEqual(MKSConverter.as_geslachtsaanduiding(a), 'man')
-        for a in ['o', 'O', 'x', 'X', '', 'anything', None]:
+        valid = {
+            'v': 'vrouw',
+            'm': 'man',
+            'o': 'onbekend',
+        }
+        for code, expected_result in valid.items():
+            for aanduiding in [code.upper(), code.lower()]:
+                self.assertEqual(MKSConverter.as_geslachtsaanduiding(aanduiding), expected_result)
+        for a in ['x', 'X', '', 'anything', None]:
             self.assertEqual(MKSConverter.as_geslachtsaanduiding(a), 'onbekend')
+
+    def test_as_aanduiding_naamgebruik(self):
+        valid = {
+            'e': 'eigen',
+            'n': 'eigen_partner',
+            'p': 'partner',
+            'v': 'partner_eigen',
+        }
+        for code, expected_result in valid.items():
+            for aanduiding in [code.upper(), code.lower()]:
+                self.assertEqual(MKSConverter.as_aanduiding_naamgebruik(aanduiding), expected_result)
+        for aanduiding in ['x', 'X', '', 'anything', None]:
+            self.assertIsNone(MKSConverter.as_aanduiding_naamgebruik(aanduiding))

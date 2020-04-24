@@ -12,7 +12,7 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
     mapping = {
         'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding, 'BG:geslachtsaanduiding'),
         'naam': {
-            'aanduidingNaamgebruik': 'BG:aanduidingNaamgebruik',
+            'aanduidingNaamgebruik': (MKSConverter.as_aanduiding_naamgebruik, 'BG:aanduidingNaamgebruik'),
             'voornamen': 'BG:voornamen',
             'voorletters': 'BG:voorletters',
             'geslachtsnaam': 'BG:geslachtsnaam',
