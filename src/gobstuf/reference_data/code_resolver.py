@@ -1,5 +1,3 @@
-import requests
-from requests.exceptions import HTTPError, ConnectionError
 import os
 import csv
 
@@ -10,20 +8,35 @@ class CodeNotFoundException(Exception):
 
 class CodeResolver:
 
-    # Landen configuratie
-    LANDEN_TABEL = 'Tabel34 Landentabel (gesorteerd op code).csv'
     DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-    LANDEN_PATH = os.path.join(DATA_DIR, LANDEN_TABEL)
-    LANDEN_FIELDS = {
-        'landcode': 0,
-        'omschrijving': 1,
-        'datum_ingang': 2,
-        'datum_einde': 3,
-        'fictieve_datum_einde': 4,
+
+    # Maps code on omschrijving
+    CODE = 'code'
+    DESCRIPTION = 'omschrijving'
+
+    # Landen configuratie
+    LANDEN = {
+        'table': 'Tabel34 Landentabel (gesorteerd op code).csv',
+        'fields': {
+            CODE: 0,
+            DESCRIPTION: 1,
+            'datum_ingang': 2,
+            'datum_einde': 3,
+            'fictieve_datum_einde': 4,
+        },
     }
 
     # Gemeenten configuratie
-    GOB_URL = "https://api.data.amsterdam.nl/gob/graphql/"
+    GEMEENTEN = {
+        'table': 'Tabel33 Gemeententabel (gesorteerd op code).csv',
+        'fields': {
+            CODE: 0,
+            DESCRIPTION: 1,
+            'nieuwe_code': 2,
+            'datum_ingang': 3,
+            'datum_einde': 4
+        }
+    }
 
     # Local dictionaries
     _landen = {}
@@ -36,29 +49,50 @@ class CodeResolver:
 
         :return:
         """
-        cls._landen = cls._load_landen()
+        cls._gemeenten = cls._load_data(cls.GEMEENTEN)
+        cls._landen = cls._load_data(cls.LANDEN)
 
     @classmethod
-    def _load_landen(cls):
+    def _load_data(cls, config):
         """
-        Load landen table from internal data file
+        Load reference data from internal data file
 
-        See README for details how to refresh tha landen table
+        See README for details how to refresh the reference data
         :return:
         """
+        path = os.path.join(cls.DATA_DIR, config['table'])
         try:
-            with open(cls.LANDEN_PATH, 'r', encoding='utf16') as f:
+            with open(path, 'r', encoding='utf16') as f:
                 lines = [line for line in csv.reader(f)]
         except FileNotFoundError:
-            raise CodeNotFoundException(f"ERROR: landentabel {cls.LANDEN_TABEL} could not be found")
+            raise CodeNotFoundException(f"ERROR: Table {config['table']} not found")
 
-        landen = {}
+        data = {}
         for line in lines[1:]:  # Skip header
-            landcode = line[cls.LANDEN_FIELDS['landcode']]
-            landen[landcode] = {
-                attr: line[index] for attr, index in cls.LANDEN_FIELDS.items()
+            code = line[config['fields'][cls.CODE]]
+            data[code] = {
+                attr: line[index] for attr, index in config['fields'].items()
             }
-        return landen
+        return data
+
+    @classmethod
+    def _get_dataitem(cls, data, code):
+        """
+        Get the description for the given code
+
+        :param code:
+        :return:
+        """
+        assert data, f"{cls.__name__} initialize method not called"
+
+        if not code:
+            return
+
+        code = code.zfill(4)
+        try:
+            return data[code][cls.DESCRIPTION]
+        except KeyError:
+            print(f"ERROR: {code} could not be found")
 
     @classmethod
     def get_land(cls, code):
@@ -68,44 +102,7 @@ class CodeResolver:
         :param code:
         :return:
         """
-        assert cls._landen, f"{cls.__name__} initialize method not called"
-
-        if not code:
-            return
-
-        code = code.zfill(4)
-        try:
-            return cls._landen[code]['omschrijving']
-        except KeyError:
-            print(f"ERROR: Land {code} could not be found")
-
-    @classmethod
-    def _load_gemeente(cls, code):
-        # Construct a GraphQL query to retrieve the name for the given code
-        entity = 'brkGemeentes'
-        attr = 'naam'
-        query = """
-{
-  %s (identificatie:"%s") {
-    edges {
-      node {
-        %s
-      }
-    }
-  }
-}""" % (entity, code, attr)
-
-        # Construct the URL for the GraphQL query
-        url = f"{cls.GOB_URL}?query={query}"
-
-        try:
-            result = requests.get(url)
-            result.raise_for_status()
-            return result.json()['data'][entity]['edges'][0]['node'][attr]
-        except (HTTPError, ConnectionError) as e:
-            raise CodeNotFoundException(f"ERROR: Request {cls.GOB_URL} failed for query {query} ({str(e)})")
-        except (KeyError, IndexError):
-            raise CodeNotFoundException(f"ERROR: Gemeente {code} could not be found")
+        return cls._get_dataitem(cls._landen, code)
 
     @classmethod
     def get_gemeente(cls, code):
@@ -115,17 +112,7 @@ class CodeResolver:
         :param code:
         :return:
         """
-        if not code:
-            return
-
-        code = code.zfill(4)
-        if not cls._gemeenten.get(code):
-            try:
-                cls._gemeenten[code] = cls._load_gemeente(code)
-            except CodeNotFoundException as e:
-                print(str(e))
-                return
-        return cls._gemeenten[code]
+        return cls._get_dataitem(cls._gemeenten, code)
 
 
 CodeResolver.initialize()

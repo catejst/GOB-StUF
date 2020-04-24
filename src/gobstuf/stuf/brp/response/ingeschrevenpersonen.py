@@ -34,7 +34,7 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
             'datumAanvangAdreshouding': (MKSConverter.as_datum_broken_down, 'BG:verblijfsadres BG:begindatumVerblijf'),
             'datumInschrijvingInGemeente': (MKSConverter.as_datum_broken_down, 'BG:inp.datumInschrijving'),
             'gemeenteVanInschrijving': {
-                'code': 'BG:inp.gemeenteVanInschrijving',
+                'code': (MKSConverter.as_code(4), 'BG:inp.gemeenteVanInschrijving'),
                 'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.gemeenteVanInschrijving')
             },
         },

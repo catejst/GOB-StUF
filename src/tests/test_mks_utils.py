@@ -51,6 +51,12 @@ class TestMKSConverter(TestCase):
         self.assertEqual(MKSConverter.as_dag("20200422"), 22)
         self.assertEqual(MKSConverter.as_dag("202004221"), None)
 
+    def test_as_code(self):
+        for length in range(1, 5):
+            as_code = MKSConverter.as_code(length)
+            code = as_code("1")
+            self.assertEqual(len(code), length)
+
     @patch('gobstuf.mks_utils.CodeResolver')
     def test_get_gemeente_omschrijving(self, mock_code_resolver):
         mock_code_resolver.get_gemeente.return_value = 'any omschrijving'

@@ -95,6 +95,17 @@ class MKSConverter:
         }.get(mks_geslachtsaanduiding.lower(), 'onbekend')
 
     @classmethod
+    def as_code(cls, length):
+        """
+        Returns a function to convert a code to a zero padded string of length <length>
+        :param length:
+        :return:
+        """
+        def as_code(mks_code):
+            return mks_code.zfill(length)
+        return as_code
+
+    @classmethod
     def get_gemeente_omschrijving(cls, mks_code):
         return CodeResolver.get_gemeente(mks_code)
 
