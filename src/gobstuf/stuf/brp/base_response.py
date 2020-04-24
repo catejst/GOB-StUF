@@ -129,6 +129,8 @@ class StufMappedResponse(StufResponse):
                 # will result in 'naamlengte': len(<attribute value>)
                 method, attribute = v
                 result[k] = method(self.stuf_message.get_elm_value(attribute, obj))
+            elif v[0] == '=':
+                result[k] = v[1:]
             else:
                 # Plain attribute value
                 result[k] = self.stuf_message.get_elm_value(v, obj)

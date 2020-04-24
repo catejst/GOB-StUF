@@ -26,7 +26,8 @@ class StufMappedResponseImpl(StufMappedResponse):
             'attr3a': 'XML PATH C - a',
             'attr3b': 'XML PATH C - b'
         },
-        'attr4': (len, 'XML PATH D')
+        'attr4': (len, 'XML PATH D'),
+        'attr5': '=attr5 value'
     }
 
 
@@ -53,7 +54,8 @@ class StufMappedResponseTest(TestCase):
                 'attr3a': resp.stuf_message.get_elm_value(resp.mapping['attr3']['attr3a']),
                 'attr3b': resp.stuf_message.get_elm_value(resp.mapping['attr3']['attr3b']),
             },
-            'attr4': len(resp.stuf_message.get_elm_value(resp.mapping['attr4'][1]))
+            'attr4': len(resp.stuf_message.get_elm_value(resp.mapping['attr4'][1])),
+            'attr5': 'attr5 value'
         }
 
     def test_get_mapped_object(self):
