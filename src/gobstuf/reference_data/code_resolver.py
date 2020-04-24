@@ -129,8 +129,3 @@ class CodeResolver:
 
 
 CodeResolver.initialize()
-# for i in [1, 2]:
-#     result = CodeResolver.get_land('5002')
-#     print(result)
-#     result = CodeResolver.get_gemeente('0363')
-#     print(result)

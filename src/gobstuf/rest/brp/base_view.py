@@ -69,8 +69,6 @@ class StufRestView(MethodView):
 
         response = self._make_request(request_template)
 
-        # print("RESPONSE", response.text)
-
         try:
             response.raise_for_status()
         except HTTPError:
@@ -100,8 +98,6 @@ class StufRestView(MethodView):
             'Content-Type': 'text/xml'
         }
         url = f'{ROUTE_SCHEME}://{ROUTE_NETLOC}{ROUTE_PATH}'
-
-        # print("REQUEST", request_template.to_string())
 
         return cert_post(url, data=request_template.to_string(), headers=soap_headers)
 

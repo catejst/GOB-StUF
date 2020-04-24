@@ -21,11 +21,21 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
         'leeftijd': (MKSConverter.as_leeftijd, 'BG:geboortedatum'),
         'burgerservicenummer': 'BG:inp.bsn',
         'geboorte': {
-            'datum': {
-                'datum': (MKSConverter.as_datum, 'BG:geboortedatum'),
-                'jaar': (MKSConverter.as_jaar, 'BG:geboortedatum'),
-                'maand': (MKSConverter.as_maand, 'BG:geboortedatum'),
-                'dag': (MKSConverter.as_dag, 'BG:geboortedatum'),
+            'datum': (MKSConverter.as_datum_broken_down, 'BG:geboortedatum'),
+        },
+        'verblijfplaats': {
+            'functieAdres': '=woonadres',
+            'huisletter': 'BG:verblijfsadres BG:aoa.huisletter',
+            'huisnummer': 'BG:verblijfsadres BG:aoa.huisnummer',
+            'huisnummertoevoeging': 'BG:verblijfsadres BG:aoa.huisnummertoevoeging',
+            'postcode': 'BG:verblijfsadres BG:aoa.postcode',
+            'woonplaatsnaam': 'BG:verblijfsadres BG:wpl.woonplaatsNaam',
+            'straatnaam': 'BG:verblijfsadres BG:gor.straatnaam',
+            'datumAanvangAdreshouding': (MKSConverter.as_datum_broken_down, 'BG:verblijfsadres BG:begindatumVerblijf'),
+            'datumInschrijvingInGemeente': (MKSConverter.as_datum_broken_down, 'BG:inp.datumInschrijving'),
+            'gemeenteVanInschrijving': {
+                'code': 'BG:inp.gemeenteVanInschrijving',
+                'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.gemeenteVanInschrijving')
             },
         },
         'overlijdensdatum': 'BG:overlijdensdatum'

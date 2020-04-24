@@ -3,7 +3,7 @@
 Reference data is used to link codes in MKS to names.
 
 Example:
-- gemeente 0363 = Amsterdam
+- land 5002 = Frankrijk
 
 Reference data is imported from the Rijksdienst voor Identiteitsgegevens:
 
