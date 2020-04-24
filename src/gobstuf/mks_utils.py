@@ -6,6 +6,8 @@ MKS utility methods
 import datetime
 from dateutil.relativedelta import relativedelta
 
+from gobstuf.reference_data.code_resolver import CodeResolver
+
 
 def _today():
     return datetime.datetime.now().date()
@@ -47,6 +49,16 @@ class MKSConverter:
         return mks_datum[6:8] if cls._is_mks_datum(mks_datum) else None
 
     @classmethod
+    def as_datum_broken_down(cls, mks_datum):
+        if cls._is_mks_datum(mks_datum):
+            return {
+                'datum': cls.as_datum(mks_datum),
+                'jaar': cls.as_jaar(mks_datum),
+                'maand': cls.as_maand(mks_datum),
+                'dag': cls.as_dag(mks_datum)
+            }
+
+    @classmethod
     def as_datum(cls, mks_datum):
         if cls._is_mks_datum(mks_datum):
             return f"{cls._yyyy(mks_datum)}-{cls._mm(mks_datum)}-{cls._dd(mks_datum)}"
@@ -81,3 +93,11 @@ class MKSConverter:
             'v': 'vrouw',
             'm': 'man'
         }.get(mks_geslachtsaanduiding.lower(), 'onbekend')
+
+    @classmethod
+    def get_gemeente_omschrijving(cls, mks_code):
+        return CodeResolver.get_gemeente(mks_code)
+
+    @classmethod
+    def get_land_omschrijving(cls, mks_code):
+        return CodeResolver.get_land(mks_code)

@@ -31,6 +31,14 @@ class TestMKSConverter(TestCase):
         self.assertEqual(MKSConverter.as_datum("20200422"), "2020-04-22")
         self.assertEqual(MKSConverter.as_datum("202004221"), None)
 
+    def test_as_datum_broken_down(self):
+        self.assertEqual(MKSConverter.as_datum_broken_down("20200422"), {
+            'datum': '2020-04-22',
+            'jaar': 2020,
+            'maand': 4,
+            'dag': 22})
+        self.assertEqual(MKSConverter.as_datum_broken_down("202004221"), None)
+
     def test_as_jaar(self):
         self.assertEqual(MKSConverter.as_jaar("20200422"), 2020)
         self.assertEqual(MKSConverter.as_jaar("202004221"), None)
@@ -42,6 +50,16 @@ class TestMKSConverter(TestCase):
     def test_as_dag(self):
         self.assertEqual(MKSConverter.as_dag("20200422"), 22)
         self.assertEqual(MKSConverter.as_dag("202004221"), None)
+
+    @patch('gobstuf.mks_utils.CodeResolver')
+    def test_get_gemeente_omschrijving(self, mock_code_resolver):
+        mock_code_resolver.get_gemeente.return_value = 'any omschrijving'
+        self.assertEqual(MKSConverter.get_gemeente_omschrijving("any gemeente"), 'any omschrijving')
+
+    @patch('gobstuf.mks_utils.CodeResolver')
+    def test_get_land_omschrijving(self, mock_code_resolver):
+        mock_code_resolver.get_land.return_value = 'any omschrijving'
+        self.assertEqual(MKSConverter.get_land_omschrijving("any land"), 'any omschrijving')
 
     def test_today(self):
         today = _today()
