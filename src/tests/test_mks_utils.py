@@ -79,6 +79,48 @@ class TestMKSConverter(TestCase):
         self.assertEqual(MKSConverter.as_leeftijd("20190422"), 1)
         self.assertEqual(MKSConverter.as_leeftijd("20190421"), 1)
 
+        # https://github.com/VNG-Realisatie/Haal-Centraal-BRP-bevragen/blob/master/features/leeftijd_bepaling.feature
+
+        # Volledig geboortedatum
+        birthday = "19830526"
+        mock_today.return_value = datetime.date(2019, 5, 26)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 36)
+        mock_today.return_value = datetime.date(2019, 11, 30)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 36)
+        mock_today.return_value = datetime.date(2019, 1, 1)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 35)
+
+        # Jaar en maand van geboorte datum zijn bekend
+        birthday = "19830500"
+        mock_today.return_value = datetime.date(2019, 5, 31)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), None)
+        mock_today.return_value = datetime.date(2019, 6, 1)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 36)
+        mock_today.return_value = datetime.date(2019, 4, 30)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 35)
+
+        # Alleen jaar van geboorte datum is bekend
+        birthday = "19830000"
+        mock_today.return_value = datetime.date(2019, 5, 31)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), None)
+
+        # Persoon is overleden
+        birthday = "19830526"
+        mock_today.return_value = datetime.date(2019, 5, 26)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, is_overleden=True), None)
+
+        # Volledig onbekend geboortedatum
+        self.assertEqual(MKSConverter.as_leeftijd(None), None)
+
+        # Geboren op 29 februari in een schrikkeljaar
+        birthday = "19960229"
+        mock_today.return_value = datetime.date(2016, 2, 29)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 20)
+        mock_today.return_value = datetime.date(2017, 2, 28)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 20)
+        mock_today.return_value = datetime.date(2017, 3, 1)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 21)
+
     def test_as_geslachtsaanduiding(self):
         valid = {
             'v': 'vrouw',

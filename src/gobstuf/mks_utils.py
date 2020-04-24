@@ -2,9 +2,8 @@
 MKS utility methods
 
 """
-
+import re
 import datetime
-from dateutil.relativedelta import relativedelta
 
 from gobstuf.reference_data.code_resolver import CodeResolver
 
@@ -79,12 +78,51 @@ class MKSConverter:
             return int(cls._dd(mks_datum))
 
     @classmethod
-    def as_leeftijd(cls, mks_geboortedatum):
+    def _get_age(cls, now, birthday):
+        """
+        Age calculation that takes leap years into account
+
+        :param now:
+        :param birthday:
+        :return:
+        """
+        try:
+            day = birthday.replace(year=now.year)
+        except ValueError:
+            # Fails in leap year, set day to first of next month
+            day = birthday.replace(year=now.year, month=birthday.month + 1, day=1)
+
+        if day > now:
+            return now.year - birthday.year - 1
+        else:
+            return now.year - birthday.year
+
+    @classmethod
+    def as_leeftijd(cls, mks_geboortedatum, is_overleden=False):
+        """
+        birthday string as age
+
+        Accepts birthday strings with unknown month. The age is unknown in the same month
+        but otherwise simple known as if the birthday was on a arbitrary day in the month
+
+        :param mks_geboortedatum:
+        :param is_overleden:
+        :return:
+        """
+        if not mks_geboortedatum or is_overleden:
+            return None
+
+        unknown_day_pattern = r'(.*)(00)$'
+        day_is_unknown = re.match(unknown_day_pattern, mks_geboortedatum)
+        if day_is_unknown:
+            mks_geboortedatum = re.sub(unknown_day_pattern, r'\g<1>15', mks_geboortedatum)
+
         if cls._is_mks_datum(mks_geboortedatum):
             # Interpret all dates as dates in the current timezone
             now = _today()
-            birthday = datetime.datetime.strptime(mks_geboortedatum, cls._MKS_DATUM_PARSE_FORMAT)
-            return relativedelta(now, birthday).years
+            birthday = datetime.datetime.strptime(mks_geboortedatum, cls._MKS_DATUM_PARSE_FORMAT).date()
+            if not (day_is_unknown and now.month == birthday.month):
+                return cls._get_age(now=now, birthday=birthday)
 
     @classmethod
     def as_geslachtsaanduiding(cls, mks_geslachtsaanduiding):
