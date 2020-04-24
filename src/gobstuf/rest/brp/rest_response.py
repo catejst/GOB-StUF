@@ -34,10 +34,11 @@ class RESTResponse():
         :return:
         """
         status_info = {
-            400: {'code': 'badRequest',     'description': 'Bad Request',  'sec': '10.4.1'},
-            401: {'code': 'authentication', 'description': 'Unauthorized', 'sec': '10.4.2'},
-            403: {'code': 'autorisation',   'description': 'Forbidden',    'sec': '10.4.4'},
-            404: {'code': 'notFound',       'description': 'Not Found',    'sec': '10.4.5'},
+            400: {'code': 'badRequest',     'description': 'Bad Request',           'sec': '10.4.1'},
+            401: {'code': 'authentication', 'description': 'Unauthorized',          'sec': '10.4.2'},
+            403: {'code': 'autorisation',   'description': 'Forbidden',             'sec': '10.4.4'},
+            404: {'code': 'notFound',       'description': 'Not Found',             'sec': '10.4.5'},
+            500: {'code': 'serverError',    'description': 'Internal Server Error', 'sec': '10.5.1'},
         }[status]
 
         sec = f'{status_info["sec"]} {status} {status_info["description"]}'
@@ -91,6 +92,8 @@ class RESTResponse():
         data = {
             'invalid-params': [],
             'title': 'Error occurred when requesting external system. See logs for more information.',
+            'detail': 'The request could not be understood by the server due to malformed syntax. ' +
+                      'The client SHOULD NOT repeat the request without modification.',
             **kwargs
         }
         return cls._client_error_response(data=data, status=http_status.HTTP_400_BAD_REQUEST)
@@ -105,6 +108,7 @@ class RESTResponse():
         """
         data = {
             'title': 'U bent niet geautoriseerd voor deze operatie.',
+            'detail': 'The server understood the request, but is refusing to fulfill it.',
             **kwargs
         }
         return cls._client_error_response(data=data, status=http_status.HTTP_403_FORBIDDEN)
@@ -119,6 +123,16 @@ class RESTResponse():
         """
         data = {
             'title': 'Opgevraagde resource bestaat niet.',
+            'detail': 'The server has not found anything matching the Request-URI.',
             **kwargs
         }
         return cls._client_error_response(data=data, status=http_status.HTTP_404_NOT_FOUND)
+
+    @classmethod
+    def internal_server_error(cls, **kwargs):
+        data = {
+            "title": "Interne server fout.",
+            "detail": "The server encountered an unexpected condition which prevented it from fulfilling the request.",
+            **kwargs
+        }
+        return cls._client_error_response(data=data, status=http_status.HTTP_500_INTERNAL_SERVER_ERROR)

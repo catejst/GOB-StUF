@@ -77,3 +77,7 @@ class TestRESTResponse(TestCase):
     def test_not_found(self):
         result = RESTResponse.not_found()
         self.assertEqual(result['status'], 404)
+
+    def test_internal_server_error(self):
+        result = RESTResponse.internal_server_error()
+        self.assertEqual(result['status'], 500)

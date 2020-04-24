@@ -43,6 +43,13 @@ class StufRestView(MethodView):
     decorators = [headers_required_decorator([MKS_USER_HEADER, MKS_APPLICATION_HEADER])]
 
     def get(self, **kwargs):
+        try:
+            return self._get(**kwargs)
+        except Exception as e:
+            print(f"ERROR: Request failed: {str(e)}")
+            return RESTResponse.internal_server_error()
+
+    def _get(self, **kwargs):
         """kwargs contains the URL parameters, for example {'bsn': xxxx'} when the requested resource is
         /brp/ingeschrevenpersonen/<bsn>
 
@@ -61,6 +68,8 @@ class StufRestView(MethodView):
             return RESTResponse.bad_request(**errors)
 
         response = self._make_request(request_template)
+
+        # print("RESPONSE", response.text)
 
         try:
             response.raise_for_status()
@@ -91,6 +100,8 @@ class StufRestView(MethodView):
             'Content-Type': 'text/xml'
         }
         url = f'{ROUTE_SCHEME}://{ROUTE_NETLOC}{ROUTE_PATH}'
+
+        # print("REQUEST", request_template.to_string())
 
         return cert_post(url, data=request_template.to_string(), headers=soap_headers)
 

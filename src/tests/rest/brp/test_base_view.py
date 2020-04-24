@@ -130,7 +130,7 @@ class TestStufRestView(TestCase):
         view._json_response = MagicMock()
 
         # Success response
-        self.assertEqual(mock_rest_response.ok.return_value, view.get(a=1, b=2))
+        self.assertEqual(mock_rest_response.ok.return_value, view._get(a=1, b=2))
         view.request_template.assert_called_with('user', 'application', {'a': 1, 'b': 2})
         view._make_request.assert_called_with(view.request_template.return_value)
 
@@ -139,7 +139,7 @@ class TestStufRestView(TestCase):
 
         # Error response
         view._make_request.return_value.raise_for_status.side_effect = HTTPError
-        self.assertEqual(view._error_response.return_value, view.get(a=1, b=2))
+        self.assertEqual(view._error_response.return_value, view._get(a=1, b=2))
         mock_response.assert_called_with(view._make_request.return_value.text)
         view._error_response.assert_called_with(mock_response.return_value)
 
@@ -148,10 +148,24 @@ class TestStufRestView(TestCase):
         view.response_template.return_value.get_answer_object.side_effect = NoStufAnswerException
         view._not_found_response = MagicMock()
 
-        self.assertEqual(mock_rest_response.not_found(), view.get(a=1, b=2))
+        self.assertEqual(mock_rest_response.not_found(), view._get(a=1, b=2))
 
         # 400 Bad Request
         mock_request_template.return_value.validate.return_value = {'error': 'any error', 'code': 'any code'}
         view._bad_request_response = MagicMock()
-        self.assertEqual(mock_rest_response.bad_request.return_value, view.get(a=1, b=2))
+        self.assertEqual(mock_rest_response.bad_request.return_value, view._get(a=1, b=2))
         mock_rest_response.bad_request.assert_called_with(error='any error', code='any code')
+
+    @patch("gobstuf.rest.brp.base_view.RESTResponse")
+    def test_get_internal_server_error(self, mock_rest_response):
+        view = StufRestView()
+        view._get = MagicMock()
+
+        # Regular response
+        result = view.get(any='thing')
+        self.assertEqual(result, view._get.return_value)
+
+        # Request failed for an unknown reason
+        view._get.side_effect = Exception
+        result = view.get(any='thing')
+        self.assertEqual(result, mock_rest_response.internal_server_error.return_value)
