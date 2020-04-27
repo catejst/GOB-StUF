@@ -7,7 +7,7 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
     object_elm = 'BG:object'
 
     # Response parameters, Fixed class variable for now
-    inclusiefoverledenpersonen = False
+    inclusiefoverledenpersonen = True
 
     mapping = {
         'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding, 'BG:geslachtsaanduiding'),
@@ -18,10 +18,14 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
             'geslachtsnaam': 'BG:geslachtsnaam',
             'voorvoegsel': 'BG:voorvoegselGeslachtsnaam',
         },
-        'leeftijd': (MKSConverter.as_leeftijd, 'BG:geboortedatum'),
+        'leeftijd': (MKSConverter.as_leeftijd, 'BG:geboortedatum',
+                                               'BG:geboortedatum@StUF:indOnvolledigeDatum',
+                                               'BG:overlijdensdatum'),
         'burgerservicenummer': 'BG:inp.bsn',
         'geboorte': {
-            'datum': (MKSConverter.as_datum_broken_down, 'BG:geboortedatum'),
+            'datum':
+                (MKSConverter.as_datum_broken_down, 'BG:geboortedatum',
+                                                    'BG:geboortedatum@StUF:indOnvolledigeDatum'),
         },
         'verblijfplaats': {
             'functieAdres': '=woonadres',
@@ -42,17 +46,16 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
         'overlijdensdatum': 'BG:overlijdensdatum'
     }
 
-    def get_links(self):
+    def get_links(self, data):
         """
-        Return the HAL links that correspond with the mapped object
+        Return the HAL links that correspond with the mapped and filtered object (data)
 
-        :param mapped_object:
+        :param data: the mapped and filtered object
         :return:
         """
-        mapped_object = self.get_mapped_object()
         links = {}
         try:
-            nummeraanduiding = mapped_object['verblijfplaats']['identificatiecodeNummeraanduiding']
+            nummeraanduiding = data['verblijfplaats']['identificatiecodeNummeraanduiding']
         except KeyError:
             pass
         else:

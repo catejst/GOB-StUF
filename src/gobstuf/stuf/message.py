@@ -73,7 +73,27 @@ class StufMessage:
         :return:
         """
         elm = self.find_elm(elements_str, tree)
-        return None if elm is None else elm.text
+        if elm is not None:
+            return elm.text
+
+    def get_elm_attr(self, elements_str: str, element_attr: str, tree=None):
+        """Get the attribute value for element_attr
+
+        Attribute names can be prefixed by a namespace
+
+        :param elements_str: the path to the element relative to tree
+        :param element_attr: the name of the attribute
+        :param tree: defaults to the message root
+        :return:
+        """
+        elm = self.find_elm(elements_str, tree)
+        if elm is not None:
+            if ':' in element_attr:
+                # namespace attribute
+                # example StUF:attr => {http://www.egem.nl/StUF/StUF0301}attr
+                ns, attr = element_attr.split(':')
+                element_attr = '{%s}%s' % (self.namespaces.get(ns, ''), attr)
+            return elm.get(element_attr)
 
     def to_string(self):
         return ET.tostring(self.tree, encoding='unicode')

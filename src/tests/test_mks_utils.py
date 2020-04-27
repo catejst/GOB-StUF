@@ -91,25 +91,28 @@ class TestMKSConverter(TestCase):
         self.assertEqual(MKSConverter.as_leeftijd(birthday), 35)
 
         # Jaar en maand van geboorte datum zijn bekend
-        birthday = "19830500"
+        birthday = "19830515"
         mock_today.return_value = datetime.date(2019, 5, 31)
-        self.assertEqual(MKSConverter.as_leeftijd(birthday), None)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, ind_onvolledige_datum='D'), None)
         mock_today.return_value = datetime.date(2019, 6, 1)
-        self.assertEqual(MKSConverter.as_leeftijd(birthday), 36)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, ind_onvolledige_datum='D'), 36)
         mock_today.return_value = datetime.date(2019, 4, 30)
-        self.assertEqual(MKSConverter.as_leeftijd(birthday), 35)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, ind_onvolledige_datum='D'), 35)
 
         # Alleen jaar van geboorte datum is bekend
-        birthday = "19830000"
+        birthday = "19830515"
         mock_today.return_value = datetime.date(2019, 5, 31)
-        self.assertEqual(MKSConverter.as_leeftijd(birthday), None)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, ind_onvolledige_datum='M'), None)
 
         # Persoon is overleden
         birthday = "19830526"
         mock_today.return_value = datetime.date(2019, 5, 26)
-        self.assertEqual(MKSConverter.as_leeftijd(birthday, is_overleden=True), None)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, overlijdensdatum="20000101"), None)
 
         # Volledig onbekend geboortedatum
+        birthday = "19830526"
+        mock_today.return_value = datetime.date(2019, 5, 26)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, ind_onvolledige_datum='J2'), None)
         self.assertEqual(MKSConverter.as_leeftijd(None), None)
 
         # Geboren op 29 februari in een schrikkeljaar

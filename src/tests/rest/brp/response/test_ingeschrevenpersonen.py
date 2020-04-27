@@ -17,6 +17,7 @@ class TestIngeschrevenpersonenStufResponse(TestCase):
         result = res.get_filtered_object(obj)
         self.assertEqual(result, obj)
 
+        res.inclusiefoverledenpersonen = False
         obj = {'any key': 'any value', 'overlijdensdatum': 'any datum'}
         result = res.get_filtered_object(obj)
         self.assertEqual(result, None)
@@ -27,24 +28,23 @@ class TestIngeschrevenpersonenStufResponse(TestCase):
 
     def test_get_links(self):
         res = IngeschrevenpersonenStufResponse(b'<xml></xml>')
-        res.get_mapped_object = MagicMock()
 
-        res.get_mapped_object.return_value = {}
-        self.assertEqual(res.get_links(), {})
+        data = {}
+        self.assertEqual(res.get_links(data), {})
 
-        res.get_mapped_object.return_value = {
+        data = {
             'verblijfplaats': {
                 'any attribute': 'any value'
             }
         }
-        self.assertEqual(res.get_links(), {})
+        self.assertEqual(res.get_links(data), {})
 
-        res.get_mapped_object.return_value = {
+        data = {
             'verblijfplaats': {
                 'identificatiecodeNummeraanduiding': 'any nummeraanduiding'
             }
         }
-        links = res.get_links()
+        links = res.get_links(data)
         self.assertEqual(links, {'verblijfplaatsNummeraanduiding': {'href': ANY}})
         href = links['verblijfplaatsNummeraanduiding']['href']
         self.assertTrue('any nummeraanduiding' in href)

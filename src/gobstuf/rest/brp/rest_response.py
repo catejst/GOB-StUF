@@ -65,11 +65,14 @@ class RESTResponse():
         :param data:
         :return:
         """
-        data['_links'] = {
-            'self': {
-                'href': request.url
+        data = {
+            '_links': {
+                'self': {
+                    'href': request.url
+                },
+                **(links or {})
             },
-            **(links or {})
+            **data
         }
         return data
 

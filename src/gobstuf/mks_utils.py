@@ -2,14 +2,93 @@
 MKS utility methods
 
 """
-import re
 import datetime
+from abc import ABC, abstractmethod
 
 from gobstuf.reference_data.code_resolver import CodeResolver
 
 
 def _today():
     return datetime.datetime.now().date()
+
+
+class Indication(ABC):
+
+    def __init__(self, id):
+        """
+        Register the id in uppercase
+        Resolve the id to get the corresponding description
+        :param id:
+        """
+        self.id = (id or "").upper()
+        self._description = self.indications.get(self.id)
+
+    @property
+    @abstractmethod
+    def indications(self):
+        pass  # pragma: no cover
+
+    @property
+    def description(self):
+        return self._description
+
+
+class Geslachtsaanduiding(Indication):
+    VROUW = 'V'
+    MAN = 'M'
+    ONBEKEND = 'O'
+
+    @property
+    def indications(self):
+        return {
+            self.VROUW: 'vrouw',
+            self.MAN: 'man',
+            self.ONBEKEND: 'onbekend'
+        }
+
+
+class AanduidingNaamgebruik(Indication):
+    EIGEN = 'E'
+    EIGEN_PARTNER = 'N'
+    PARTNER = 'P'
+    PARTNER_EIGEN = 'V'
+
+    @property
+    def indications(self):
+        return {
+            self.EIGEN: 'eigen',
+            self.EIGEN_PARTNER: 'eigen_partner',
+            self.PARTNER: 'partner',
+            self.PARTNER_EIGEN: 'partner_eigen'
+        }
+
+
+class IncompleteDateIndicator(Indication):
+    JAAR_MAAND_EN_DAG_ONBEKEND = 'J2'
+    MAAND_EN_DAG_ONBEKEND = 'M'
+    DAG_ONBEKEND = 'D'
+    DATUM_IS_VOLLEDIG = 'V'
+
+    @property
+    def indications(self):
+        return {
+            self.JAAR_MAAND_EN_DAG_ONBEKEND: 'Jaar, maand en dag onbekend',
+            self.MAAND_EN_DAG_ONBEKEND: 'Maand en dag onbekend',
+            self.DAG_ONBEKEND: 'Dag onbekend',
+            self.DATUM_IS_VOLLEDIG: 'Datum is volledig'
+        }
+
+    def is_jaar_bekend(self):
+        return self.id not in [self.JAAR_MAAND_EN_DAG_ONBEKEND]
+
+    def is_maand_bekend(self):
+        return self.id not in [self.JAAR_MAAND_EN_DAG_ONBEKEND, self.MAAND_EN_DAG_ONBEKEND]
+
+    def is_dag_bekend(self):
+        return self.id not in [self.JAAR_MAAND_EN_DAG_ONBEKEND, self.MAAND_EN_DAG_ONBEKEND, self.DAG_ONBEKEND]
+
+    def is_datum_volledig(self):
+        return all([self.is_jaar_bekend(), self.is_maand_bekend(), self.is_dag_bekend()])
 
 
 class MKSConverter:
@@ -48,33 +127,33 @@ class MKSConverter:
         return mks_datum[6:8] if cls._is_mks_datum(mks_datum) else None
 
     @classmethod
-    def as_datum_broken_down(cls, mks_datum):
+    def as_datum_broken_down(cls, mks_datum, ind_onvolledige_datum=None):
         if cls._is_mks_datum(mks_datum):
             return {
-                'datum': cls.as_datum(mks_datum),
-                'jaar': cls.as_jaar(mks_datum),
-                'maand': cls.as_maand(mks_datum),
-                'dag': cls.as_dag(mks_datum)
+                'datum': cls.as_datum(mks_datum, ind_onvolledige_datum),
+                'jaar': cls.as_jaar(mks_datum, ind_onvolledige_datum),
+                'maand': cls.as_maand(mks_datum, ind_onvolledige_datum),
+                'dag': cls.as_dag(mks_datum, ind_onvolledige_datum)
             }
 
     @classmethod
-    def as_datum(cls, mks_datum):
-        if cls._is_mks_datum(mks_datum):
+    def as_datum(cls, mks_datum, ind_onvolledige_datum=None):
+        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_datum_volledig():
             return f"{cls._yyyy(mks_datum)}-{cls._mm(mks_datum)}-{cls._dd(mks_datum)}"
 
     @classmethod
-    def as_jaar(cls, mks_datum):
-        if cls._is_mks_datum(mks_datum):
+    def as_jaar(cls, mks_datum, ind_onvolledige_datum=None):
+        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_jaar_bekend():
             return int(cls._yyyy(mks_datum))
 
     @classmethod
-    def as_maand(cls, mks_datum):
-        if cls._is_mks_datum(mks_datum):
+    def as_maand(cls, mks_datum, ind_onvolledige_datum=None):
+        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_maand_bekend():
             return int(cls._mm(mks_datum))
 
     @classmethod
-    def as_dag(cls, mks_datum):
-        if cls._is_mks_datum(mks_datum):
+    def as_dag(cls, mks_datum, ind_onvolledige_datum=None):
+        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_dag_bekend():
             return int(cls._dd(mks_datum))
 
     @classmethod
@@ -98,7 +177,7 @@ class MKSConverter:
             return now.year - birthday.year
 
     @classmethod
-    def as_leeftijd(cls, mks_geboortedatum, is_overleden=False):
+    def as_leeftijd(cls, mks_geboortedatum,  ind_onvolledige_datum=None, overlijdensdatum=None):
         """
         birthday string as age
 
@@ -109,38 +188,29 @@ class MKSConverter:
         :param is_overleden:
         :return:
         """
-        if not mks_geboortedatum or is_overleden:
+        if not mks_geboortedatum or overlijdensdatum:
             return None
 
-        unknown_day_pattern = r'(.*)(00)$'
-        day_is_unknown = re.match(unknown_day_pattern, mks_geboortedatum)
-        if day_is_unknown:
-            mks_geboortedatum = re.sub(unknown_day_pattern, r'\g<1>15', mks_geboortedatum)
+        incomplete_date_indicator = IncompleteDateIndicator(ind_onvolledige_datum)
+        if not (incomplete_date_indicator.is_jaar_bekend() and incomplete_date_indicator.is_maand_bekend()):
+            return None
 
         if cls._is_mks_datum(mks_geboortedatum):
             # Interpret all dates as dates in the current timezone
             now = _today()
             birthday = datetime.datetime.strptime(mks_geboortedatum, cls._MKS_DATUM_PARSE_FORMAT).date()
+            day_is_unknown = not incomplete_date_indicator.is_dag_bekend()
             if not (day_is_unknown and now.month == birthday.month):
                 return cls._get_age(now=now, birthday=birthday)
 
     @classmethod
     def as_geslachtsaanduiding(cls, mks_geslachtsaanduiding):
-        mks_geslachtsaanduiding = mks_geslachtsaanduiding or ""
-        return {
-            'v': 'vrouw',
-            'm': 'man'
-        }.get(mks_geslachtsaanduiding.lower(), 'onbekend')
+        return Geslachtsaanduiding(mks_geslachtsaanduiding).description or \
+               Geslachtsaanduiding(Geslachtsaanduiding.ONBEKEND).description
 
     @classmethod
     def as_aanduiding_naamgebruik(cls, mks_aanduiding_naamgebruik):
-        mks_aanduiding_naamgebruik = mks_aanduiding_naamgebruik or ""
-        return {
-            'e': 'eigen',
-            'n': 'eigen_partner',
-            'p': 'partner',
-            'v': 'partner_eigen'
-        }.get(mks_aanduiding_naamgebruik.lower())
+        return AanduidingNaamgebruik(mks_aanduiding_naamgebruik).description
 
     @classmethod
     def as_code(cls, length):
