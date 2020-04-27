@@ -25,6 +25,7 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
         },
         'verblijfplaats': {
             'functieAdres': '=woonadres',
+            'identificatiecodeNummeraanduiding': 'BG:verblijfsadres BG:aoa.identificatie',
             'huisletter': 'BG:verblijfsadres BG:aoa.huisletter',
             'huisnummer': 'BG:verblijfsadres BG:aoa.huisnummer',
             'huisnummertoevoeging': 'BG:verblijfsadres BG:aoa.huisnummertoevoeging',
@@ -40,6 +41,25 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
         },
         'overlijdensdatum': 'BG:overlijdensdatum'
     }
+
+    def get_links(self):
+        """
+        Return the HAL links that correspond with the mapped object
+
+        :param mapped_object:
+        :return:
+        """
+        mapped_object = self.get_mapped_object()
+        links = {}
+        try:
+            nummeraanduiding = mapped_object['verblijfplaats']['identificatiecodeNummeraanduiding']
+        except KeyError:
+            pass
+        else:
+            links['verblijfplaatsNummeraanduiding'] = {
+                'href': f"https://api.data.amsterdam.nl/gob/bag/nummeraanduidingen/{nummeraanduiding}/"
+            }
+        return links
 
     def get_filtered_object(self, mapped_object):
         """

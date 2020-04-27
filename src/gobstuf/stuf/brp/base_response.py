@@ -49,6 +49,16 @@ class StufMappedResponse(StufResponse):
 
         return self.stuf_message.find_elm(self.object_elm, answer_object)
 
+    def get_links(self):
+        """
+        Return the HAL links that correspond with the (self) mapped object
+
+        Default implementation is to return no links
+
+        :return:
+        """
+        return {}
+
     def get_answer_object(self):
         """
         The answer object is created from the StUF response

@@ -58,6 +58,10 @@ class StufMappedResponseTest(TestCase):
             'attr5': 'attr5 value'
         }
 
+    def test_get_links(self):
+        resp = StufMappedResponseImpl('msg')
+        self.assertEqual(resp.get_links(), {})
+
     def test_get_mapped_object(self):
         resp = StufMappedResponseImpl('msg')
         resp.get_object_elm = MagicMock()

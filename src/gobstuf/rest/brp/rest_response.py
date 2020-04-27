@@ -58,25 +58,30 @@ class RESTResponse():
                                   **kwargs)
 
     @classmethod
-    def _hal(cls, data):
+    def _hal(cls, data, links=None):
         """
         Add Hypertext Application Language links to the given data
 
         :param data:
         :return:
         """
-        data['_links'] = {'self': {'href': request.url}}
+        data['_links'] = {
+            'self': {
+                'href': request.url
+            },
+            **(links or {})
+        }
         return data
 
     @classmethod
-    def ok(cls, data):
+    def ok(cls, data, links=None):
         """
         An OK response returns the data in HAL JSON format
 
         :param data:
         :return:
         """
-        hal_data = cls._hal(data)
+        hal_data = cls._hal(data, links)
         return cls._json_response(data=hal_data,
                                   content_type='application/hal+json',
                                   status=http_status.HTTP_200_OK)

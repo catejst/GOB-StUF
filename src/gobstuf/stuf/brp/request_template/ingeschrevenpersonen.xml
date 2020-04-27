@@ -43,6 +43,7 @@
                     <BG:geboortedatum xsi:nil="true"/>
                     <BG:overlijdensdatum xsi:nil="true"/>
                     <BG:verblijfsadres>
+                        <BG:aoa.identificatie xsi:nil="true"/>
                         <BG:wpl.woonplaatsNaam xsi:nil="true"/>
                         <BG:gor.straatnaam xsi:nil="true"/>
                         <BG:aoa.postcode xsi:nil="true"/>
