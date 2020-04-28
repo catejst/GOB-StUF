@@ -49,6 +49,17 @@ class StufMappedResponse(StufResponse):
 
         return self.stuf_message.find_elm(self.object_elm, answer_object)
 
+    def get_links(self, data):
+        """
+        Return the HAL links that correspond with the (self) mapped object
+
+        Default implementation is to return no links
+
+        :param data: the mapped and filtered object
+        :return:
+        """
+        return {}
+
     def get_answer_object(self):
         """
         The answer object is created from the StUF response
@@ -117,22 +128,27 @@ class StufMappedResponse(StufResponse):
         obj = obj or self.get_object_elm()
         mapping = mapping or self.mapping
 
-        result = {}
-        for k, v in mapping.items():
-            if isinstance(v, dict):
-                # the values are resolved at a nested level by recursively calling this method
-                # Example: 'naam': {'voornamen': '<attribute>', 'geslachtsnaam': '<attribute>'}
-                result[k] = self.get_mapped_object(obj, mapping[k])
-            elif isinstance(v, tuple):
-                # The value is resolved by a function call with the attribute value as a parameter
-                # Example: 'naamlengte': (len, '<attribute>')
-                # will result in 'naamlengte': len(<attribute value>)
-                method, attribute = v
-                result[k] = method(self.stuf_message.get_elm_value(attribute, obj))
-            else:
-                # Plain attribute value
-                result[k] = self.stuf_message.get_elm_value(v, obj)
-        return result
+        if isinstance(mapping, dict):
+            # the values are resolved at a nested level by recursively calling this method
+            # Example: 'naam': {'voornamen': '<attribute>', 'geslachtsnaam': '<attribute>'}
+            return {k: self.get_mapped_object(obj, v) for k, v in mapping.items()}
+        if isinstance(mapping, tuple):
+            # The value is resolved by a function call with the attribute value(s) as parameter(s)
+            # Example: 'naamlengte': (len, '<attribute>')
+            # will result in 'naamlengte': len(<attribute value>)
+            method, *mappings = mapping
+            attributes = [self.get_mapped_object(obj, v) for v in mappings]
+            return method(*attributes)
+        elif mapping and mapping[0] == '=':
+            # Literal value, eg: =value results in value
+            return mapping[1:]
+        elif mapping and '@' in mapping:
+            # Element attribute value, eg: element@attribute
+            mapping, attr = mapping.split('@')
+            return self.stuf_message.get_elm_attr(mapping, attr, obj)
+        else:
+            # Plain element value
+            return self.stuf_message.get_elm_value(mapping, obj)
 
     @property
     @abstractmethod

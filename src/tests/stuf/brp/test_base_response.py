@@ -26,7 +26,9 @@ class StufMappedResponseImpl(StufMappedResponse):
             'attr3a': 'XML PATH C - a',
             'attr3b': 'XML PATH C - b'
         },
-        'attr4': (len, 'XML PATH D')
+        'attr4': (len, 'XML PATH D'),
+        'attr5': '=attr5 value',
+        'attr6': 'XML PATH E@ATTR'
     }
 
 
@@ -53,13 +55,20 @@ class StufMappedResponseTest(TestCase):
                 'attr3a': resp.stuf_message.get_elm_value(resp.mapping['attr3']['attr3a']),
                 'attr3b': resp.stuf_message.get_elm_value(resp.mapping['attr3']['attr3b']),
             },
-            'attr4': len(resp.stuf_message.get_elm_value(resp.mapping['attr4'][1]))
+            'attr4': len(resp.stuf_message.get_elm_value(resp.mapping['attr4'][1])),
+            'attr5': 'attr5 value',
+            'attr6': resp.stuf_message.get_elm_attr(resp.mapping['attr6'], 'ATTR')
         }
+
+    def test_get_links(self):
+        resp = StufMappedResponseImpl('msg')
+        self.assertEqual(resp.get_links({'any': 'data'}), {})
 
     def test_get_mapped_object(self):
         resp = StufMappedResponseImpl('msg')
         resp.get_object_elm = MagicMock()
         resp.stuf_message.get_elm_value = lambda a, o=None: f"value {a}"
+        resp.stuf_message.get_elm_attr = lambda a, attr, o=None: f"attr {attr}"
 
         result = resp.get_mapped_object()
         self.assertEqual(result, self._get_expected_mapped_result(resp))

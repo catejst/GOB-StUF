@@ -125,3 +125,44 @@ class StufMessageTest(TestCase):
         mock_parsestr.assert_called_with(mock_et.tostring.return_value)
         mock_et.tostring.assert_called_with(message.tree)
         self.assertEqual('A\nB\nC', res)
+
+class TestXML(TestCase):
+
+    def test_get_elm_attr(self):
+        msg = '''
+<root xmlns:StUF="http://www.egem.nl/StUF/StUF0301">
+  <elm1 attr="attr">value</elm1>
+  <elm2>
+    <elm2sub dummy="dummy value" StUF:attr="ns2 attr">sub value</elm2sub>
+  </elm2>
+</root>        
+'''
+        stuf = StufMessage(msg)
+
+        # Get a root element
+        e = stuf.get_elm_value('elm1')
+        self.assertEqual(e, 'value')
+
+        # Get an element at a sub level
+        e = stuf.get_elm_value('elm2 elm2sub')
+        self.assertEqual(e, 'sub value')
+
+        # Get a root element that does not exist
+        e = stuf.get_elm_value('unknown')
+        self.assertEqual(e, None)
+
+        # Get an attribute
+        e = stuf.get_elm_attr('elm1', 'attr')
+        self.assertEqual(e, 'attr')
+
+        # Get an attribute at a sub level
+        e = stuf.get_elm_attr('elm2 elm2sub', 'dummy')
+        self.assertEqual(e, 'dummy value')
+
+        # Get a namespace attribute
+        e = stuf.get_elm_attr('elm2 elm2sub', 'StUF:attr')
+        self.assertEqual(e, 'ns2 attr')
+
+        # Get an attribute that does not exist
+        e = stuf.get_elm_attr('elm1', 'unkown')
+        self.assertEqual(e, None)

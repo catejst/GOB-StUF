@@ -42,6 +42,19 @@
                     <BG:geslachtsaanduiding xsi:nil="true"/>
                     <BG:geboortedatum xsi:nil="true"/>
                     <BG:overlijdensdatum xsi:nil="true"/>
+                    <BG:verblijfsadres>
+                        <BG:aoa.identificatie xsi:nil="true"/>
+                        <BG:wpl.woonplaatsNaam xsi:nil="true"/>
+                        <BG:gor.straatnaam xsi:nil="true"/>
+                        <BG:aoa.postcode xsi:nil="true"/>
+                        <BG:aoa.huisnummer xsi:nil="true"/>
+                        <BG:aoa.huisletter xsi:nil="true"/>
+                        <BG:aoa.huisnummertoevoeging xsi:nil="true"/>
+                        <BG:inp.locatiebeschrijving xsi:nil="true"/>
+                        <BG:begindatumVerblijf xsi:nil="true"/>
+                    </BG:verblijfsadres>
+                    <BG:inp.gemeenteVanInschrijving xsi:nil="true"/>
+                    <BG:inp.datumInschrijving xsi:nil="true"/>
                 </BG:object>
             </BG:scope>
         </BG:npsLv01>

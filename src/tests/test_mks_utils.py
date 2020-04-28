@@ -31,6 +31,14 @@ class TestMKSConverter(TestCase):
         self.assertEqual(MKSConverter.as_datum("20200422"), "2020-04-22")
         self.assertEqual(MKSConverter.as_datum("202004221"), None)
 
+    def test_as_datum_broken_down(self):
+        self.assertEqual(MKSConverter.as_datum_broken_down("20200422"), {
+            'datum': '2020-04-22',
+            'jaar': 2020,
+            'maand': 4,
+            'dag': 22})
+        self.assertEqual(MKSConverter.as_datum_broken_down("202004221"), None)
+
     def test_as_jaar(self):
         self.assertEqual(MKSConverter.as_jaar("20200422"), 2020)
         self.assertEqual(MKSConverter.as_jaar("202004221"), None)
@@ -42,6 +50,22 @@ class TestMKSConverter(TestCase):
     def test_as_dag(self):
         self.assertEqual(MKSConverter.as_dag("20200422"), 22)
         self.assertEqual(MKSConverter.as_dag("202004221"), None)
+
+    def test_as_code(self):
+        for length in range(1, 5):
+            as_code = MKSConverter.as_code(length)
+            code = as_code("1")
+            self.assertEqual(len(code), length)
+
+    @patch('gobstuf.mks_utils.CodeResolver')
+    def test_get_gemeente_omschrijving(self, mock_code_resolver):
+        mock_code_resolver.get_gemeente.return_value = 'any omschrijving'
+        self.assertEqual(MKSConverter.get_gemeente_omschrijving("any gemeente"), 'any omschrijving')
+
+    @patch('gobstuf.mks_utils.CodeResolver')
+    def test_get_land_omschrijving(self, mock_code_resolver):
+        mock_code_resolver.get_land.return_value = 'any omschrijving'
+        self.assertEqual(MKSConverter.get_land_omschrijving("any land"), 'any omschrijving')
 
     def test_today(self):
         today = _today()
@@ -55,10 +79,72 @@ class TestMKSConverter(TestCase):
         self.assertEqual(MKSConverter.as_leeftijd("20190422"), 1)
         self.assertEqual(MKSConverter.as_leeftijd("20190421"), 1)
 
+        # https://github.com/VNG-Realisatie/Haal-Centraal-BRP-bevragen/blob/master/features/leeftijd_bepaling.feature
+
+        # Volledig geboortedatum
+        birthday = "19830526"
+        mock_today.return_value = datetime.date(2019, 5, 26)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 36)
+        mock_today.return_value = datetime.date(2019, 11, 30)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 36)
+        mock_today.return_value = datetime.date(2019, 1, 1)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 35)
+
+        # Jaar en maand van geboorte datum zijn bekend
+        birthday = "19830515"
+        mock_today.return_value = datetime.date(2019, 5, 31)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, ind_onvolledige_datum='D'), None)
+        mock_today.return_value = datetime.date(2019, 6, 1)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, ind_onvolledige_datum='D'), 36)
+        mock_today.return_value = datetime.date(2019, 4, 30)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, ind_onvolledige_datum='D'), 35)
+
+        # Alleen jaar van geboorte datum is bekend
+        birthday = "19830515"
+        mock_today.return_value = datetime.date(2019, 5, 31)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, ind_onvolledige_datum='M'), None)
+
+        # Persoon is overleden
+        birthday = "19830526"
+        mock_today.return_value = datetime.date(2019, 5, 26)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, overlijdensdatum="20000101"), None)
+
+        # Volledig onbekend geboortedatum
+        birthday = "19830526"
+        mock_today.return_value = datetime.date(2019, 5, 26)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday, ind_onvolledige_datum='J2'), None)
+        self.assertEqual(MKSConverter.as_leeftijd(None), None)
+
+        # Geboren op 29 februari in een schrikkeljaar
+        birthday = "19960229"
+        mock_today.return_value = datetime.date(2016, 2, 29)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 20)
+        mock_today.return_value = datetime.date(2017, 2, 28)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 20)
+        mock_today.return_value = datetime.date(2017, 3, 1)
+        self.assertEqual(MKSConverter.as_leeftijd(birthday), 21)
+
     def test_as_geslachtsaanduiding(self):
-        for a in ['v', 'V']:
-            self.assertEqual(MKSConverter.as_geslachtsaanduiding(a), 'vrouw')
-        for a in ['m', 'M']:
-            self.assertEqual(MKSConverter.as_geslachtsaanduiding(a), 'man')
-        for a in ['o', 'O', 'x', 'X', '', 'anything', None]:
+        valid = {
+            'v': 'vrouw',
+            'm': 'man',
+            'o': 'onbekend',
+        }
+        for code, expected_result in valid.items():
+            for aanduiding in [code.upper(), code.lower()]:
+                self.assertEqual(MKSConverter.as_geslachtsaanduiding(aanduiding), expected_result)
+        for a in ['x', 'X', '', 'anything', None]:
             self.assertEqual(MKSConverter.as_geslachtsaanduiding(a), 'onbekend')
+
+    def test_as_aanduiding_naamgebruik(self):
+        valid = {
+            'e': 'eigen',
+            'n': 'eigen_partner',
+            'p': 'partner',
+            'v': 'partner_eigen',
+        }
+        for code, expected_result in valid.items():
+            for aanduiding in [code.upper(), code.lower()]:
+                self.assertEqual(MKSConverter.as_aanduiding_naamgebruik(aanduiding), expected_result)
+        for aanduiding in ['x', 'X', '', 'anything', None]:
+            self.assertIsNone(MKSConverter.as_aanduiding_naamgebruik(aanduiding))

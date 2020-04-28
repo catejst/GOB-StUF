@@ -1,6 +1,5 @@
-import json
 from flask.views import MethodView
-from flask import request, abort, Response, jsonify
+from flask import request, abort, Response
 from requests.exceptions import HTTPError
 from abc import abstractmethod
 
@@ -8,6 +7,7 @@ from gobstuf.certrequest import cert_post
 from gobstuf.stuf.brp.base_request import StufRequest
 from gobstuf.stuf.exception import NoStufAnswerException
 from gobstuf.stuf.brp.error_response import StufErrorResponse
+from gobstuf.rest.brp.rest_response import RESTResponse
 from gobstuf.config import ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH
 
 
@@ -43,6 +43,13 @@ class StufRestView(MethodView):
     decorators = [headers_required_decorator([MKS_USER_HEADER, MKS_APPLICATION_HEADER])]
 
     def get(self, **kwargs):
+        try:
+            return self._get(**kwargs)
+        except Exception as e:
+            print(f"ERROR: Request failed: {str(e)}")
+            return RESTResponse.internal_server_error()
+
+    def _get(self, **kwargs):
         """kwargs contains the URL parameters, for example {'bsn': xxxx'} when the requested resource is
         /brp/ingeschrevenpersonen/<bsn>
 
@@ -58,7 +65,7 @@ class StufRestView(MethodView):
         )
         errors = request_template.validate(kwargs)
         if errors:
-            return self._bad_request_response(**errors)
+            return RESTResponse.bad_request(**errors)
 
         response = self._make_request(request_template)
 
@@ -73,10 +80,12 @@ class StufRestView(MethodView):
         response_obj = self.response_template(response.text)
 
         try:
-            return self._json_response(response_obj.get_answer_object())
+            data = response_obj.get_answer_object()
         except NoStufAnswerException:
             # Return 404, answer section is empty
-            return self._not_found_response(**kwargs)
+            return RESTResponse.not_found(detail=self.get_not_found_message(**kwargs))
+        else:
+            return RESTResponse.ok(data, response_obj.get_links(data))
 
     def _make_request(self, request_template: StufRequest):
         """Makes the MKS request
@@ -92,17 +101,6 @@ class StufRestView(MethodView):
 
         return cert_post(url, data=request_template.to_string(), headers=soap_headers)
 
-    def _json_response(self, data: dict, status_code: int = 200):
-        """Builds an HAL JSON formatted Flask response object.
-
-        :param data:
-        :param status_code:
-        :return:
-        """
-        data['_links'] = {'self': {'href': request.url}}
-
-        return Response(response=json.dumps(data), content_type='application/hal+json'), status_code
-
     def _error_response(self, response_obj: StufErrorResponse):
         """Builds the error response based on the error response received from MKS
 
@@ -113,45 +111,12 @@ class StufRestView(MethodView):
 
         if code == 'Fo02':
             # Invalid MKS APPLICATIE/GEBRUIKER. Raise 403
-            data = {
-                'status': 403,
-                'title': 'U bent niet geautoriseerd voor deze operatie.',
-            }
-            return jsonify(data), 403
+            return RESTResponse.forbidden()
 
         # Other unknown code
         print(f"MKS error {response_obj.get_error_code()}. Code {response_obj.get_error_string()}")
 
-        return self._bad_request_response(
-            title='Error occurred when requesting external system. See logs for more information.')
-
-    def _bad_request_response(self, **kwargs):
-        data = {
-            'invalid-params': [],
-            'type': 'https://docs.microsoft.com/en-us/dotnet/api/system.net.httpstatuscode?'
-                    '#System_Net_HttpStatusCode_BadRequest',
-            'title': '',
-            'status': 400,
-            'detail': '',
-            'instance': request.url,
-            "code": '',
-            **kwargs
-        }
-
-        return jsonify(data), 400
-
-    def _not_found_response(self, **kwargs):
-        data = {
-            'type': 'https://docs.microsoft.com/en-us/dotnet/api/system.net.httpstatuscode?'
-                    '#System_Net_HttpStatusCode_NotFound',
-            'title': 'Opgevraagde resource bestaat niet.',
-            'status': 404,
-            'detail': self.get_not_found_message(**kwargs),
-            'instance': request.url,
-            'code': 'notFound',
-        }
-
-        return jsonify(data), 404
+        return RESTResponse.bad_request()
 
     @property
     @abstractmethod

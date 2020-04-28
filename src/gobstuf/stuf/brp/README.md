@@ -17,6 +17,12 @@ value.
 property.
 - The paths in the ```replace_paths``` property are relative to the path as defined in the ```content_root_elm``` property.
 
+To request all possible MKS attributes use the following scope:
+```xml
+<BG:object StUF:entiteittype="NPS" StUF:scope="alles">
+</BG:object>
+```
+
 When a StufRequest object is converted to its string representation (for actual sending), the values for 'tijdstip_bericht'
 and 'referentienummer' are set automatically.
 The StufRequest base object contains the generic paths for the applicatie, gebruiker, tijdstip_bericht and referentienummer
