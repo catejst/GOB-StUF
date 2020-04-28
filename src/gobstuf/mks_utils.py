@@ -3,6 +3,7 @@ MKS utility methods
 
 """
 import datetime
+from calendar import isleap
 from abc import ABC, abstractmethod
 
 from gobstuf.reference_data.code_resolver import CodeResolver
@@ -78,17 +79,17 @@ class IncompleteDateIndicator(Indication):
             self.DATUM_IS_VOLLEDIG: 'Datum is volledig'
         }
 
-    def is_jaar_bekend(self):
+    def is_jaar_known(self):
         return self.id not in [self.JAAR_MAAND_EN_DAG_ONBEKEND]
 
-    def is_maand_bekend(self):
+    def is_maand_known(self):
         return self.id not in [self.JAAR_MAAND_EN_DAG_ONBEKEND, self.MAAND_EN_DAG_ONBEKEND]
 
-    def is_dag_bekend(self):
+    def is_dag_known(self):
         return self.id not in [self.JAAR_MAAND_EN_DAG_ONBEKEND, self.MAAND_EN_DAG_ONBEKEND, self.DAG_ONBEKEND]
 
-    def is_datum_volledig(self):
-        return all([self.is_jaar_bekend(), self.is_maand_bekend(), self.is_dag_bekend()])
+    def is_datum_complete(self):
+        return all([self.is_jaar_known(), self.is_maand_known(), self.is_dag_known()])
 
 
 class MKSConverter:
@@ -138,22 +139,22 @@ class MKSConverter:
 
     @classmethod
     def as_datum(cls, mks_datum, ind_onvolledige_datum=None):
-        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_datum_volledig():
+        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_datum_complete():
             return f"{cls._yyyy(mks_datum)}-{cls._mm(mks_datum)}-{cls._dd(mks_datum)}"
 
     @classmethod
     def as_jaar(cls, mks_datum, ind_onvolledige_datum=None):
-        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_jaar_bekend():
+        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_jaar_known():
             return int(cls._yyyy(mks_datum))
 
     @classmethod
     def as_maand(cls, mks_datum, ind_onvolledige_datum=None):
-        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_maand_bekend():
+        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_maand_known():
             return int(cls._mm(mks_datum))
 
     @classmethod
     def as_dag(cls, mks_datum, ind_onvolledige_datum=None):
-        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_dag_bekend():
+        if cls._is_mks_datum(mks_datum) and IncompleteDateIndicator(ind_onvolledige_datum).is_dag_known():
             return int(cls._dd(mks_datum))
 
     @classmethod
@@ -165,11 +166,12 @@ class MKSConverter:
         :param birthday:
         :return:
         """
-        try:
-            day = birthday.replace(year=now.year)
-        except ValueError:
-            # Fails in leap year, set day to first of next month
+        if birthday.month == 2 and birthday.day == 29 and not isleap(now.year):
+            # Born on 29 february (leap year)
+            # If the current year is not a leap year then use March 1 as birthdate for age calculation
             day = birthday.replace(year=now.year, month=birthday.month + 1, day=1)
+        else:
+            day = birthday.replace(year=now.year)
 
         if day > now:
             return now.year - birthday.year - 1
@@ -192,15 +194,17 @@ class MKSConverter:
             return None
 
         incomplete_date_indicator = IncompleteDateIndicator(ind_onvolledige_datum)
-        if not (incomplete_date_indicator.is_jaar_bekend() and incomplete_date_indicator.is_maand_bekend()):
+        if not (incomplete_date_indicator.is_jaar_known() and incomplete_date_indicator.is_maand_known()):
+            # jaar and maand are mandatory to calculate age
             return None
 
         if cls._is_mks_datum(mks_geboortedatum):
             # Interpret all dates as dates in the current timezone
             now = _today()
             birthday = datetime.datetime.strptime(mks_geboortedatum, cls._MKS_DATUM_PARSE_FORMAT).date()
-            day_is_unknown = not incomplete_date_indicator.is_dag_bekend()
-            if not (day_is_unknown and now.month == birthday.month):
+            if incomplete_date_indicator.is_dag_known() or now.month != birthday.month:
+                # The dag is mandatory. Unless the current month is unequal to the birthday month
+                # In the latter case the age can be calculated without knowing the exact birthday dag
                 return cls._get_age(now=now, birthday=birthday)
 
     @classmethod
