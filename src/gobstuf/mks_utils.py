@@ -224,7 +224,8 @@ class MKSConverter:
         :return:
         """
         def as_code(mks_code):
-            return mks_code.zfill(length)
+            if mks_code is not None:
+                return mks_code.zfill(length)
         return as_code
 
     @classmethod

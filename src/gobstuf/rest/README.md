@@ -44,3 +44,9 @@ An example that uses the Haal-Centraal-API is:
 ```
 curl -H "x-api-key: <api key>" https://www.haalcentraal.nl/haalcentraal/api/brp/ingeschrevenpersonen/999993847
 ```
+
+# Differences with the Haal-Centraal BRP API
+
+If any differences exist between this REST API and the Haal-Centraal BRP API the following procedure will be followed:
+
+![Haal-Centraal conformity](/assets/when_diffs_found.png "Haal-Centraal BRP API conformity")

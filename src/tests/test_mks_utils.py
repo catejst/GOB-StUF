@@ -57,6 +57,9 @@ class TestMKSConverter(TestCase):
             code = as_code("1")
             self.assertEqual(len(code), length)
 
+        as_code = MKSConverter.as_code(4)
+        self.assertIsNone(as_code(None))
+
     @patch('gobstuf.mks_utils.CodeResolver')
     def test_get_gemeente_omschrijving(self, mock_code_resolver):
         mock_code_resolver.get_gemeente.return_value = 'any omschrijving'
