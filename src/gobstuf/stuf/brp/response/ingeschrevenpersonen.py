@@ -35,7 +35,8 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
             },
             'woonadres': {
                 'identificatiecodeNummeraanduiding':
-                    'BG:inp.verblijftIn BG:gerelateerde StUF:extraElementen StUF:extraElement',
+                    'BG:inp.verblijftIn BG:gerelateerde StUF:extraElementen' +
+                    '!.//StUF:extraElement[@naam="identificatieNummerAanduiding"]',
                 'identificatiecodeAdresseerbaarObject': 'BG:verblijfsadres BG:aoa.identificatie',
                 'huisletter': 'BG:verblijfsadres BG:aoa.huisletter',
                 'huisnummer': 'BG:verblijfsadres BG:aoa.huisnummer',
