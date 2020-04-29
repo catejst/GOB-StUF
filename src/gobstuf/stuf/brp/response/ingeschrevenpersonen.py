@@ -28,19 +28,32 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
                                                     'BG:geboortedatum@StUF:indOnvolledigeDatum'),
         },
         'verblijfplaats': {
-            'functieAdres': '=woonadres',
-            'identificatiecodeNummeraanduiding': 'BG:verblijfsadres BG:aoa.identificatie',
-            'huisletter': 'BG:verblijfsadres BG:aoa.huisletter',
-            'huisnummer': 'BG:verblijfsadres BG:aoa.huisnummer',
-            'huisnummertoevoeging': 'BG:verblijfsadres BG:aoa.huisnummertoevoeging',
-            'postcode': 'BG:verblijfsadres BG:aoa.postcode',
-            'woonplaatsnaam': 'BG:verblijfsadres BG:wpl.woonplaatsNaam',
-            'straatnaam': 'BG:verblijfsadres BG:gor.straatnaam',
-            'datumAanvangAdreshouding': (MKSConverter.as_datum_broken_down, 'BG:verblijfsadres BG:begindatumVerblijf'),
             'datumInschrijvingInGemeente': (MKSConverter.as_datum_broken_down, 'BG:inp.datumInschrijving'),
             'gemeenteVanInschrijving': {
                 'code': (MKSConverter.as_code(4), 'BG:inp.gemeenteVanInschrijving'),
                 'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.gemeenteVanInschrijving')
+            },
+            'woonadres': {
+                'identificatiecodeNummeraanduiding':
+                    'BG:inp.verblijftIn BG:gerelateerde StUF:extraElementen StUF:extraElement',
+                'identificatiecodeAdresseerbaarObject': 'BG:verblijfsadres BG:aoa.identificatie',
+                'huisletter': 'BG:verblijfsadres BG:aoa.huisletter',
+                'huisnummer': 'BG:verblijfsadres BG:aoa.huisnummer',
+                'huisnummertoevoeging': 'BG:verblijfsadres BG:aoa.huisnummertoevoeging',
+                'postcode': 'BG:verblijfsadres BG:aoa.postcode',
+                'woonplaatsnaam': 'BG:verblijfsadres BG:wpl.woonplaatsNaam',
+                'straatnaam': 'BG:verblijfsadres BG:gor.straatnaam',
+                'datumAanvangAdreshouding':
+                    (MKSConverter.as_datum_broken_down, 'BG:verblijfsadres BG:begindatumVerblijf'),
+            },
+            'briefadres': {
+                'identificatiecodeAdresseerbaarObject': 'BG:sub.correspondentieAdres BG:aoa.identificatie',
+                'huisletter': 'BG:sub.correspondentieAdres BG:aoa.huisletter',
+                'huisnummer': 'BG:sub.correspondentieAdres BG:aoa.huisnummer',
+                'huisnummertoevoeging': 'BG:sub.correspondentieAdres BG:aoa.huisnummertoevoeging',
+                'postcode': 'BG:sub.correspondentieAdres BG:postcode',
+                'woonplaatsnaam': 'BG:sub.correspondentieAdres BG:wpl.woonplaatsNaam',
+                'straatnaam': 'BG:sub.correspondentieAdres BG:gor.straatnaam'
             },
         },
         'overlijdensdatum': 'BG:overlijdensdatum'
@@ -67,11 +80,28 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
     def get_filtered_object(self, mapped_object):
         """
         Filter the mapped object on overlijdensdatum
-
         Default is to not return overleden personen
+
+        Filter the mapped object on either woonadres or briefadres
+
         :param mapped_object: The mapped response object
         :return:
         """
+        # Set verblijfplaats: default use woonadres, fallback is briefadres
+        verblijfplaats = mapped_object['verblijfplaats']
+        for functie_adres in ['woonadres', 'briefadres']:
+            adres = verblijfplaats[functie_adres]
+            del verblijfplaats[functie_adres]
+            if not verblijfplaats.get('functieAdres') and any(adres.values()):
+                # Take the first adrestype that has any values
+                verblijfplaats = {
+                    'functieAdres': functie_adres,
+                    **adres,
+                    **verblijfplaats
+                }
+        mapped_object['verblijfplaats'] = verblijfplaats
+
+        # Use overlijdensdatum for filtering
         is_overleden = mapped_object.get('overlijdensdatum') is not None
         if is_overleden and not self.inclusiefoverledenpersonen:
             # Skip overleden personen, unless explicitly included
