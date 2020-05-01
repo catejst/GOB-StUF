@@ -142,6 +142,10 @@ class StufMappedResponse(StufResponse):
         elif mapping and mapping[0] == '=':
             # Literal value, eg: =value results in value
             return mapping[1:]
+        elif mapping and '!' in mapping:
+            # XPath value, eg !.//<element>...
+            mapping, path = mapping.split('!')
+            return self.stuf_message.get_elm_value_by_path(mapping, path, obj)
         elif mapping and '@' in mapping:
             # Element attribute value, eg: element@attribute
             mapping, attr = mapping.split('@')

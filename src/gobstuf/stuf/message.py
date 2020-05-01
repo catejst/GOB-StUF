@@ -76,6 +76,21 @@ class StufMessage:
         if elm is not None:
             return elm.text
 
+    def get_elm_value_by_path(self, elements_str: str, path: str, tree=None):
+        """
+        Get an element by its XPath path
+
+        :param path: XPath spec
+        :param tree: defaults to the message root
+        :return:
+        """
+        elm = self.find_elm(elements_str, tree)
+        if elm is not None:
+            # Find element using XPath expression
+            elm = elm.find(path, self.namespaces)
+            if elm is not None:
+                return elm.text
+
     def get_elm_attr(self, elements_str: str, element_attr: str, tree=None):
         """Get the attribute value for element_attr
 

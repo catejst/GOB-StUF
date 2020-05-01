@@ -135,6 +135,13 @@ class TestXML(TestCase):
   <elm2>
     <elm2sub dummy="dummy value" StUF:attr="ns2 attr">sub value</elm2sub>
   </elm2>
+  <elm3>
+    <elm3sub>
+      <sub x="1">sub1</sub>
+      <sub x="3">sub3</sub>
+      <sub x="2">sub2</sub>
+    </elm3sub>
+  </elm3>
 </root>        
 '''
         stuf = StufMessage(msg)
@@ -165,4 +172,10 @@ class TestXML(TestCase):
 
         # Get an attribute that does not exist
         e = stuf.get_elm_attr('elm1', 'unkown')
+        self.assertEqual(e, None)
+
+        e = stuf.get_elm_value_by_path("elm3", ".//elm3sub//sub[@x='3']")
+        self.assertEqual(e, 'sub3')
+
+        e = stuf.get_elm_value_by_path("elm3", ".//elm3sub//sub[@x='5']")
         self.assertEqual(e, None)

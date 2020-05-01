@@ -28,7 +28,8 @@ class StufMappedResponseImpl(StufMappedResponse):
         },
         'attr4': (len, 'XML PATH D'),
         'attr5': '=attr5 value',
-        'attr6': 'XML PATH E@ATTR'
+        'attr6': 'XML PATH E@ATTR',
+        'attr7': 'XML PATH F!XPATH EXPRESSION'
     }
 
 
@@ -57,8 +58,15 @@ class StufMappedResponseTest(TestCase):
             },
             'attr4': len(resp.stuf_message.get_elm_value(resp.mapping['attr4'][1])),
             'attr5': 'attr5 value',
-            'attr6': resp.stuf_message.get_elm_attr(resp.mapping['attr6'], 'ATTR')
+            'attr6': resp.stuf_message.get_elm_attr(resp.mapping['attr6'], 'ATTR'),
+            'attr7': 'xpath XPATH EXPRESSION'
         }
+
+    def _mock_stuf_message(self, resp):
+        resp.get_object_elm = MagicMock()
+        resp.stuf_message.get_elm_value = lambda a, o=None: f"value {a}"
+        resp.stuf_message.get_elm_attr = lambda a, attr, o=None: f"attr {attr}"
+        resp.stuf_message.get_elm_value_by_path = lambda a, path, o=None: f"xpath {path}"
 
     def test_get_links(self):
         resp = StufMappedResponseImpl('msg')
@@ -66,16 +74,14 @@ class StufMappedResponseTest(TestCase):
 
     def test_get_mapped_object(self):
         resp = StufMappedResponseImpl('msg')
-        resp.get_object_elm = MagicMock()
-        resp.stuf_message.get_elm_value = lambda a, o=None: f"value {a}"
-        resp.stuf_message.get_elm_attr = lambda a, attr, o=None: f"attr {attr}"
+        self._mock_stuf_message(resp)
 
         result = resp.get_mapped_object()
         self.assertEqual(result, self._get_expected_mapped_result(resp))
 
     def test_get_answer_object(self):
         resp = StufMappedResponseImpl('msg')
-        resp.get_object_elm = MagicMock()
+        self._mock_stuf_message(resp)
 
         result = resp.get_answer_object()
         self.assertEqual(result, self._get_expected_mapped_result(resp))
