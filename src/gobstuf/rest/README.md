@@ -32,7 +32,7 @@ More on the ```StufRequest``` and ```StufResponse``` objects [here](../stuf/brp/
 Returns person for supplied BSN.
 
 ```
-curl -H "MKS_APPLICATIE: <applicatie>" -H "MKS_GEBRUIKER: <gebruiker>" http://<API>/brp/ingeschrevenpersonen/<BSN>
+curl -H "MKS_APPLICATIE:<applicatie>" -H "MKS_GEBRUIKER:<gebruiker>" http(s)://<API>/brp/ingeschrevenpersonen/<BSN>
 ```
 
 The API returns data in the same format as the 

@@ -9,3 +9,4 @@
 htmlcov
 
 .env
+/src/e2etests/results/
