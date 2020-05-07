@@ -193,6 +193,25 @@ class TestXML(TestCase):
         stuf_message.set_elm_value(elm, 'value of new elm6')
 
         self.assertEqual('value of new elm6', stuf_message.get_elm_value(elm))
+        self.assertEqual("""<?xml version="1.0" ?>
+<root xmlns:StUF="http://www.egem.nl/StUF/StUF0301">
+	<elm1 attr="attr">value</elm1>
+	<elm2>
+		<elm2sub StUF:attr="ns2 attr" dummy="dummy value">sub value</elm2sub>
+	</elm2>
+	<elm3>
+		<elm3sub>
+			<sub x="1">sub1</sub>
+			<sub x="3">sub3</sub>
+			<sub x="2">sub2</sub>
+		</elm3sub>
+	</elm3>
+	<elm4>
+		<elm5>
+			<elm6>value of new elm6</elm6>
+		</elm5>
+	</elm4>
+</root>""", stuf_message.pretty_print())
 
         # Already exists. Original value should be returned
         stuf_message.create_elm('elm1')

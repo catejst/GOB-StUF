@@ -94,7 +94,8 @@ class StufMessage:
             ns, tag = create_elm.split(':')
             assert ns in self.namespaces, f"Namespace {ns} not defined"
 
-            return ET.SubElement(parent, f'{{{self.namespaces[ns]}}}{tag}')
+            # Add namespaced tag, of the format '{http://example.com/namespace-definition}tag'
+            return ET.SubElement(parent, '{%s}%s' % (self.namespaces[ns], tag))
         else:
             return ET.SubElement(parent, create_elm)
 
