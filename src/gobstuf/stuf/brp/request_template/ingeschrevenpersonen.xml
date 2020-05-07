@@ -28,7 +28,7 @@
                 <StUF:indicatorAantal>false</StUF:indicatorAantal>
             </BG:parameters>
             <BG:gelijk StUF:entiteittype="NPS">
-                <BG:inp.bsn>BSN</BG:inp.bsn>
+                <!-- Parameters are inserted here -->
             </BG:gelijk>
             <BG:scope>
                 <BG:object StUF:entiteittype="NPS" StUF:scope="alles">

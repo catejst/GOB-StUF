@@ -9,7 +9,7 @@ from gobstuf.stuf.brp.base_request import StufRequest
 class StufRequestImpl(StufRequest):
     template = 'template.xml'
     content_root_elm = 'A B C'
-    replace_paths = {
+    parameter_paths = {
         'attr1': 'PATH TO ATTR1',
         'attr2': 'PATH TO ATTR2',
     }
@@ -60,9 +60,16 @@ class StufRequestTest(TestCase):
     def test_set_element(self):
         req = StufRequestImpl('', '', {})
         req.stuf_message = MagicMock()
+        req.stuf_message.find_elm.return_value = True
 
         req.set_element('THE PATH', 'the value')
         req.stuf_message.set_elm_value.assert_called_with('A B C THE PATH', 'the value')
+        req.stuf_message.create_elm.assert_not_called()
+
+        # Assert element is created when it doesn't exist
+        req.stuf_message.find_elm.return_value = None
+        req.set_element('THE PATH', 'the value')
+        req.stuf_message.create_elm.assert_called_with('A B C THE PATH')
 
     def test_validate(self):
         # Default validation is to return no errors: None

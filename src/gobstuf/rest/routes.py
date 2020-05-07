@@ -1,5 +1,5 @@
-from gobstuf.rest.brp.views import IngeschrevenpersonenView
+from gobstuf.rest.brp.views import IngeschrevenpersonenBsnView
 
 REST_ROUTES = [
-    ('/brp/ingeschrevenpersonen/<bsn>', IngeschrevenpersonenView.as_view('brp_ingeschrevenpersonen')),
+    ('/brp/ingeschrevenpersonen/<bsn>', IngeschrevenpersonenBsnView.as_view('brp_ingeschrevenpersonen_bsn')),
 ]

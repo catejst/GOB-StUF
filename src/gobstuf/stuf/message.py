@@ -65,6 +65,39 @@ class StufMessage:
         elm = self.find_elm(elements_str, tree)
         elm.text = value
 
+    def create_elm(self, elements_str: str, tree=None):
+        """Creates an element when it doesn't exist yet and returns newly created element. If the element already
+        exists, the existing element is returned.
+
+        :param elements_str:
+        :param tree:
+        :return:
+        """
+        elm = self.find_elm(elements_str, tree)
+
+        if elm is not None:
+            # Already exists
+            return elm
+
+        elements = elements_str.split(' ')
+
+        if len(elements) == 1:
+            # Parent is tree
+            parent = tree or self.tree
+        else:
+            # Create parent
+            parent = self.create_elm(' '.join(elements[:-1]), tree)
+
+        create_elm = elements[-1]
+
+        if ':' in create_elm:
+            ns, tag = create_elm.split(':')
+            assert ns in self.namespaces, f"Namespace {ns} not defined"
+
+            return ET.SubElement(parent, f'{{{self.namespaces[ns]}}}{tag}')
+        else:
+            return ET.SubElement(parent, create_elm)
+
     def get_elm_value(self, elements_str: str, tree=None):
         """Get the value of the first element identified by elements_str
 

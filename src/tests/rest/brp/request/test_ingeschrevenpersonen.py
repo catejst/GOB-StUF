@@ -1,12 +1,12 @@
 from unittest import TestCase
 
-from gobstuf.stuf.brp.request.ingeschrevenpersonen import IngeschrevenpersonenStufRequest
+from gobstuf.stuf.brp.request.ingeschrevenpersonen import IngeschrevenpersonenBsnStufRequest
 
 
 class TestIngeschrevenpersonenStufRequest(TestCase):
 
     def test_validate(self):
-        req = IngeschrevenpersonenStufRequest("gebruiker", "applicatie", {'bsn': 'any bsn'})
+        req = IngeschrevenpersonenBsnStufRequest("gebruiker", "applicatie", {'bsn': 'any bsn'})
 
         for bsn in ['', '12345', '1234567']:
             result = req.validate({'bsn': bsn})

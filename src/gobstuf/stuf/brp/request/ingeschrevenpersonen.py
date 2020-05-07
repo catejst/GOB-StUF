@@ -1,14 +1,14 @@
 from gobstuf.stuf.brp.base_request import StufRequest
 
 
-class IngeschrevenpersonenStufRequest(StufRequest):
+class IngeschrevenpersonenBsnStufRequest(StufRequest):
     template = 'ingeschrevenpersonen.xml'
     content_root_elm = 'soapenv:Body BG:npsLv01'
     soap_action = 'http://www.egem.nl/StUF/sector/bg/0310/npsLv01Integraal'
 
     BSN_LENGTH = 9
 
-    replace_paths = {
+    parameter_paths = {
         'bsn': 'BG:gelijk BG:inp.bsn'
     }
 

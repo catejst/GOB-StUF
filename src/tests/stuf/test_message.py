@@ -126,10 +126,11 @@ class StufMessageTest(TestCase):
         mock_et.tostring.assert_called_with(message.tree)
         self.assertEqual('A\nB\nC', res)
 
+
 class TestXML(TestCase):
 
-    def test_get_elm_attr(self):
-        msg = '''
+    def setUp(self) -> None:
+        self.msg = '''
 <root xmlns:StUF="http://www.egem.nl/StUF/StUF0301">
   <elm1 attr="attr">value</elm1>
   <elm2>
@@ -142,9 +143,12 @@ class TestXML(TestCase):
       <sub x="2">sub2</sub>
     </elm3sub>
   </elm3>
-</root>        
+  <elm4 />
+</root>
 '''
-        stuf = StufMessage(msg)
+
+    def test_get_elm_attr(self):
+        stuf = StufMessage(self.msg)
 
         # Get a root element
         e = stuf.get_elm_value('elm1')
@@ -179,3 +183,22 @@ class TestXML(TestCase):
 
         e = stuf.get_elm_value_by_path("elm3", ".//elm3sub//sub[@x='5']")
         self.assertEqual(e, None)
+
+    def test_create_elm(self):
+        stuf_message = StufMessage(self.msg)
+
+        elm = 'elm4 elm5 elm6'
+
+        stuf_message.create_elm(elm)
+        stuf_message.set_elm_value(elm, 'value of new elm6')
+
+        self.assertEqual('value of new elm6', stuf_message.get_elm_value(elm))
+
+        # Already exists. Original value should be returned
+        stuf_message.create_elm('elm1')
+        self.assertEqual('value', stuf_message.get_elm_value('elm1'))
+
+        # Create element in root
+        stuf_message.create_elm('elm7')
+        stuf_message.set_elm_value('elm7', 'elm7value')
+        self.assertEqual('elm7value', stuf_message.get_elm_value('elm7'))
