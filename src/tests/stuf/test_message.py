@@ -144,6 +144,15 @@ class TestXML(TestCase):
     </elm3sub>
   </elm3>
   <elm4 />
+  <elm8>
+    <elm8sub>1</elm8sub> 
+    <elm8sub>2</elm8sub> 
+    <elm8sub>3</elm8sub> 
+  </elm8>
+  <elm8>
+    <elm8sub>4</elm8sub> 
+    <elm8sub>5</elm8sub> 
+  </elm8>
 </root>
 '''
 
@@ -211,6 +220,15 @@ class TestXML(TestCase):
 			<elm6>value of new elm6</elm6>
 		</elm5>
 	</elm4>
+	<elm8>
+		<elm8sub>1</elm8sub>
+		<elm8sub>2</elm8sub>
+		<elm8sub>3</elm8sub>
+	</elm8>
+	<elm8>
+		<elm8sub>4</elm8sub>
+		<elm8sub>5</elm8sub>
+	</elm8>
 </root>""", stuf_message.pretty_print())
 
         # Already exists. Original value should be returned
@@ -221,3 +239,26 @@ class TestXML(TestCase):
         stuf_message.create_elm('elm7')
         stuf_message.set_elm_value('elm7', 'elm7value')
         self.assertEqual('elm7value', stuf_message.get_elm_value('elm7'))
+
+    def test_find_all_elms(self):
+        stuf_message = StufMessage(self.msg)
+
+        self.assertEqual([], stuf_message.find_all_elms('elm1 elm2'))
+        self.assertEqual([], stuf_message.find_all_elms('nonexistent'))
+
+        # Triggers case where parent path is not found
+        self.assertEqual([], stuf_message.find_all_elms('non existent'))
+
+        self.assertEqual(3, len(stuf_message.find_all_elms('elm3 elm3sub sub')))
+        self.assertEqual([
+            'sub1',
+            'sub3',
+            'sub2',
+        ], [elm.text for elm in stuf_message.find_all_elms('elm3 elm3sub sub')])
+
+        # Only elements from first elm8 should be returned
+        self.assertEqual([
+            '1',
+            '2',
+            '3',
+        ], [elm.text for elm in stuf_message.find_all_elms('elm8 elm8sub')])

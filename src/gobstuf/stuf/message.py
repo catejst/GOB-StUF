@@ -54,6 +54,27 @@ class StufMessage:
         else:
             return elm
 
+    def find_all_elms(self, elements_str: str, tree=None):
+        """Returns all elements matching elements_str that are children from the first parent found.
+
+        If elements_str is 'a b c d', then the first element matching 'a b c' is found. Then all children d of this
+        element are returned.
+
+        :param elements_str:
+        :param tree:
+        :return:
+        """
+        elements = elements_str.split(' ')
+
+        if len(elements) > 1:
+            parent = self.find_elm(' '.join(elements[:-1]))
+        else:
+            parent = tree or self.tree
+
+        if parent is None:
+            return []
+        return parent.findall(elements[-1], self.namespaces)
+
     def set_elm_value(self, elements_str: str, value: str, tree=None):
         """Set the value of the first element identified by elements_str.
 
