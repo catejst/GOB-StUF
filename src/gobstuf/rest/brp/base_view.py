@@ -21,16 +21,13 @@ def headers_required_decorator(headers):
     :param headers:
     :return:
     """
-
     def headers_required(f):
         def decorator(*args, **kwargs):
             if not all([request.headers.get(h) for h in headers]):
                 return abort(Response(response='Missing required MKS headers', status=400))
 
             return f(*args, **kwargs)
-
         return decorator
-
     return headers_required
 
 
@@ -65,7 +62,15 @@ class StufRestView(MethodView):
         """
         return kwargs
 
-    def _validate(self, **kwargs):
+    def _validate(self, **kwargs) -> dict:
+        """Validates this request. Called before anything else in handling the request.
+
+        Returns the dictionary with errors, or an empty dictionary when no errors occurred.
+        Default behaviour is no validation.
+
+        :param kwargs:
+        :return:
+        """
         return {}
 
     def _get(self, **kwargs):
@@ -201,13 +206,25 @@ class StufRestFilterView(StufRestView):
         return {**kwargs, **self._get_query_parameters()}
 
     def _validate(self, **kwargs):
+        """Validates that a correct combination of query parameters is provided.
+
+        :param kwargs:
+        :return:
+        """
         try:
             self._request_template_parameters(**kwargs)
             return {}
         except self.InvalidQueryParametersException:
             return self._query_parameters_error()
 
-    def _query_parameters_error(self):
+    def _query_parameters_error(self) -> dict:
+        """Returns the error that is returned to the user when the combination of query parameters is not
+        according to specification.
+
+        Provides the possible valid parameter combinations in the error message.
+
+        :return:
+        """
         combinations = ' , '.join([combination
                                    for combination in [
                                        ' / '.join(parameters)
