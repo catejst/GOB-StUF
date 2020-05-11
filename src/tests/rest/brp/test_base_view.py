@@ -3,7 +3,8 @@ from unittest.mock import patch, MagicMock
 
 from gobstuf.rest.brp.base_view import (
     StufRestView, headers_required_decorator, MKS_USER_HEADER, MKS_APPLICATION_HEADER, HTTPError,
-    NoStufAnswerException
+    NoStufAnswerException,
+    StufRestFilterView
 )
 
 
@@ -157,6 +158,12 @@ class TestStufRestView(TestCase):
         self.assertEqual(mock_rest_response.bad_request.return_value, view._get(a=1, b=2))
         mock_rest_response.bad_request.assert_called_with(error='any error', code='any code')
 
+        # Test invalid request
+        view._validate = lambda **kwargs: {'some': 'error'}
+        kwargs = {'kw': 'args'}
+        self.assertEqual(mock_rest_response.bad_request.return_value, view.get(**kwargs))
+        mock_rest_response.bad_request.assert_called_with(some='error')
+
     @patch("gobstuf.rest.brp.base_view.RESTResponse")
     def test_get_internal_server_error(self, mock_rest_response):
         view = StufRestView()
@@ -170,3 +177,106 @@ class TestStufRestView(TestCase):
         view._get.side_effect = Exception
         result = view.get(any='thing')
         self.assertEqual(result, mock_rest_response.internal_server_error.return_value)
+
+
+class StufRestFilterViewImpl(StufRestFilterView):
+    name = 'stufrestfilterviewobjects'
+
+
+class TestStufRestFilterView(TestCase):
+
+    def test_request_template_parameters(self):
+        view = StufRestFilterViewImpl()
+        view._get_query_parameters = lambda: {'e': 'f'}
+        kwargs = {'a': 'b', 'c': 'd'}
+        self.assertEqual({
+            'a': 'b', 'c': 'd', 'e': 'f'
+        }, view._request_template_parameters(**kwargs))
+
+    def test_validate(self):
+        view = StufRestFilterViewImpl()
+
+        view._query_parameters_error = MagicMock()
+        view._get_query_parameters = MagicMock()
+        view.query_parameter_combinations = [
+            ('a', 'b', 'c'),
+            ('a', 'd'),
+        ]
+
+        # Test success
+        view._get_query_parameters.return_value = {'a': 1, 'd': 2}
+        self.assertEqual({}, view._validate())
+
+        view._get_query_parameters.return_value = {'a': 1, 'b': 2}
+        self.assertEqual({}, view._validate(c=3))
+
+        # Test error
+        view._get_query_parameters.side_effect = view.InvalidQueryParametersException
+        self.assertEqual(view._query_parameters_error.return_value, view._validate())
+
+    def test_query_parameters_error(self):
+        view = StufRestFilterViewImpl()
+        view.query_parameter_combinations = [
+            ('a', 'b'),
+            ('c', 'd'),
+            (),
+        ]
+
+        self.assertEqual({
+            'title': 'De opgegeven combinatie van parameters is niet correct',
+            'detail': 'De mogelijke combinaties zijn: a / b , c / d , no params',
+            'code': 'paramsRequired',
+        }, view._query_parameters_error())
+
+    @patch("gobstuf.rest.brp.base_view.RESTResponse")
+    def test_build_response(self, mock_rest_response):
+        view = StufRestFilterViewImpl()
+        response_obj = MagicMock()
+        response_obj.get_all_answer_objects = lambda: [{'object': 'A'}, {'object': 'B'}]
+
+        self.assertEqual(mock_rest_response.ok.return_value, view._build_response(response_obj))
+        mock_rest_response.ok.assert_called_with({
+            '_embedded': {
+                'stufrestfilterviewobjects': [
+                    {'object': 'A'},
+                    {'object': 'B'},
+                ]
+            }
+        }, {})
+
+    def test_get_not_found_message(self):
+        view = StufRestFilterViewImpl()
+
+    @patch("gobstuf.rest.brp.base_view.request")
+    def test_get_query_parameters(self, mock_request):
+        view = StufRestFilterViewImpl()
+
+        # Default case. All parameters present, return first match
+        mock_request.args = {
+            'a': 1,
+            'b': 2,
+            'c': 3,
+        }
+        view.query_parameter_combinations = [
+            ('a', 'b')
+        ]
+        self.assertEqual({'a': 1, 'b': 2}, view._get_query_parameters())
+
+        # Case with no parameters, allowed
+        view.query_parameter_combinations = [()]
+        mock_request.args = {}
+        self.assertEqual({}, view._get_query_parameters())
+
+        # Case with no parameters, not allowed
+        view.query_parameter_combinations = []
+
+        with self.assertRaises(view.InvalidQueryParametersException):
+            view._get_query_parameters()
+
+        # Case with invalid combination of parameters. B is missing
+        view.query_parameter_combinations = [('a', 'b')]
+        mock_request.args = {'a': 1}
+
+        with self.assertRaises(view.InvalidQueryParametersException):
+            view._get_query_parameters()
+

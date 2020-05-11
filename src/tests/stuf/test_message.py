@@ -126,10 +126,11 @@ class StufMessageTest(TestCase):
         mock_et.tostring.assert_called_with(message.tree)
         self.assertEqual('A\nB\nC', res)
 
+
 class TestXML(TestCase):
 
-    def test_get_elm_attr(self):
-        msg = '''
+    def setUp(self) -> None:
+        self.msg = '''
 <root xmlns:StUF="http://www.egem.nl/StUF/StUF0301">
   <elm1 attr="attr">value</elm1>
   <elm2>
@@ -142,9 +143,21 @@ class TestXML(TestCase):
       <sub x="2">sub2</sub>
     </elm3sub>
   </elm3>
-</root>        
+  <elm4 />
+  <elm8>
+    <elm8sub>1</elm8sub> 
+    <elm8sub>2</elm8sub> 
+    <elm8sub>3</elm8sub> 
+  </elm8>
+  <elm8>
+    <elm8sub>4</elm8sub> 
+    <elm8sub>5</elm8sub> 
+  </elm8>
+</root>
 '''
-        stuf = StufMessage(msg)
+
+    def test_get_elm_attr(self):
+        stuf = StufMessage(self.msg)
 
         # Get a root element
         e = stuf.get_elm_value('elm1')
@@ -179,3 +192,73 @@ class TestXML(TestCase):
 
         e = stuf.get_elm_value_by_path("elm3", ".//elm3sub//sub[@x='5']")
         self.assertEqual(e, None)
+
+    def test_create_elm(self):
+        stuf_message = StufMessage(self.msg)
+
+        elm = 'elm4 elm5 elm6'
+
+        stuf_message.create_elm(elm)
+        stuf_message.set_elm_value(elm, 'value of new elm6')
+
+        self.assertEqual('value of new elm6', stuf_message.get_elm_value(elm))
+        self.assertEqual("""<?xml version="1.0" ?>
+<root xmlns:StUF="http://www.egem.nl/StUF/StUF0301">
+	<elm1 attr="attr">value</elm1>
+	<elm2>
+		<elm2sub StUF:attr="ns2 attr" dummy="dummy value">sub value</elm2sub>
+	</elm2>
+	<elm3>
+		<elm3sub>
+			<sub x="1">sub1</sub>
+			<sub x="3">sub3</sub>
+			<sub x="2">sub2</sub>
+		</elm3sub>
+	</elm3>
+	<elm4>
+		<elm5>
+			<elm6>value of new elm6</elm6>
+		</elm5>
+	</elm4>
+	<elm8>
+		<elm8sub>1</elm8sub>
+		<elm8sub>2</elm8sub>
+		<elm8sub>3</elm8sub>
+	</elm8>
+	<elm8>
+		<elm8sub>4</elm8sub>
+		<elm8sub>5</elm8sub>
+	</elm8>
+</root>""", stuf_message.pretty_print())
+
+        # Already exists. Original value should be returned
+        stuf_message.create_elm('elm1')
+        self.assertEqual('value', stuf_message.get_elm_value('elm1'))
+
+        # Create element in root
+        stuf_message.create_elm('elm7')
+        stuf_message.set_elm_value('elm7', 'elm7value')
+        self.assertEqual('elm7value', stuf_message.get_elm_value('elm7'))
+
+    def test_find_all_elms(self):
+        stuf_message = StufMessage(self.msg)
+
+        self.assertEqual([], stuf_message.find_all_elms('elm1 elm2'))
+        self.assertEqual([], stuf_message.find_all_elms('nonexistent'))
+
+        # Triggers case where parent path is not found
+        self.assertEqual([], stuf_message.find_all_elms('non existent'))
+
+        self.assertEqual(3, len(stuf_message.find_all_elms('elm3 elm3sub sub')))
+        self.assertEqual([
+            'sub1',
+            'sub3',
+            'sub2',
+        ], [elm.text for elm in stuf_message.find_all_elms('elm3 elm3sub sub')])
+
+        # Only elements from first elm8 should be returned
+        self.assertEqual([
+            '1',
+            '2',
+            '3',
+        ], [elm.text for elm in stuf_message.find_all_elms('elm8 elm8sub')])

@@ -55,10 +55,10 @@ class StufRequest(ABC):
         :param values:
         :return:
         """
-        assert values.keys() == self.replace_paths.keys()  # Should never fail
+        assert values.keys() == self.parameter_paths.keys()  # Should never fail
 
         for key, value in values.items():
-            self.set_element(self.replace_paths[key], value)
+            self.set_element(self.parameter_paths[key], value)
 
     def _load(self):
         """Loads xml template file.
@@ -86,7 +86,16 @@ class StufRequest(ABC):
         return dt.strftime('%Y%m%d%H%M%S%f')[:17]
 
     def set_element(self, path: str, value: str):
+        """Sets element value. Creates element if it doesn't exist
+
+        :param path:
+        :param value:
+        :return:
+        """
         full_path = self.content_root_elm + " " + path
+
+        if self.stuf_message.find_elm(full_path) is None:
+            self.stuf_message.create_elm(full_path)
         self.stuf_message.set_elm_value(full_path, value)
 
     def to_string(self):
@@ -149,7 +158,7 @@ class StufRequest(ABC):
 
     @property
     @abstractmethod
-    def replace_paths(self) -> dict:
+    def parameter_paths(self) -> dict:
         """key -> path pairs, for example:
 
         {'bsn': 'BG:gelijk BG:inp.bsn'}

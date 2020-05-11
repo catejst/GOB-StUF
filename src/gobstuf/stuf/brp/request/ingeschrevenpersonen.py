@@ -1,14 +1,25 @@
+from abc import ABC
+
 from gobstuf.stuf.brp.base_request import StufRequest
 
 
-class IngeschrevenpersonenStufRequest(StufRequest):
+class IngeschrevenpersonenStufRequest(StufRequest, ABC):
     template = 'ingeschrevenpersonen.xml'
     content_root_elm = 'soapenv:Body BG:npsLv01'
     soap_action = 'http://www.egem.nl/StUF/sector/bg/0310/npsLv01Integraal'
 
+
+class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
+    parameter_paths = {
+        'verblijfplaats__postcode': 'BG:gelijk BG:verblijfsadres BG:aoa.postcode',
+        'verblijfplaats__huisnummer': 'BG:gelijk BG:verblijfsadres BG:aoa.huisnummer',
+    }
+
+
+class IngeschrevenpersonenBsnStufRequest(IngeschrevenpersonenStufRequest):
     BSN_LENGTH = 9
 
-    replace_paths = {
+    parameter_paths = {
         'bsn': 'BG:gelijk BG:inp.bsn'
     }
 

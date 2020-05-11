@@ -49,6 +49,15 @@ class StufMappedResponse(StufResponse):
 
         return self.stuf_message.find_elm(self.object_elm, answer_object)
 
+    def get_all_object_elms(self):
+        """Returns all objects from the response message.
+
+        Works like get_object_elm, but does not raise an Exception when there are no results.
+
+        :return:
+        """
+        return self.stuf_message.find_all_elms(self.answer_section + ' ' + self.object_elm)
+
     def get_links(self, data):
         """
         Return the HAL links that correspond with the (self) mapped object
@@ -67,6 +76,8 @@ class StufMappedResponse(StufResponse):
         The response is mapped on the response object
         and then filtered
 
+        If multiple answer objects are present, only the first item is returned.
+
         :return: the object to be returned as answer to the REST call
         :raises: NoStufAnswerException if the object is empty
         """
@@ -77,6 +88,20 @@ class StufMappedResponse(StufResponse):
             raise NoStufAnswerException()
 
         return answer_object
+
+    def get_all_answer_objects(self):
+        """
+        Returns all objects from the StUF response. Works like get_answer_object, but does not raise an Exception when
+        the response is empty.
+
+        :return:
+        """
+        result = []
+        for obj in self.get_all_object_elms():
+            mapped_object = self.get_mapped_object(obj)
+            answer_obj = self.get_filtered_object(mapped_object)
+            result.append(answer_obj)
+        return result
 
     def get_filtered_object(self, mapped_object):
         """
