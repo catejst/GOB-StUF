@@ -42,6 +42,9 @@ class StufRestView(MethodView):
     # Decorator makes sure the MKS headers are set
     decorators = [headers_required_decorator([MKS_USER_HEADER, MKS_APPLICATION_HEADER])]
 
+    # The key/value pairs in this dictionary will be set as properties on the response template object
+    response_template_properties = {}
+
     def get(self, **kwargs):
         errors = self._validate(**kwargs)
 
@@ -101,7 +104,7 @@ class StufRestView(MethodView):
             return self._error_response(response_obj)
 
         # Map MKS response back to REST response.
-        response_obj = self.response_template(response.text)
+        response_obj = self.response_template(response.text, **self.response_template_properties)
 
         return self._build_response(response_obj, **kwargs)
 

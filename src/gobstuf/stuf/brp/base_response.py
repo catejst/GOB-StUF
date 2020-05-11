@@ -16,12 +16,17 @@ class StufResponse(ABC):
         'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
     }
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str, **kwargs):
         """
 
         :param msg: The string representation of the XML StUF message
         """
         self.stuf_message = None
+
+        # Set kwargs as properties. For example inclusiefoverledenpersonen on the IngeschrevenpersonenStufResponse
+        # class
+        for k, v in kwargs.items():
+            self.__setattr__(k, v)
 
         self.load(msg)
 

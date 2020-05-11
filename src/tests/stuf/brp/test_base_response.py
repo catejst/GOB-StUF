@@ -8,12 +8,13 @@ from gobstuf.stuf.brp.base_response import StufResponse, StufMappedResponse, NoS
 class StufResponseTest(TestCase):
 
     def test_stuf_response(self, mock_stuf_message):
-        resp = StufResponse('msg')
+        resp = StufResponse('msg', kwarg1='value1')
 
         self.assertEqual(resp.stuf_message, mock_stuf_message())
         mock_stuf_message.assert_any_call('msg', resp.namespaces)
 
         self.assertEqual(mock_stuf_message().pretty_print(), resp.to_string())
+        self.assertEqual('value1', resp.kwarg1)
 
 
 class StufMappedResponseImpl(StufMappedResponse):

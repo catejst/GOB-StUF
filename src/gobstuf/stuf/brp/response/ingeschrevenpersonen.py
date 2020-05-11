@@ -6,7 +6,7 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
     answer_section = 'soapenv:Envelope soapenv:Body BG:npsLa01 BG:antwoord'
     object_elm = 'BG:object'
 
-    # Response parameters, Fixed class variable for now
+    # Response parameters. Defaults to True, can be overridden with response_template_kwargs
     inclusiefoverledenpersonen = True
 
     mapping = {
@@ -81,7 +81,7 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
     def get_filtered_object(self, mapped_object):
         """
         Filter the mapped object on overlijdensdatum
-        Default is to not return overleden personen
+        Overleden personen are returned based on the inclusiefoverledenpersonen property
 
         Filter the mapped object on either woonadres or briefadres
 
