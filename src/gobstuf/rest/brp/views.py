@@ -9,6 +9,9 @@ from gobstuf.stuf.brp.response.ingeschrevenpersonen import IngeschrevenpersonenS
 class IngeschrevenpersonenFilterView(StufRestFilterView):
     request_template = IngeschrevenpersonenFilterStufRequest
     response_template = IngeschrevenpersonenStufResponse
+    response_template_properties = {
+        'inclusiefoverledenpersonen': False,
+    }
     name = 'ingeschrevenpersonen'
 
     query_parameter_combinations = [

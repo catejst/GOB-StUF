@@ -3,12 +3,19 @@ from unittest.mock import patch, MagicMock
 
 from gobstuf.rest.brp.views import (
     IngeschrevenpersonenBsnView,
+    IngeschrevenpersonenFilterView,
     IngeschrevenpersonenStufResponse,
     IngeschrevenpersonenBsnStufRequest
 )
 
 
-class TestIngeschrevenpersonenView(TestCase):
+class TestIngeschrevernpersonenFilterView(TestCase):
+    def test_template_properties(self):
+        view = IngeschrevenpersonenFilterView()
+        self.assertEqual(False, view.response_template_properties['inclusiefoverledenpersonen'])
+
+
+class TestIngeschrevenpersonenBsnView(TestCase):
 
     @patch("gobstuf.rest.brp.views.StufRestView", MagicMock())
     def test_templates_set(self):
