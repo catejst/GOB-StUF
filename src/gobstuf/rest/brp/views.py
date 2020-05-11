@@ -1,6 +1,19 @@
-from gobstuf.rest.brp.base_view import StufRestView
-from gobstuf.stuf.brp.request.ingeschrevenpersonen import IngeschrevenpersonenBsnStufRequest
+from gobstuf.rest.brp.base_view import StufRestView, StufRestFilterView
+from gobstuf.stuf.brp.request.ingeschrevenpersonen import (
+    IngeschrevenpersonenBsnStufRequest,
+    IngeschrevenpersonenFilterStufRequest
+)
 from gobstuf.stuf.brp.response.ingeschrevenpersonen import IngeschrevenpersonenStufResponse
+
+
+class IngeschrevenpersonenFilterView(StufRestFilterView):
+    request_template = IngeschrevenpersonenFilterStufRequest
+    response_template = IngeschrevenpersonenStufResponse
+    name = 'ingeschrevenpersonen'
+
+    query_parameter_combinations = [
+        ('verblijfplaats__postcode', 'verblijfplaats__huisnummer'),
+    ]
 
 
 class IngeschrevenpersonenBsnView(StufRestView):

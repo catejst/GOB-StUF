@@ -48,6 +48,12 @@ class StufMappedResponseTest(TestCase):
         with self.assertRaises(NoStufAnswerException):
             resp.get_object_elm()
 
+    def test_get_all_object_elms(self):
+        resp = StufMappedResponseImpl('msg')
+        result = resp.get_all_object_elms()
+        self.assertEqual(resp.stuf_message.find_all_elms.return_value, result)
+        resp.stuf_message.find_all_elms.assert_called_with('ANSWER SECTION OBJECT')
+
     def _get_expected_mapped_result(self, resp):
         return {
             'attr1': resp.stuf_message.get_elm_value(resp.mapping['attr1']),
@@ -90,6 +96,16 @@ class StufMappedResponseTest(TestCase):
         resp.get_filtered_object.return_value = None
         with self.assertRaises(NoStufAnswerException):
             result = resp.get_answer_object()
+
+    def test_get_all_answer_objects(self):
+        resp = StufMappedResponseImpl('msg')
+        resp.get_all_object_elms = MagicMock(return_value=['object A', 'object B'])
+        resp.get_mapped_object = lambda x: 'mapped ' + x
+        resp.get_filtered_object = lambda x: 'filtered ' + x
+        self.assertEqual([
+            'filtered mapped object A',
+            'filtered mapped object B',
+        ], resp.get_all_answer_objects())
 
     def test_get_filtered_object(self):
         resp = StufMappedResponseImpl('msg')
