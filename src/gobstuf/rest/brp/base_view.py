@@ -45,8 +45,19 @@ class StufRestView(MethodView):
     # The key/value pairs in this dictionary will be set as properties on the response template object
     response_template_properties = {}
 
+    # Passed to the response template. Values are the default values.
+    functional_query_parameters = {
+        'expand': None,
+    }
+
+    # The options for the expand parameter, for example 'partners', 'ouders', ...
+    expand_options = []
+
     def get(self, **kwargs):
         errors = self._validate(**kwargs)
+
+        assert getattr(self, '_validate_called', False), \
+            f"Make sure to call super()._validate() from children of {self.__class__}"
 
         if errors:
             return RESTResponse.bad_request(**errors)
@@ -69,12 +80,34 @@ class StufRestView(MethodView):
         """Validates this request. Called before anything else in handling the request.
 
         Returns the dictionary with errors, or an empty dictionary when no errors occurred.
-        Default behaviour is no validation.
 
         :param kwargs:
         :return:
         """
+        # Control variable to make sure this method is called from child classes
+        self._validate_called = True
+
+        functional_params = self._get_functional_query_parameters()
+
+        """
+        Test validity of expand parameter.
+        If expand is set, expand should only contain values as defined in expand_options.
+        Expand can be a comma-separated list of options.
+        """
+        if functional_params['expand'] is not None and not (
+                isinstance(functional_params['expand'], str) and
+                all([expand in self.expand_options for expand in functional_params['expand'].split(',')])
+        ):
+            return {
+                'invalid-params': 'expand',
+                'title': 'De waarde van expand wordt niet geaccepteerd',
+                'detail': f'De mogelijke waarden zijn: {",".join(self.expand_options)}'
+            }
+
         return {}
+
+    def _get_functional_query_parameters(self):
+        return {k: request.args.get(k, v) for k, v in self.functional_query_parameters.items()}
 
     def _get(self, **kwargs):
         """kwargs contains the URL parameters, for example {'bsn': xxxx'} when the requested resource is
@@ -104,7 +137,9 @@ class StufRestView(MethodView):
             return self._error_response(response_obj)
 
         # Map MKS response back to REST response.
-        response_obj = self.response_template(response.text, **self.response_template_properties)
+        response_obj = self.response_template(response.text,
+                                              **self._get_functional_query_parameters(),
+                                              **self.response_template_properties)
 
         return self._build_response(response_obj, **kwargs)
 
@@ -214,6 +249,10 @@ class StufRestFilterView(StufRestView):
         :param kwargs:
         :return:
         """
+        errors = super()._validate(**kwargs)
+        if errors:
+            return errors
+
         try:
             self._request_template_parameters(**kwargs)
             return {}

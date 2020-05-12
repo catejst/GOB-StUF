@@ -6,7 +6,17 @@ from gobstuf.stuf.brp.request.ingeschrevenpersonen import (
 from gobstuf.stuf.brp.response.ingeschrevenpersonen import IngeschrevenpersonenStufResponse
 
 
-class IngeschrevenpersonenFilterView(StufRestFilterView):
+class IngeschrevenpersonenView:
+    """
+    Contains options that are applicable to all Ingeschrevenpersonen Views
+    Use as first parent class
+    """
+    expand_options = [
+        'partners'
+    ]
+
+
+class IngeschrevenpersonenFilterView(IngeschrevenpersonenView, StufRestFilterView):
     request_template = IngeschrevenpersonenFilterStufRequest
     response_template = IngeschrevenpersonenStufResponse
     response_template_properties = {
@@ -19,7 +29,7 @@ class IngeschrevenpersonenFilterView(StufRestFilterView):
     ]
 
 
-class IngeschrevenpersonenBsnView(StufRestView):
+class IngeschrevenpersonenBsnView(IngeschrevenpersonenView, StufRestView):
     request_template = IngeschrevenpersonenBsnStufRequest
     response_template = IngeschrevenpersonenStufResponse
 
