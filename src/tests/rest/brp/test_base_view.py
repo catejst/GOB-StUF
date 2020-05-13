@@ -69,6 +69,62 @@ class TestStufRestView(TestCase):
             set_decorator(MagicMock())()
             mock_abort.assert_called_once()
 
+    def test_validate_inheritance(self):
+        """StufRestView sets a control parameter when _validate is called, so it won't happen that a child class
+        forgets to call its parent's validate() method.
+
+        :return:
+        """
+        class StufRestViewNaughtyChild(StufRestView):
+
+            def _validate(self, **kwargs) -> dict:
+                return {}
+
+            @property
+            def request_template(self):
+                return ""
+
+            @property
+            def response_template(self):
+                return ""
+
+            def get_not_found_message(self, **kwargs):
+                return ""
+
+        class StufRestViewObedientChild(StufRestView):
+
+            def _validate(self, **kwargs) -> dict:
+                return super()._validate(**kwargs)
+
+            def _get(self, **kwargs):
+                return 'OK'
+
+            def _get_functional_query_parameters(self):
+                return {'expand': None}
+
+            @property
+            def request_template(self):
+               return ""
+
+            @property
+            def response_template(self):
+                return ""
+
+            def get_not_found_message(self, **kwargs):
+                return ""
+
+        # Naughty child does not call super()._validate() and raises an error
+        naughty_child = StufRestViewNaughtyChild()
+
+        kwargs = {'kw': 'arg'}
+        with self.assertRaises(AssertionError):
+            naughty_child.get(**kwargs)
+
+        # Obedient child does call super()._validate() and succeeds
+        obedient_child = StufRestViewObedientChild()
+
+        self.assertEqual('OK', obedient_child.get(**kwargs))
+
     @patch("gobstuf.rest.brp.base_view.ROUTE_SCHEME", 'scheme')
     @patch("gobstuf.rest.brp.base_view.ROUTE_NETLOC", 'netloc')
     @patch("gobstuf.rest.brp.base_view.ROUTE_PATH", '/route/path')
@@ -110,6 +166,51 @@ class TestStufRestView(TestCase):
         mock_rest_response.forbidden.assert_called_with()
 
     @patch("gobstuf.rest.brp.base_view.request")
+    def test_validate(self, mock_request):
+        view = StufRestView()
+        view.expand_options = ['a', 'b']
+        self.assertIsNone(getattr(view, '_validate_called', None))
+
+        valid_options = ['a', 'b', 'a,b']
+        invalid_options = ['', 'c']
+
+        for expand in valid_options:
+            mock_request.args = {'expand': expand}
+            self.assertEqual({}, view._validate())
+
+        error = {
+            'invalid-params': 'expand',
+            'title': 'De waarde van expand wordt niet geaccepteerd',
+            'detail': f'De mogelijke waarden zijn: a,b'
+        }
+
+        for expand in invalid_options:
+            mock_request.args = {'expand': expand}
+            self.assertEqual(error, view._validate())
+
+    @patch("gobstuf.rest.brp.base_view.request")
+    def test_get_functional_query_parameters(self, mock_request):
+        mock_request.args = {
+            'a': 1,
+            'b': '',
+            'c': None,
+            'd': False,
+        }
+        view = StufRestView()
+        view.functional_query_parameters = {
+            'a': 15,
+            'b': 16,
+            'c': 17,
+            'd': 18,
+            'e': 19
+        }
+
+        self.assertEqual({
+            **mock_request.args,
+            'e': 19,
+        }, view._get_functional_query_parameters())
+
+    @patch("gobstuf.rest.brp.base_view.request")
     @patch("gobstuf.rest.brp.base_view.StufErrorResponse")
     @patch("gobstuf.rest.brp.base_view.RESTResponse")
     def test_get(self, mock_rest_response, mock_response, mock_request):
@@ -117,6 +218,7 @@ class TestStufRestView(TestCase):
             MKS_USER_HEADER: 'user',
             MKS_APPLICATION_HEADER: 'application',
         }
+        mock_request.args = {}
 
         mock_request_template = MagicMock()
         mock_request_template.return_value.validate.return_value = None
@@ -132,13 +234,15 @@ class TestStufRestView(TestCase):
         view._make_request = MagicMock()
         view._error_response = MagicMock()
         view._json_response = MagicMock()
+        view._validate_called = True
+        view._get_functional_query_parameters = MagicMock(return_value={'funcparam': True})
 
         # Success response
         self.assertEqual(mock_rest_response.ok.return_value, view._get(a=1, b=2))
         view.request_template.assert_called_with('user', 'application', {'a': 1, 'b': 2})
         view._make_request.assert_called_with(view.request_template.return_value)
 
-        view.response_template.assert_called_with(view._make_request.return_value.text, some_property=42)
+        view.response_template.assert_called_with(view._make_request.return_value.text, funcparam=True, some_property=42)
         mock_rest_response.ok.assert_called_with(view.response_template.return_value.get_answer_object.return_value,
                                                  view.response_template.return_value.get_links.return_value)
 
@@ -171,6 +275,9 @@ class TestStufRestView(TestCase):
     def test_get_internal_server_error(self, mock_rest_response):
         view = StufRestView()
         view._get = MagicMock()
+        view._validate = MagicMock(return_value={})
+        view._get_functional_query_parameters = MagicMock(return_value={})
+        view._validate_called = True
 
         # Regular response
         result = view.get(any='thing')
@@ -196,11 +303,20 @@ class TestStufRestFilterView(TestCase):
             'a': 'b', 'c': 'd', 'e': 'f'
         }, view._request_template_parameters(**kwargs))
 
-    def test_validate(self):
+    @patch("gobstuf.rest.brp.base_view.StufRestView._validate")
+    def test_validate(self, mock_parent_validate):
         view = StufRestFilterViewImpl()
 
         view._query_parameters_error = MagicMock()
         view._get_query_parameters = MagicMock()
+        view._validate_called = True
+
+        # Test parent validate errors
+        mock_parent_validate.return_value = {'some': 'error'}
+        self.assertEqual(mock_parent_validate.return_value, view._validate())
+
+        # Test validation of query params
+        mock_parent_validate.return_value = {}
         view.query_parameter_combinations = [
             ('a', 'b', 'c'),
             ('a', 'd'),
