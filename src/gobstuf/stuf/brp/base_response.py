@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from xml.etree.ElementTree import Element
 
 from gobstuf.stuf.message import StufMessage
 from gobstuf.stuf.exception import NoStufAnswerException
+from gobstuf.stuf.brp.response_mapping import StufObjectMapping, Mapping
 
 
 class StufResponse(ABC):
@@ -37,11 +39,25 @@ class StufResponse(ABC):
         return self.stuf_message.pretty_print()
 
 
+class MappedObjectWrapper:
+
+    def __init__(self, mapped_object: dict, mapping_class: Mapping):
+        self.mapped_object = mapped_object
+        self.mapping_class = mapping_class
+
+    def get_filtered_object(self, **kwargs):
+        return self.mapping_class.filter(self.mapped_object, **kwargs)
+
+
 class StufMappedResponse(StufResponse):
     """StufResponse with mapping for further use; maps paths to keys (as used in
     the REST API for example)
 
     """
+
+    # Class properties to pass to the mapped object filter
+    filter_kwargs = []
+
     def get_object_elm(self):
         """Returns the object wrapper element from the response message.
 
@@ -74,6 +90,9 @@ class StufMappedResponse(StufResponse):
         """
         return {}
 
+    def _get_filter_kwargs(self):
+        return {prop: getattr(self, prop, None) for prop in self.filter_kwargs}
+
     def get_answer_object(self):
         """
         The answer object is created from the StUF response
@@ -87,7 +106,7 @@ class StufMappedResponse(StufResponse):
         :raises: NoStufAnswerException if the object is empty
         """
         mapped_object = self.get_mapped_object()
-        answer_object = self.get_filtered_object(mapped_object)
+        answer_object = mapped_object.get_filtered_object(**self._get_filter_kwargs())
 
         if not answer_object:
             raise NoStufAnswerException()
@@ -104,46 +123,27 @@ class StufMappedResponse(StufResponse):
         result = []
         for obj in self.get_all_object_elms():
             mapped_object = self.get_mapped_object(obj)
-            answer_obj = self.get_filtered_object(mapped_object)
+            answer_obj = mapped_object.get_filtered_object(**self._get_filter_kwargs())
             result.append(answer_obj)
         return result
 
-    def get_filtered_object(self, mapped_object):
-        """
-        Filter the mapped object on the mapped attribute values
-        Default implementation is to filter out any null values
+    def _get_mapping(self, element: Element) -> Mapping:
+        """Finds the mapping for the given XML Element, based on the value of StUF:entiteittype
 
-        Any derived class that implements this method should call this super method on its result
-        super().get_filtered_object(result)
-
-        :param mapped_object:
+        :param element:
         :return:
         """
-        def filter_none_values(obj):
-            """
-            Recursively filter out any None values of the given object
+        stuf_entity_type = element.attrib.get('{%s}entiteittype' % self.namespaces['StUF'])
+        return StufObjectMapping.get_for_entity_type(stuf_entity_type)
 
-            :param obj:
-            :return:
-            """
-            result = {}
-            for k, v in obj.items():
-                if isinstance(v, dict):
-                    value = filter_none_values(v)
-                    if value:
-                        result[k] = value
-                elif v is not None:
-                    result[k] = v
-            return result
-
-        return filter_none_values(mapped_object) if mapped_object else mapped_object
-
-    def get_mapped_object(self, obj=None, mapping=None):
+    def get_mapped_object(self, obj=None, mapping=None):  # noqa: C901
         """
         Returns a dict with key -> value pairs for the keys in mapping with the value extracted
         from the response message.
 
-        The mapping is a (possibly nested) dictionary
+        The mapping is a (possibly nested) dictionary. If no mapping is provided, the mapping will be inferred from
+        the StUF:entiteittype attribute on the object.
+
         Each key is mapped upon the specified element value
 
         Optionally a tuple can be specified (method, element value).
@@ -156,13 +156,17 @@ class StufMappedResponse(StufResponse):
         # Initially obj and mapping are None
         # On a recursive call these two parameters will have a value
         obj = obj or self.get_object_elm()
-        mapping = mapping or self.mapping
+        mapping = mapping or self._get_mapping(obj)
 
-        if isinstance(mapping, dict):
+        if isinstance(mapping, Mapping):
+            # Initial call. Return mapped dictionary and Mapping class
+            dict_mapping = self.get_mapped_object(obj, mapping.mapping)
+            return MappedObjectWrapper(dict_mapping, mapping)
+        elif isinstance(mapping, dict):
             # the values are resolved at a nested level by recursively calling this method
             # Example: 'naam': {'voornamen': '<attribute>', 'geslachtsnaam': '<attribute>'}
             return {k: self.get_mapped_object(obj, v) for k, v in mapping.items()}
-        if isinstance(mapping, tuple):
+        elif isinstance(mapping, tuple):
             # The value is resolved by a function call with the attribute value(s) as parameter(s)
             # Example: 'naamlengte': (len, '<attribute>')
             # will result in 'naamlengte': len(<attribute value>)
@@ -197,18 +201,6 @@ class StufMappedResponse(StufResponse):
     @abstractmethod
     def object_elm(self):
         """The root element of the answer object, relative to the answer_secion
-
-        :return:
-        """
-        pass  # pragma: no cover
-
-    @property
-    @abstractmethod
-    def mapping(self):
-        """Mapping of keys to paths. Paths are relative to object_elm
-
-        For example:
-        {'burgerservicenummer': 'BG:inp.bsn'}
 
         :return:
         """
