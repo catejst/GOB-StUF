@@ -303,6 +303,12 @@ class StufRestFilterView(StufRestView):
         }, {})
 
     def _transform_query_parameter_value(self, value: str):
+        """Transforms the string value of the query parameter to the corresponding python type for booleans and null
+        values.
+
+        :param value:
+        :return:
+        """
         if not value:
             return None
         lower = value.lower()

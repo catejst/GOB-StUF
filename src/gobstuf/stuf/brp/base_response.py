@@ -107,9 +107,18 @@ class StufMappedResponse(StufResponse):
         return {}
 
     def _get_filter_kwargs(self):
+        """Get the kwargs to pass to the filter method for filtering objects
+
+        :return:
+        """
         return {prop: getattr(self, prop, None) for prop in self.filter_kwargs}
 
     def _add_embedded_objects(self, mapped_object: MappedObjectWrapper):
+        """Adds the _embedded objects to :mapped_object:
+
+        :param mapped_object:
+        :return:
+        """
         mapping = mapped_object.mapping_class
         embedded = {}
         for related_attr, root_obj in mapping.related.items():
@@ -143,6 +152,11 @@ class StufMappedResponse(StufResponse):
         return answer_object
 
     def create_object_from_element(self, element: Element) -> Optional[dict]:
+        """Creates the dictionary representation of :element: based on its StUF:entiteittype attribute.
+
+        :param element:
+        :return:
+        """
         mapped_object = self.get_mapped_object(element)
         if not mapped_object:
             return None
