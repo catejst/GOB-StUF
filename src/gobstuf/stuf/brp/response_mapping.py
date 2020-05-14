@@ -9,6 +9,8 @@ class Mapping(ABC):
 
     Provides a filter method to filter out attributes and/or objects
     """
+    related = {}
+    is_relation = False
 
     @property
     @abstractmethod
@@ -31,6 +33,7 @@ class Mapping(ABC):
         :param mapped_object:
         :return:
         """
+
         def filter_none_values(obj):
             """
             Recursively filter out any None values of the given object
@@ -127,6 +130,10 @@ class NPSMapping(Mapping):
         'overlijdensdatum': 'BG:overlijdensdatum'
     }
 
+    related = {
+        'partners': 'BG:inp.heeftAlsEchtgenootPartner',
+    }
+
     def filter(self, mapped_object: dict, **kwargs):
         """
         Filter the mapped object on overlijdensdatum
@@ -160,3 +167,59 @@ class NPSMapping(Mapping):
 
 
 StufObjectMapping.register(NPSMapping)
+
+
+class RelatedMapping(Mapping):
+    """RelatedMapping is the mapping of a StUF element holding a related element.
+
+    For example:
+
+    <BG:inp.heeftAlsEchtgenootPartner StUF:entiteittype="NPSNPSHUW">
+        <BG:gerelateerde StUF:entiteittype="NPS">
+        ...
+        </BG:gerelateerde>
+        <other attrs />
+    </BG:inp.heeftAlsEchtgenootPartner>
+
+    The RelatedMapping has the element with type NPSNPSHUW as root. The embedded element with type NPS is the related
+    object. All attributes that are defined in the NPSMapping are included in this mapping, based on the
+    include_related property of this class.
+    On top of these inherited attributes, a RelatedMapping can define its own mapping.
+
+    The result is a combination of attributes from the embedded type (NPS) and the attributes defined on the
+    NPSNPSHUW class.
+    """
+    related_entity_wrapper = 'BG:gerelateerde'
+    is_relation = True
+    include_related = []
+    override_related_filters = {}
+
+    def filter(self, mapped_object: dict, **kwargs):
+        mapped_object = {k: v for k, v in mapped_object.items() if k in self.include_related}
+
+        return super().filter(mapped_object)
+
+
+class NPSNPSHUWMapping(RelatedMapping):
+    entity_type = 'NPSNPSHUW'
+
+    override_related_filters = {
+        'inclusiefoverledenpersonen': True,
+    }
+
+    # Include these attributes from the embedded (NPS) object
+    include_related = [
+        'burgerservicenummer',
+        'geboorte',
+        'naam'
+    ]
+
+    # And add these attributes
+    mapping = {
+        'aangaanHuwelijkPartnerschap': {
+            'datum': (MKSConverter.as_datum_broken_down, 'BG:datumSluiting')
+        }
+    }
+
+
+StufObjectMapping.register(NPSNPSHUWMapping)
