@@ -10,7 +10,6 @@ class Mapping(ABC):
     Provides a filter method to filter out attributes and/or objects
     """
     related = {}
-    is_relation = False
 
     @property
     @abstractmethod
@@ -190,7 +189,6 @@ class RelatedMapping(Mapping):
     NPSNPSHUW class.
     """
     related_entity_wrapper = 'BG:gerelateerde'
-    is_relation = True
     include_related = []
     override_related_filters = {}
 
