@@ -363,8 +363,21 @@ class TestStufRestFilterView(TestCase):
             }
         }, {})
 
-    def test_get_not_found_message(self):
+    def test_transform_query_parameter_value(self):
         view = StufRestFilterViewImpl()
+
+        test_cases = [
+            (None, None),
+            ('', None),
+            ('null', None),
+            ('none', None),
+            ('true', True),
+            ('false', False),
+            ('13', '13'),
+        ]
+
+        for inp, outp in test_cases:
+            self.assertEqual(outp, view._transform_query_parameter_value(inp))
 
     @patch("gobstuf.rest.brp.base_view.request")
     def test_get_query_parameters(self, mock_request):
@@ -372,14 +385,14 @@ class TestStufRestFilterView(TestCase):
 
         # Default case. All parameters present, return first match
         mock_request.args = {
-            'a': 1,
-            'b': 2,
-            'c': 3,
+            'a': '1',
+            'b': '2',
+            'c': '3',
         }
         view.query_parameter_combinations = [
             ('a', 'b')
         ]
-        self.assertEqual({'a': 1, 'b': 2}, view._get_query_parameters())
+        self.assertEqual({'a': '1', 'b': '2'}, view._get_query_parameters())
 
         # Case with no parameters, allowed
         view.query_parameter_combinations = [()]
@@ -394,7 +407,7 @@ class TestStufRestFilterView(TestCase):
 
         # Case with invalid combination of parameters. B is missing
         view.query_parameter_combinations = [('a', 'b')]
-        mock_request.args = {'a': 1}
+        mock_request.args = {'a': '1'}
 
         with self.assertRaises(view.InvalidQueryParametersException):
             view._get_query_parameters()
