@@ -1,5 +1,5 @@
 from unittest import TestCase
-from gobstuf.stuf.brp.response_mapping import Mapping, NPSMapping, StufObjectMapping
+from gobstuf.stuf.brp.response_mapping import Mapping, NPSMapping, StufObjectMapping, RelatedMapping
 
 
 class MappingImpl(Mapping):
@@ -74,35 +74,55 @@ class TestNPSMapping(TestCase):
     def test_filter(self):
         mapping = NPSMapping()
 
-        obj = self.empty_mapping(NPSMapping.mapping)
+        obj = self.empty_mapping(mapping.mapping)
         result = mapping.filter(obj)
         self.assertEqual(result, {})
 
-        obj = self.empty_mapping(NPSMapping.mapping)
+        obj = self.empty_mapping(mapping.mapping)
         obj['any key'] = 'any value'
         result = mapping.filter(obj)
         self.assertEqual(result, {'any key': 'any value'})
 
-        obj = self.empty_mapping(NPSMapping.mapping)
+        obj = self.empty_mapping(mapping.mapping)
         obj['any key'] = 'any value'
         obj['overlijdensdatum'] = 'any datum'
         kwargs = {'inclusiefoverledenpersonen': False}
         result = mapping.filter(obj, **kwargs)
         self.assertEqual(result, None)
 
-        obj = self.empty_mapping(NPSMapping.mapping)
+        obj = self.empty_mapping(mapping.mapping)
         obj['any key'] = 'any value'
         obj['overlijdensdatum'] = 'any datum'
         kwargs = {'inclusiefoverledenpersonen': True}
         result = mapping.filter(obj, **kwargs)
         self.assertEqual(result, {'any key': 'any value', 'overlijdensdatum': 'any datum'})
 
-        obj = self.empty_mapping(NPSMapping.mapping)
+        obj = self.empty_mapping(mapping.mapping)
         obj['verblijfplaats']['woonadres'] = {'any key': 'any value'}
         result = mapping.filter(obj)
         self.assertEqual(result, {'verblijfplaats': {'any key': 'any value', 'functieAdres': 'woonadres'}})
 
-        obj = self.empty_mapping(NPSMapping.mapping)
+        obj = self.empty_mapping(mapping.mapping)
         obj['verblijfplaats']['briefadres'] = {'any key': 'any value'}
         result = mapping.filter(obj)
         self.assertEqual(result, {'verblijfplaats': {'any key': 'any value', 'functieAdres': 'briefadres'}})
+
+
+class TestRelatedMapping(TestCase):
+
+    def test_filter(self):
+        class RelatedMappingImpl(RelatedMapping):
+            entity_type = 'RELMAP'
+            mapping = {}
+            include_related = ['A', 'B']
+
+        mapping = RelatedMappingImpl()
+        mapped_object = {
+            'A': 1,
+            'B': 2,
+            'C': 3,
+        }
+        self.assertEqual({
+            'A': 1,
+            'B': 2,
+        }, mapping.filter(mapped_object))

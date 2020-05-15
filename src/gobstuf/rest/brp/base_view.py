@@ -123,7 +123,7 @@ class StufRestView(MethodView):
             request.headers.get(MKS_APPLICATION_HEADER),
             self._request_template_parameters(**kwargs)
         )
-        errors = request_template.validate(kwargs)
+        errors = request_template.validate(self._request_template_parameters(**kwargs))
         if errors:
             return RESTResponse.bad_request(**errors)
 
@@ -302,6 +302,26 @@ class StufRestFilterView(StufRestView):
             }
         }, {})
 
+    def _transform_query_parameter_value(self, value: str):
+        """Transforms the string value of the query parameter to the corresponding python type for booleans and null
+        values.
+
+        :param value:
+        :return:
+        """
+        if not value:
+            return None
+        lower = value.lower()
+
+        if lower in ('null', 'none'):
+            return None
+        elif lower in ('true'):
+            return True
+        elif lower in ('false'):
+            return False
+        else:
+            return value
+
     def _get_query_parameters(self) -> dict:
         """Returns the query parameters as k:v pairs. Returns only the parameters that are in the first matching
         combination in query_parameter_combinations.
@@ -314,12 +334,12 @@ class StufRestFilterView(StufRestView):
             If b would be missing, a, c and d would be returned.
             If a were missing an empty dict would be returned. No query parameters is an option in this case, because
             of the empty tuple.
-            If no match is found an InnvalidQueryParametersException is raised
+            If no match is found an InvalidQueryParametersException is raised
 
         :return:
         """
         for combination in self.query_parameter_combinations:
-            args = {arg: request.args.get(arg) for arg in combination}
+            args = {arg: self._transform_query_parameter_value(request.args.get(arg)) for arg in combination}
             if all(args.values()):
                 return args
 
