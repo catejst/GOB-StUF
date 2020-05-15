@@ -9,7 +9,10 @@ class Mapping(ABC):
 
     Provides a filter method to filter out attributes and/or objects
     """
-    related = {}
+
+    @property
+    def related(self) -> dict:
+        return {}
 
     @property
     @abstractmethod
@@ -69,69 +72,76 @@ class StufObjectMapping:
 
     @classmethod
     def register(cls, mapping: Type[Mapping]):
-        cls.mappings[mapping.entity_type] = mapping
+        cls.mappings[mapping().entity_type] = mapping
 
 
 class NPSMapping(Mapping):
     """NPS mapping, for Natuurlijke Personen
 
     """
-    entity_type = 'NPS'
 
-    mapping = {
-        'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding, 'BG:geslachtsaanduiding'),
-        'naam': {
-            'aanduidingNaamgebruik': (MKSConverter.as_aanduiding_naamgebruik, 'BG:aanduidingNaamgebruik'),
-            'voornamen': 'BG:voornamen',
-            'voorletters': 'BG:voorletters',
-            'geslachtsnaam': 'BG:geslachtsnaam',
-            'voorvoegsel': 'BG:voorvoegselGeslachtsnaam',
-        },
-        'leeftijd': (MKSConverter.as_leeftijd, 'BG:geboortedatum',
-                     'BG:geboortedatum@StUF:indOnvolledigeDatum',
-                     'BG:overlijdensdatum'),
-        'burgerservicenummer': 'BG:inp.bsn',
-        'geboorte': {
-            'datum':
-                (MKSConverter.as_datum_broken_down, 'BG:geboortedatum',
-                 'BG:geboortedatum@StUF:indOnvolledigeDatum'),
-        },
-        'verblijfplaats': {
-            'datumInschrijvingInGemeente': (MKSConverter.as_datum_broken_down, 'BG:inp.datumInschrijving'),
-            'gemeenteVanInschrijving': {
-                'code': (MKSConverter.as_code(4), 'BG:inp.gemeenteVanInschrijving'),
-                'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.gemeenteVanInschrijving')
-            },
-            'woonadres': {
-                'identificatiecodeNummeraanduiding':
-                    'BG:inp.verblijftIn BG:gerelateerde StUF:extraElementen' +
-                    '!.//StUF:extraElement[@naam="identificatieNummerAanduiding"]',
-                'identificatiecodeAdresseerbaarObject': 'BG:verblijfsadres BG:aoa.identificatie',
-                'huisletter': 'BG:verblijfsadres BG:aoa.huisletter',
-                'huisnummer': 'BG:verblijfsadres BG:aoa.huisnummer',
-                'huisnummertoevoeging': 'BG:verblijfsadres BG:aoa.huisnummertoevoeging',
-                'postcode': 'BG:verblijfsadres BG:aoa.postcode',
-                'woonplaatsnaam': 'BG:verblijfsadres BG:wpl.woonplaatsNaam',
-                'straatnaam': 'BG:verblijfsadres BG:gor.straatnaam',
-                'datumAanvangAdreshouding':
-                    (MKSConverter.as_datum_broken_down, 'BG:verblijfsadres BG:begindatumVerblijf'),
-            },
-            'briefadres': {
-                'identificatiecodeAdresseerbaarObject': 'BG:sub.correspondentieAdres BG:aoa.identificatie',
-                'huisletter': 'BG:sub.correspondentieAdres BG:aoa.huisletter',
-                'huisnummer': 'BG:sub.correspondentieAdres BG:aoa.huisnummer',
-                'huisnummertoevoeging': 'BG:sub.correspondentieAdres BG:aoa.huisnummertoevoeging',
-                'postcode': 'BG:sub.correspondentieAdres BG:postcode',
-                'woonplaatsnaam': 'BG:sub.correspondentieAdres BG:wpl.woonplaatsNaam',
-                'straatnaam': 'BG:sub.correspondentieAdres BG:gor.straatnaam'
-            },
-        },
-        'overlijdensdatum': 'BG:overlijdensdatum'
-    }
+    @property
+    def entity_type(self):
+        return 'NPS'
 
-    related = {
-        'partners': 'BG:inp.heeftAlsEchtgenootPartner',
-    }
+    @property
+    def mapping(self):
+        return {
+            'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding, 'BG:geslachtsaanduiding'),
+            'naam': {
+                'aanduidingNaamgebruik': (MKSConverter.as_aanduiding_naamgebruik, 'BG:aanduidingNaamgebruik'),
+                'voornamen': 'BG:voornamen',
+                'voorletters': 'BG:voorletters',
+                'geslachtsnaam': 'BG:geslachtsnaam',
+                'voorvoegsel': 'BG:voorvoegselGeslachtsnaam',
+            },
+            'leeftijd': (MKSConverter.as_leeftijd, 'BG:geboortedatum',
+                         'BG:geboortedatum@StUF:indOnvolledigeDatum',
+                         'BG:overlijdensdatum'),
+            'burgerservicenummer': 'BG:inp.bsn',
+            'geboorte': {
+                'datum':
+                    (MKSConverter.as_datum_broken_down, 'BG:geboortedatum',
+                     'BG:geboortedatum@StUF:indOnvolledigeDatum'),
+            },
+            'verblijfplaats': {
+                'datumInschrijvingInGemeente': (MKSConverter.as_datum_broken_down, 'BG:inp.datumInschrijving'),
+                'gemeenteVanInschrijving': {
+                    'code': (MKSConverter.as_code(4), 'BG:inp.gemeenteVanInschrijving'),
+                    'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.gemeenteVanInschrijving')
+                },
+                'woonadres': {
+                    'identificatiecodeNummeraanduiding':
+                        'BG:inp.verblijftIn BG:gerelateerde StUF:extraElementen' +
+                        '!.//StUF:extraElement[@naam="identificatieNummerAanduiding"]',
+                    'identificatiecodeAdresseerbaarObject': 'BG:verblijfsadres BG:aoa.identificatie',
+                    'huisletter': 'BG:verblijfsadres BG:aoa.huisletter',
+                    'huisnummer': 'BG:verblijfsadres BG:aoa.huisnummer',
+                    'huisnummertoevoeging': 'BG:verblijfsadres BG:aoa.huisnummertoevoeging',
+                    'postcode': 'BG:verblijfsadres BG:aoa.postcode',
+                    'woonplaatsnaam': 'BG:verblijfsadres BG:wpl.woonplaatsNaam',
+                    'straatnaam': 'BG:verblijfsadres BG:gor.straatnaam',
+                    'datumAanvangAdreshouding':
+                        (MKSConverter.as_datum_broken_down, 'BG:verblijfsadres BG:begindatumVerblijf'),
+                },
+                'briefadres': {
+                    'identificatiecodeAdresseerbaarObject': 'BG:sub.correspondentieAdres BG:aoa.identificatie',
+                    'huisletter': 'BG:sub.correspondentieAdres BG:aoa.huisletter',
+                    'huisnummer': 'BG:sub.correspondentieAdres BG:aoa.huisnummer',
+                    'huisnummertoevoeging': 'BG:sub.correspondentieAdres BG:aoa.huisnummertoevoeging',
+                    'postcode': 'BG:sub.correspondentieAdres BG:postcode',
+                    'woonplaatsnaam': 'BG:sub.correspondentieAdres BG:wpl.woonplaatsNaam',
+                    'straatnaam': 'BG:sub.correspondentieAdres BG:gor.straatnaam'
+                },
+            },
+            'overlijdensdatum': 'BG:overlijdensdatum'
+        }
+
+    @property
+    def related(self):  # pragma: no cover
+        return {
+            'partners': 'BG:inp.heeftAlsEchtgenootPartner',
+        }
 
     def filter(self, mapped_object: dict, **kwargs):
         """
@@ -188,9 +198,18 @@ class RelatedMapping(Mapping):
     The result is a combination of attributes from the embedded type (NPS) and the attributes defined on the
     NPSNPSHUW class.
     """
-    related_entity_wrapper = 'BG:gerelateerde'
-    include_related = []
-    override_related_filters = {}
+
+    @property
+    def related_entity_wrapper(self):  # pragma: no cover
+        return 'BG:gerelateerde'
+
+    @property
+    def include_related(self):  # pragma: no cover
+        return []
+
+    @property
+    def override_related_filters(self):  # pragma: no cover
+        return {}
 
     def filter(self, mapped_object: dict, **kwargs):
         mapped_object = {k: v for k, v in mapped_object.items() if k in self.include_related}
@@ -199,25 +218,34 @@ class RelatedMapping(Mapping):
 
 
 class NPSNPSHUWMapping(RelatedMapping):
-    entity_type = 'NPSNPSHUW'
 
-    override_related_filters = {
-        'inclusiefoverledenpersonen': True,
-    }
+    @property
+    def entity_type(self):  # pragma: no cover
+        return 'NPSNPSHUW'
+
+    @property
+    def override_related_filters(self):  # pragma: no cover
+        return {
+            'inclusiefoverledenpersonen': True,
+        }
 
     # Include these attributes from the embedded (NPS) object
-    include_related = [
-        'burgerservicenummer',
-        'geboorte',
-        'naam'
-    ]
+    @property
+    def include_related(self):  # pragma: no cover
+        return [
+            'burgerservicenummer',
+            'geboorte',
+            'naam'
+        ]
 
     # And add these attributes
-    mapping = {
-        'aangaanHuwelijkPartnerschap': {
-            'datum': (MKSConverter.as_datum_broken_down, 'BG:datumSluiting')
+    @property
+    def mapping(self):  # pragma: no cover
+        return {
+            'aangaanHuwelijkPartnerschap': {
+                'datum': (MKSConverter.as_datum_broken_down, 'BG:datumSluiting')
+            }
         }
-    }
 
 
 StufObjectMapping.register(NPSNPSHUWMapping)
