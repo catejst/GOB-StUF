@@ -291,7 +291,9 @@ class NPSNPSHUWMapping(RelatedMapping):
     def mapping(self):  # pragma: no cover
         return {
             'aangaanHuwelijkPartnerschap': {
-                'datum': (MKSConverter.as_datum_broken_down, 'BG:datumSluiting')
+                'datum': (MKSConverter.as_datum_broken_down,
+                          'BG:datumSluiting',
+                          'BG:datumSluiting@StUF:indOnvolledigeDatum')
             },
             # datumOntbinding is used to filter out 'ontbonden huwelijken'.
             # Note that this field will never be exposed because its value will be None on exposed objects.
