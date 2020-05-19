@@ -212,7 +212,21 @@ class RelatedMapping(Mapping):
         return {}
 
     def filter(self, mapped_object: dict, **kwargs):
-        mapped_object = {k: v for k, v in mapped_object.items() if k in self.include_related}
+        """Filters :mapped_object:. Only keeps the keys present in self.mapping and self.include_related.
+
+        The mapped_object includes ALL keys from the related mapping, plus the keys we defined in this instance.
+        However, we only need the keys from the related mapping defined in include_related, plus our own mapped
+        attributes.
+
+        This method filters out all keys from the related entity we don't need.
+
+        :param mapped_object:
+        :param kwargs:
+        :return:
+        """
+        mapped_object = {k: v for k, v in mapped_object.items() if k in
+                         self.include_related + list(self.mapping.keys())
+                         }
 
         return super().filter(mapped_object)
 
