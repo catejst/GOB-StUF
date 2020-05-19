@@ -113,7 +113,7 @@ class TestRelatedMapping(TestCase):
     def test_filter(self):
         class RelatedMappingImpl(RelatedMapping):
             entity_type = 'RELMAP'
-            mapping = {}
+            mapping = {'D': ''}
             include_related = ['A', 'B']
 
         mapping = RelatedMappingImpl()
@@ -121,8 +121,10 @@ class TestRelatedMapping(TestCase):
             'A': 1,
             'B': 2,
             'C': 3,
+            'D': 4,
         }
         self.assertEqual({
             'A': 1,
             'B': 2,
+            'D': 4,
         }, mapping.filter(mapped_object))

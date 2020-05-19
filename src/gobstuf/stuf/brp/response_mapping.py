@@ -212,7 +212,9 @@ class RelatedMapping(Mapping):
         return {}
 
     def filter(self, mapped_object: dict, **kwargs):
-        mapped_object = {k: v for k, v in mapped_object.items() if k in self.include_related}
+        mapped_object = {k: v for k, v in mapped_object.items() if k in
+                         self.include_related + list(self.mapping.keys())
+                         }
 
         return super().filter(mapped_object)
 
