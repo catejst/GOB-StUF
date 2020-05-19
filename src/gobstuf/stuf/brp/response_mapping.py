@@ -212,6 +212,12 @@ class RelatedMapping(Mapping):
         return {}
 
     def filter(self, mapped_object: dict, **kwargs):
+        """Filters :mapped_object:. Only keeps the keys present in self.mapping and self.include_related.
+
+        :param mapped_object:
+        :param kwargs:
+        :return:
+        """
         mapped_object = {k: v for k, v in mapped_object.items() if k in
                          self.include_related + list(self.mapping.keys())
                          }
