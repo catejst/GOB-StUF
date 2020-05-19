@@ -158,7 +158,7 @@ class StufRestView(MethodView):
             # Return 404, answer section is empty
             return RESTResponse.not_found(detail=self.get_not_found_message(**kwargs))
         else:
-            return RESTResponse.ok(data, response_obj.get_links(data))
+            return RESTResponse.ok(data)
 
     def _make_request(self, request_template: StufRequest):
         """Makes the MKS request

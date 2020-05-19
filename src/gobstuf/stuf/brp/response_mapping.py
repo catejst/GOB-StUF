@@ -1,7 +1,13 @@
 from typing import Type
 from abc import ABC, abstractmethod
+from flask import url_for, request
 
 from gobstuf.mks_utils import MKSConverter
+
+
+def flask_url(view_name, **kwargs):
+    url = url_for(view_name, **kwargs)
+    return f"{request.scheme}://{request.host}{url}"
 
 
 class Mapping(ABC):
@@ -23,6 +29,9 @@ class Mapping(ABC):
     @abstractmethod
     def entity_type(self) -> str:  # pragma: no cover
         pass
+
+    def get_links(self, mapped_object) -> dict:
+        return {}
 
     def filter(self, mapped_object: dict, **kwargs):
         """
@@ -174,6 +183,31 @@ class NPSMapping(Mapping):
             mapped_object = None
         return super().filter(mapped_object)
 
+    def get_links(self, mapped_object: dict):
+        """
+        Return the HAL links that correspond with the mapped and filtered object (data)
+
+        :param data: the mapped and filtered object
+        :return:
+        """
+        links = super().get_links(mapped_object)
+
+        try:
+            nummeraanduiding = mapped_object['verblijfplaats']['woonadres']['identificatiecodeNummeraanduiding']
+        except KeyError:
+            pass
+        else:
+            links['verblijfplaatsNummeraanduiding'] = {
+                'href': f"https://api.data.amsterdam.nl/gob/bag/nummeraanduidingen/{nummeraanduiding}/"
+            }
+
+        if mapped_object.get('burgerservicenummer'):
+            links['self'] = {
+                'href': flask_url('brp_ingeschrevenpersonen_bsn', bsn=mapped_object['burgerservicenummer'])
+            }
+
+        return links
+
 
 StufObjectMapping.register(NPSMapping)
 
@@ -260,6 +294,15 @@ class NPSNPSHUWMapping(RelatedMapping):
                 'datum': (MKSConverter.as_datum_broken_down, 'BG:datumSluiting')
             }
         }
+
+    def get_links(self, mapped_object: dict) -> dict:
+        links = super().get_links(mapped_object)
+
+        if mapped_object.get('burgerservicenummer'):
+            links['ingeschrevenPersoon'] = {
+                'href': flask_url('brp_ingeschrevenpersonen_bsn', bsn=mapped_object['burgerservicenummer'])
+            }
+        return links
 
 
 StufObjectMapping.register(NPSNPSHUWMapping)
