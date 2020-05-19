@@ -182,3 +182,26 @@ class TestNPSNPSHUWMapping(TestCase):
 
         mapped_object = {}
         self.assertEqual({}, mapping.get_links(mapped_object))
+
+    def test_filter(self):
+        mapping = NPSNPSHUWMapping()
+
+        expected = {
+            'burgerservicenummer': 'bsn val',
+            'geboorte': 'geboorte fields',
+            'naam': 'naam fields',
+            'aangaanHuwelijkPartnerschap': 'some date'
+        }
+        mapped_object = {
+            'datumOntbinding': None,
+            'someFilteredOutField': 'its value',
+            **expected
+        }
+        self.assertEqual(expected, mapping.filter(mapped_object))
+
+        # Has datumOntbinding. Object is filtered out.
+        mapped_object = {
+            'datumOntbinding': 'some date',
+            **expected,
+        }
+        self.assertIsNone(mapping.filter(mapped_object))
