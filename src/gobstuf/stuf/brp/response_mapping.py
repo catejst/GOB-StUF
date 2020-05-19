@@ -291,9 +291,27 @@ class NPSNPSHUWMapping(RelatedMapping):
     def mapping(self):  # pragma: no cover
         return {
             'aangaanHuwelijkPartnerschap': {
-                'datum': (MKSConverter.as_datum_broken_down, 'BG:datumSluiting')
-            }
+                'datum': (MKSConverter.as_datum_broken_down,
+                          'BG:datumSluiting',
+                          'BG:datumSluiting@StUF:indOnvolledigeDatum')
+            },
+            # datumOntbinding is used to filter out 'ontbonden huwelijken'.
+            # Note that this field will never be exposed because its value will be None on exposed objects.
+            'datumOntbinding': 'BG:datumOntbinding'
         }
+
+    def filter(self, mapped_object: dict, **kwargs):
+        """Filters out 'ontbonden huwelijken'
+
+        :param mapped_object:
+        :param kwargs:
+        :return:
+        """
+        if mapped_object.get('datumOntbinding'):
+            # Filter out 'ontbonden huwelijk'
+            return None
+
+        return super().filter(mapped_object, **kwargs)
 
     def get_links(self, mapped_object: dict) -> dict:
         links = super().get_links(mapped_object)
