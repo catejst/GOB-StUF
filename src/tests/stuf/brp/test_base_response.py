@@ -41,8 +41,74 @@ class StufMappedResponseImpl(StufMappedResponse):
         def filter(self, obj, **kwargs):
             return obj
 
+        def get_links(self, mapped_object) -> dict:
+            return {
+                'self': {
+                    'href': 'http://path/to/me'
+                }
+            }
+
     def _get_mapping(self, *args):
         return self.MockMapping()
+
+
+class MappedObjectWrapperTest(TestCase):
+    class MockMapping(Mapping):
+        entity_type = 'TST'
+        mapping = {
+            'A': 'some mapping to A',
+            'B': 'some mapping to B',
+            'C': 'some mapping to C',
+        }
+
+        def get_links(self, mapped_object) -> dict:
+            return {
+                'linkToB': f'http://host/path/to/{mapped_object["B"]}'
+            }
+
+        def filter(self, mapped_object: dict, **kwargs):
+            # Simple filter function that assures kwargs is passed correctly
+            keep = ['A'] + kwargs.get('keep_too', [])
+            return {k: v for k, v in mapped_object.items() if k in keep}
+
+    class MockMappingFilterNone(MockMapping):
+        # Should of class above. Mimicks filtered out object.
+        def filter(self, mapped_object: dict, **kwargs):
+            return None
+
+    def test_get_filtered_object(self):
+        mapped_object = {
+            'A': 'some value for A',
+            # B will be filtered out by the MockMapping class, but not before creating the link to B.
+            'B': 'idForB',
+            'C': 'some value for C',
+        }
+
+        wrapper = MappedObjectWrapper(mapped_object, self.MockMapping(), MagicMock())
+        result = wrapper.get_filtered_object(keep_too=['C'])
+
+        # If this succeeds, we are certain that:
+        # - The kwargs to get_filtered_object are passed correctly to the filter() method of the mapping class
+        # - get_links() is called before filter() (otherwise linkToB would fail)
+        expected = {
+            'A': 'some value for A',
+            'C': 'some value for C',
+            '_links': {
+                'linkToB': 'http://host/path/to/idForB'
+            }
+        }
+        self.assertEqual(expected, result)
+
+        # Handle None case
+        wrapper = MappedObjectWrapper(mapped_object, self.MockMappingFilterNone(), MagicMock())
+        self.assertIsNone(wrapper.get_filtered_object())
+
+
+
+
+
+
+
 
 
 @patch("gobstuf.stuf.brp.base_response.StufMessage", MagicMock())
@@ -82,6 +148,11 @@ class StufMappedResponseTest(TestCase):
         mapping = resp._get_mapping(None).mapping
         return {
             '_embedded': {},
+            '_links': {
+                'self': {
+                    'href': 'http://path/to/me'
+                }
+            },
             'attr1': resp.stuf_message.get_elm_value(mapping['attr1']),
             'attr2': resp.stuf_message.get_elm_value(mapping['attr2']),
             'attr3': {

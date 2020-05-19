@@ -10,21 +10,3 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
 
     # These properties are passed to the filter method of the mapped object
     filter_kwargs = ['inclusiefoverledenpersonen']
-
-    def get_links(self, data):
-        """
-        Return the HAL links that correspond with the mapped and filtered object (data)
-
-        :param data: the mapped and filtered object
-        :return:
-        """
-        links = {}
-        try:
-            nummeraanduiding = data['verblijfplaats']['identificatiecodeNummeraanduiding']
-        except KeyError:
-            pass
-        else:
-            links['verblijfplaatsNummeraanduiding'] = {
-                'href': f"https://api.data.amsterdam.nl/gob/bag/nummeraanduidingen/{nummeraanduiding}/"
-            }
-        return links

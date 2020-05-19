@@ -54,7 +54,14 @@ class MappedObjectWrapper:
         self.element = element
 
     def get_filtered_object(self, **kwargs):
-        return self.mapping_class.filter(self.mapped_object, **kwargs)
+        # Important that get_links is called before filter, as get_links may need data that is filtered out
+        # (This case is handled in the tests)
+        links = self.mapping_class.get_links(self.mapped_object)
+
+        filtered = self.mapping_class.filter(self.mapped_object, **kwargs)
+        if filtered is not None:
+            filtered['_links'] = links
+        return filtered
 
 
 class StufMappedResponse(StufResponse):

@@ -1,5 +1,6 @@
 from unittest import TestCase
-from gobstuf.stuf.brp.response_mapping import Mapping, NPSMapping, StufObjectMapping, RelatedMapping
+from unittest.mock import patch
+from gobstuf.stuf.brp.response_mapping import Mapping, NPSMapping, StufObjectMapping, RelatedMapping, NPSNPSHUWMapping
 
 
 class MappingImpl(Mapping):
@@ -107,6 +108,34 @@ class TestNPSMapping(TestCase):
         result = mapping.filter(obj)
         self.assertEqual(result, {'verblijfplaats': {'any key': 'any value', 'functieAdres': 'briefadres'}})
 
+    @patch("gobstuf.stuf.brp.response_mapping.request")
+    @patch("gobstuf.stuf.brp.response_mapping.url_for", lambda name, **kwargs: f'/{name}/{kwargs["bsn"]}')
+    def test_get_links(self, mock_request):
+        mock_request.scheme = 'http(s)'
+        mock_request.host = 'thishost'
+
+        mapping = NPSMapping()
+        mapped_object = {
+            'verblijfplaats': {
+                'woonadres': {
+                    'identificatiecodeNummeraanduiding': '036digitdigitdigit'
+                }
+            },
+            'burgerservicenummer': 'digitdigitdigit',
+        }
+
+        self.assertEqual({
+            'verblijfplaatsNummeraanduiding': {
+                'href': 'https://api.data.amsterdam.nl/gob/bag/nummeraanduidingen/036digitdigitdigit/',
+            },
+            'self': {
+                'href': 'http(s)://thishost/brp_ingeschrevenpersonen_bsn/digitdigitdigit'
+            }
+        }, mapping.get_links(mapped_object))
+
+        mapped_object = {}
+        self.assertEqual({}, mapping.get_links(mapped_object))
+
 
 class TestRelatedMapping(TestCase):
 
@@ -130,3 +159,26 @@ class TestRelatedMapping(TestCase):
             'B': 2,
             'D': 4,
         }, mapping.filter(mapped_object))
+
+
+class TestNPSNPSHUWMapping(TestCase):
+
+    @patch("gobstuf.stuf.brp.response_mapping.request")
+    @patch("gobstuf.stuf.brp.response_mapping.url_for", lambda name, **kwargs: f'/{name}/{kwargs["bsn"]}')
+    def test_get_links(self, mock_request):
+        mock_request.scheme = 'http(s)'
+        mock_request.host = 'thishost'
+
+        mapping = NPSNPSHUWMapping()
+        mapped_object = {
+            'burgerservicenummer': 'digitdigitdigit',
+        }
+
+        self.assertEqual({
+            'ingeschrevenPersoon': {
+                'href': 'http(s)://thishost/brp_ingeschrevenpersonen_bsn/digitdigitdigit'
+            }
+        }, mapping.get_links(mapped_object))
+
+        mapped_object = {}
+        self.assertEqual({}, mapping.get_links(mapped_object))
