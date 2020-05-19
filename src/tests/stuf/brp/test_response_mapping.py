@@ -113,7 +113,7 @@ class TestRelatedMapping(TestCase):
     def test_filter(self):
         class RelatedMappingImpl(RelatedMapping):
             entity_type = 'RELMAP'
-            mapping = {'D': ''}
+            mapping = {'D': 'not important'}
             include_related = ['A', 'B']
 
         mapping = RelatedMappingImpl()
@@ -123,6 +123,8 @@ class TestRelatedMapping(TestCase):
             'C': 3,
             'D': 4,
         }
+
+        # Assert that only the keys present in mapping and include_related are taken from mapped_object
         self.assertEqual({
             'A': 1,
             'B': 2,
