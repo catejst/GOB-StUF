@@ -15,7 +15,7 @@ def _today():
 
 class Indication(ABC):
 
-    def __init__(self, id):
+    def __init__(self, id=None):
         """
         Register the id in uppercase
         Resolve the id to get the corresponding description
@@ -28,6 +28,10 @@ class Indication(ABC):
     @abstractmethod
     def indications(self):
         pass  # pragma: no cover
+
+    @property
+    def identifiers(self):
+        return {v: k for k, v in self.indications.items()}
 
     @property
     def description(self):
