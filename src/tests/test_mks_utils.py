@@ -167,3 +167,7 @@ class TestMKSConverter(TestCase):
                 self.assertEqual(MKSConverter.as_aanduiding_naamgebruik(aanduiding), expected_result)
         for aanduiding in ['x', 'X', '', 'anything', None]:
             self.assertIsNone(MKSConverter.as_aanduiding_naamgebruik(aanduiding))
+
+    def test_true_if_exists(self):
+        self.assertTrue(MKSConverter.true_if_exists('anything'))
+        self.assertIsNone(MKSConverter.true_if_exists(None))

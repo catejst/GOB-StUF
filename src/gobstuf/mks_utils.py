@@ -239,3 +239,14 @@ class MKSConverter:
     @classmethod
     def get_land_omschrijving(cls, mks_code):
         return CodeResolver.get_land(mks_code)
+
+    @classmethod
+    def true_if_exists(cls, property):
+        """
+        Return True if the property has a value, None if the property is empty
+
+        :param property:
+        :return:
+        """
+        if property is not None:
+            return True

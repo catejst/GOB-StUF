@@ -143,7 +143,18 @@ class NPSMapping(Mapping):
                     'straatnaam': 'BG:sub.correspondentieAdres BG:gor.straatnaam'
                 },
             },
-            'overlijdensdatum': 'BG:overlijdensdatum'
+            'overlijden': {
+                'indicatieOverleden': (MKSConverter.true_if_exists, 'BG:overlijdensdatum'),
+                'datum': (MKSConverter.as_datum_broken_down, 'BG:overlijdensdatum'),
+                'land': {
+                    'code': (MKSConverter.as_code(4), 'BG:inp.overlijdenLand'),
+                    'omschrijving': (MKSConverter.get_land_omschrijving, 'BG:inp.overlijdenLand')
+                },
+                'plaats': {
+                    'code': (MKSConverter.as_code(4), 'BG:inp.overlijdenplaats'),
+                    'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.overlijdenplaats')
+                }
+            }
         }
 
     @property
@@ -177,7 +188,7 @@ class NPSMapping(Mapping):
         mapped_object['verblijfplaats'] = verblijfplaats
 
         # Use overlijdensdatum for filtering
-        is_overleden = mapped_object.get('overlijdensdatum') is not None
+        is_overleden = mapped_object['overlijden']['indicatieOverleden']
         if is_overleden and not kwargs.get('inclusiefoverledenpersonen', False):
             # Skip overleden personen, unless explicitly included
             mapped_object = None
