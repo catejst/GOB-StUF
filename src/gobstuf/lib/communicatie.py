@@ -7,6 +7,7 @@ Functionaliteit: Als gemeente wil ik de juiste en consistente briefaanhef in com
 """
 import datetime
 
+from typing import List
 from functools import reduce
 from operator import getitem
 
@@ -129,7 +130,7 @@ class Partner(Persoon):
 
 class Communicatie():
 
-    def __init__(self, persoon, partners=None, partnerhistorie=None):
+    def __init__(self, persoon: Persoon, partners: List[Partner] = None, partnerhistorie: List[Partner] = None):
         """
         Communicatie with a persoon requires an aanhef and aanschrijfwijze
 
@@ -139,14 +140,9 @@ class Communicatie():
         :param partners:
         :param partnerhistorie:
         """
-        self.persoon = Persoon(persoon)
-
-        partners = partners or []
-        partners = partners if isinstance(partners, list) else [partners]
-        self.partners = [Partner(partner) for partner in partners]
-
-        partnerhistorie = partnerhistorie or []
-        self.partnerhistorie = [Partner(partner) for partner in partnerhistorie]
+        self.persoon = persoon
+        self.partners = partners or []
+        self.partnerhistorie = partnerhistorie or []
 
         # Determine the partner for this Persoon that is used for the aanhef en aanschrijfwijze
         self.partner = self._get_partner()

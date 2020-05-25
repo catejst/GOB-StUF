@@ -17,16 +17,16 @@ class TestCommunicatie(TestCase):
                 'voorvoegsel': 'in het',
             }
         }
-        self.assertEqual(Communicatie(in_het_veld).aanhef, "Geachte heer In het Veld")
-        self.assertEqual(Communicatie(in_het_veld).aanschrijfwijze, "H. in het Veld")
+        self.assertEqual(Communicatie(Persoon(in_het_veld)).aanhef, "Geachte heer In het Veld")
+        self.assertEqual(Communicatie(Persoon(in_het_veld)).aanschrijfwijze, "H. in het Veld")
 
         in_het_veld['geslachtsaanduiding'] = 'vrouw'
-        self.assertEqual(Communicatie(in_het_veld).aanhef, "Geachte mevrouw In het Veld")
-        self.assertEqual(Communicatie(in_het_veld).aanschrijfwijze, "H. in het Veld")
+        self.assertEqual(Communicatie(Persoon(in_het_veld)).aanhef, "Geachte mevrouw In het Veld")
+        self.assertEqual(Communicatie(Persoon(in_het_veld)).aanschrijfwijze, "H. in het Veld")
 
         in_het_veld['geslachtsaanduiding'] = 'onbekend'
-        self.assertEqual(Communicatie(in_het_veld).aanhef, "Geachte In het Veld")
-        self.assertEqual(Communicatie(in_het_veld).aanschrijfwijze, "H. in het Veld")
+        self.assertEqual(Communicatie(Persoon(in_het_veld)).aanhef, "Geachte In het Veld")
+        self.assertEqual(Communicatie(Persoon(in_het_veld)).aanschrijfwijze, "H. in het Veld")
 
     def test_geen_adellijke_titel_of_predikaat(self):
         in_het_veld = {
@@ -68,61 +68,61 @@ class TestCommunicatie(TestCase):
         #   | Eigen                 | Man                 | GA VV GN            | H. in het Veld            | Geachte heer In het Veld               |
         in_het_veld['geslachtsaanduiding'] = 'man'
         in_het_veld['naam']['aanduidingNaamgebruik'] = 'eigen'
-        self.assertEqual(Communicatie(in_het_veld, van_velzen).aanhef, "Geachte heer In het Veld")
-        self.assertEqual(Communicatie(in_het_veld, van_velzen).aanschrijfwijze, "H. in het Veld")
+        self.assertEqual(Communicatie(Persoon(in_het_veld), [Partner(van_velzen)]).aanhef, "Geachte heer In het Veld")
+        self.assertEqual(Communicatie(Persoon(in_het_veld), [Partner(van_velzen)]).aanschrijfwijze, "H. in het Veld")
 
         #   | aanduidingNaamgebruik | geslachtsaanduiding |samenstelling aanhef | aanschrijfwijze           | aanhef                                 |
         #   | Eigen                 | Man                 | GA VV GN            | F. Groenen                | Geachte heer Groenen                   |
         groenen['geslachtsaanduiding'] = 'man'
         groenen['naam']['aanduidingNaamgebruik'] = 'eigen'
-        self.assertEqual(Communicatie(groenen, groenink).aanhef, "Geachte heer Groenen")
-        self.assertEqual(Communicatie(groenen, groenink).aanschrijfwijze, "F. Groenen")
+        self.assertEqual(Communicatie(Persoon(groenen), [Partner(groenink)]).aanhef, "Geachte heer Groenen")
+        self.assertEqual(Communicatie(Persoon(groenen), [Partner(groenink)]).aanschrijfwijze, "F. Groenen")
 
         #   | aanduidingNaamgebruik | geslachtsaanduiding |samenstelling aanhef | aanschrijfwijze           | aanhef                                 |
         #   | Partner na eigen      | Vrouw               | GA VV GN-VP GP      | I. van Velzen-in het Veld | Geachte mevrouw Van Velzen-in het Veld |
         van_velzen['geslachtsaanduiding'] = 'vrouw'
         van_velzen['naam']['aanduidingNaamgebruik'] = 'eigen_partner'
-        self.assertEqual(Communicatie(van_velzen, in_het_veld).aanhef, "Geachte mevrouw Van Velzen-in het Veld")
-        self.assertEqual(Communicatie(van_velzen, in_het_veld).aanschrijfwijze, "I. van Velzen-in het Veld")
+        self.assertEqual(Communicatie(Persoon(van_velzen), [Partner(in_het_veld)]).aanhef, "Geachte mevrouw Van Velzen-in het Veld")
+        self.assertEqual(Communicatie(Persoon(van_velzen), [Partner(in_het_veld)]).aanschrijfwijze, "I. van Velzen-in het Veld")
 
         #   | aanduidingNaamgebruik | geslachtsaanduiding |samenstelling aanhef | aanschrijfwijze           | aanhef                                 |
         #   | Partner na eigen      | Vrouw               | GA VV GN-VP GP      | F. Groenen-Groenink       | Geachte mevrouw Groenen-Groenink       |
         groenen['geslachtsaanduiding'] = 'vrouw'
         groenen['naam']['aanduidingNaamgebruik'] = 'eigen_partner'
-        self.assertEqual(Communicatie(groenen, groenink).aanhef, "Geachte mevrouw Groenen-Groenink")
-        self.assertEqual(Communicatie(groenen, groenink).aanschrijfwijze, "F. Groenen-Groenink")
+        self.assertEqual(Communicatie(Persoon(groenen), [Partner(groenink)]).aanhef, "Geachte mevrouw Groenen-Groenink")
+        self.assertEqual(Communicatie(Persoon(groenen), [Partner(groenink)]).aanschrijfwijze, "F. Groenen-Groenink")
 
         #   | aanduidingNaamgebruik | geslachtsaanduiding |samenstelling aanhef | aanschrijfwijze           | aanhef                                 |
         #   | Partner               | Vrouw               | GA VP GP            | S. van Velzen             | Geachte mevrouw Van Velzen             |
         in_het_veld['geslachtsaanduiding'] = 'vrouw'
         in_het_veld['naam']['aanduidingNaamgebruik'] = 'partner'
         in_het_veld['naam']['voorletters'] = 'S.'
-        self.assertEqual(Communicatie(in_het_veld, van_velzen).aanhef, "Geachte mevrouw Van Velzen")
-        self.assertEqual(Communicatie(in_het_veld, van_velzen).aanschrijfwijze, "S. van Velzen")
+        self.assertEqual(Communicatie(Persoon(in_het_veld), [Partner(van_velzen)]).aanhef, "Geachte mevrouw Van Velzen")
+        self.assertEqual(Communicatie(Persoon(in_het_veld), [Partner(van_velzen)]).aanschrijfwijze, "S. van Velzen")
 
         #   | aanduidingNaamgebruik | geslachtsaanduiding |samenstelling aanhef | aanschrijfwijze           | aanhef                                 |
         #   | Partner               | Vrouw               | GA VP GP            | J.F.R. Groenen            | Geachte mevrouw Groenen                |
         groenink['geslachtsaanduiding'] = 'vrouw'
         groenink['naam']['aanduidingNaamgebruik'] = 'partner'
         groenink['naam']['voorletters'] = 'J.F.R.'
-        self.assertEqual(Communicatie(groenink, groenen).aanhef, "Geachte mevrouw Groenen")
-        self.assertEqual(Communicatie(groenink, groenen).aanschrijfwijze, "J.F.R. Groenen")
+        self.assertEqual(Communicatie(Persoon(groenink), [Partner(groenen)]).aanhef, "Geachte mevrouw Groenen")
+        self.assertEqual(Communicatie(Persoon(groenink), [Partner(groenen)]).aanschrijfwijze, "J.F.R. Groenen")
 
         #   | aanduidingNaamgebruik | geslachtsaanduiding |samenstelling aanhef | aanschrijfwijze           | aanhef                                 |
         #   | Partner voor eigen    | Man                 | GA VP GP-VV GN      | F. in het Veld-van Velzen | Geachte heer In het Veld-van Velzen    |
         van_velzen['geslachtsaanduiding'] = 'man'
         van_velzen['naam']['aanduidingNaamgebruik'] = 'partner_eigen'
         van_velzen['naam']['voorletters'] = 'F.'
-        self.assertEqual(Communicatie(van_velzen, in_het_veld).aanhef, "Geachte heer In het Veld-van Velzen")
-        self.assertEqual(Communicatie(van_velzen, in_het_veld).aanschrijfwijze, "F. in het Veld-van Velzen")
+        self.assertEqual(Communicatie(Persoon(van_velzen), [Partner(in_het_veld)]).aanhef, "Geachte heer In het Veld-van Velzen")
+        self.assertEqual(Communicatie(Persoon(van_velzen), [Partner(in_het_veld)]).aanschrijfwijze, "F. in het Veld-van Velzen")
 
         #   | aanduidingNaamgebruik | geslachtsaanduiding |samenstelling aanhef | aanschrijfwijze           | aanhef                                 |
         #   | Partner voor eigen    | Man                 | GA VP GP-VV GN      | F. Groenen-Groenink       | Geachte heer Groenen-Groenink          |
         groenink['geslachtsaanduiding'] = 'man'
         groenink['naam']['aanduidingNaamgebruik'] = 'partner_eigen'
         groenink['naam']['voorletters'] = 'F.'
-        self.assertEqual(Communicatie(groenink, groenen).aanhef, "Geachte heer Groenen-Groenink")
-        self.assertEqual(Communicatie(groenink, groenen).aanschrijfwijze, "F. Groenen-Groenink")
+        self.assertEqual(Communicatie(Persoon(groenink), [Partner(groenen)]).aanhef, "Geachte heer Groenen-Groenink")
+        self.assertEqual(Communicatie(Persoon(groenink), [Partner(groenen)]).aanschrijfwijze, "F. Groenen-Groenink")
 
     def test_voorvoegsels_met_hoofdletter_of_kleine_letter(self):
         in_het_veld = {
@@ -146,25 +146,25 @@ class TestCommunicatie(TestCase):
         # | E                       | man                 | In het | Veld   | van    | Velzen | Geachte heer In het Veld               |
         in_het_veld['geslachtsaanduiding'] = 'man'
         in_het_veld['naam']['aanduidingNaamgebruik'] = 'eigen'
-        self.assertEqual(Communicatie(in_het_veld, van_velzen).aanhef, "Geachte heer In het Veld")
+        self.assertEqual(Communicatie(Persoon(in_het_veld), [Partner(van_velzen)]).aanhef, "Geachte heer In het Veld")
 
         # | aanduidingAanschrijving | geslachtsaanduiding | VV     | GN     | VP     | GP     | aanhef                                 |
         # | N                       | vrouw               | van    | Velzen | In het | Veld   | Geachte mevrouw Van Velzen-In het Veld |
         van_velzen['geslachtsaanduiding'] = 'vrouw'
         van_velzen['naam']['aanduidingNaamgebruik'] = 'eigen_partner'
-        self.assertEqual(Communicatie(van_velzen, in_het_veld).aanhef, "Geachte mevrouw Van Velzen-In het Veld")
+        self.assertEqual(Communicatie(Persoon(van_velzen), [Partner(in_het_veld)]).aanhef, "Geachte mevrouw Van Velzen-In het Veld")
 
         # | aanduidingAanschrijving | geslachtsaanduiding | VV     | GN     | VP     | GP     | aanhef                                 |
         # | P                       | vrouw               | In het | Veld   | van    | Velzen | Geachte mevrouw Van Velzen             |
         in_het_veld['geslachtsaanduiding'] = 'vrouw'
         in_het_veld['naam']['aanduidingNaamgebruik'] = 'partner'
-        self.assertEqual(Communicatie(in_het_veld, van_velzen).aanhef, "Geachte mevrouw Van Velzen")
+        self.assertEqual(Communicatie(Persoon(in_het_veld), [Partner(van_velzen)]).aanhef, "Geachte mevrouw Van Velzen")
 
         # | aanduidingAanschrijving | geslachtsaanduiding | VV     | GN     | VP     | GP     | aanhef                                 |
         # | V                       | man                 | van    | Velzen | In het | Veld   | Geachte heer In het Veld-van Velzen    |
         van_velzen['geslachtsaanduiding'] = 'man'
         van_velzen['naam']['aanduidingNaamgebruik'] = 'partner_eigen'
-        self.assertEqual(Communicatie(van_velzen, in_het_veld).aanhef, "Geachte heer In het Veld-van Velzen")
+        self.assertEqual(Communicatie(Persoon(van_velzen), [Partner(in_het_veld)]).aanhef, "Geachte heer In het Veld-van Velzen")
 
     def test_meerdere_actuele_relaties(self):
         # Gegeven de ingeschreven persoon de heer F.C. Groen is getrouwd in 1958 met Geel
@@ -208,8 +208,8 @@ class TestCommunicatie(TestCase):
                 }
             },
         }
-        self.assertEqual(Communicatie(groenen, [geel, roodt]).aanhef, "Geachte heer Geel-Groen")
-        self.assertEqual(Communicatie(groenen, [roodt, geel]).aanhef, "Geachte heer Geel-Groen")
+        self.assertEqual(Communicatie(Persoon(groenen), [Partner(geel), Partner(roodt)]).aanhef, "Geachte heer Geel-Groen")
+        self.assertEqual(Communicatie(Persoon(groenen), [Partner(roodt), Partner(geel)]).aanhef, "Geachte heer Geel-Groen")
 
     def test_meerdere_ontbonden_relaties(self):
         # Gegeven de ingeschreven persoon de heer J. Wit is getrouwd in 1958 met Geel
@@ -280,12 +280,12 @@ class TestCommunicatie(TestCase):
                 }
             }
         }
-        self.assertEqual(Communicatie(wit, None, [zwart, blaauw]).aanhef, "Geachte heer Zwart-Wit")
-        self.assertEqual(Communicatie(wit, None, [blaauw, zwart]).aanhef, "Geachte heer Zwart-Wit")
+        self.assertEqual(Communicatie(Persoon(wit), None, [Partner(zwart), Partner(blaauw)]).aanhef, "Geachte heer Zwart-Wit")
+        self.assertEqual(Communicatie(Persoon(wit), None, [Partner(blaauw), Partner(zwart)]).aanhef, "Geachte heer Zwart-Wit")
 
     def test_adellijke_titel_predikaat(self):
         persoonsgegevens = {}
-        communicatie = Communicatie(persoonsgegevens)
+        communicatie = Communicatie(Persoon(persoonsgegevens))
         communicatie.persoon.adellijke_titel_predikaat = 'een adelijke titel'
         with self.assertRaises(NotImplementedError):
             communicatie._geachte()
