@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import datetime
 
-from gobstuf.mks_utils import MKSConverter, _today
+from gobstuf.mks_utils import MKSConverter, _today, Indication
 
 class TestMKSConverter(TestCase):
 
@@ -127,6 +127,22 @@ class TestMKSConverter(TestCase):
         mock_today.return_value = datetime.date(2017, 3, 1)
         self.assertEqual(MKSConverter.as_leeftijd(birthday), 21)
 
+    def test_indication(self):
+        class AnyIndication(Indication):
+
+            @property
+            def indications(self):
+                return {
+                    'a': 'b',
+                    'c': 'd'
+                }
+
+        indication = AnyIndication()
+        self.assertEqual(indication.identifiers, {
+            'b': 'a',
+            'd': 'c'
+        })
+
     def test_as_geslachtsaanduiding(self):
         valid = {
             'v': 'vrouw',
@@ -151,3 +167,7 @@ class TestMKSConverter(TestCase):
                 self.assertEqual(MKSConverter.as_aanduiding_naamgebruik(aanduiding), expected_result)
         for aanduiding in ['x', 'X', '', 'anything', None]:
             self.assertIsNone(MKSConverter.as_aanduiding_naamgebruik(aanduiding))
+
+    def test_true_if_exists(self):
+        self.assertTrue(MKSConverter.true_if_exists('anything'))
+        self.assertIsNone(MKSConverter.true_if_exists(None))

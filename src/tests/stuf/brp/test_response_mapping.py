@@ -86,17 +86,17 @@ class TestNPSMapping(TestCase):
 
         obj = self.empty_mapping(mapping.mapping)
         obj['any key'] = 'any value'
-        obj['overlijdensdatum'] = 'any datum'
+        obj['overlijden']['indicatieOverleden'] = True
         kwargs = {'inclusiefoverledenpersonen': False}
         result = mapping.filter(obj, **kwargs)
         self.assertEqual(result, None)
 
         obj = self.empty_mapping(mapping.mapping)
         obj['any key'] = 'any value'
-        obj['overlijdensdatum'] = 'any datum'
+        obj['overlijden']['indicatieOverleden'] = True
         kwargs = {'inclusiefoverledenpersonen': True}
         result = mapping.filter(obj, **kwargs)
-        self.assertEqual(result, {'any key': 'any value', 'overlijdensdatum': 'any datum'})
+        self.assertEqual(result, {'any key': 'any value', 'overlijden': {'indicatieOverleden': True}})
 
         obj = self.empty_mapping(mapping.mapping)
         obj['verblijfplaats']['woonadres'] = {'any key': 'any value'}

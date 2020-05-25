@@ -15,7 +15,7 @@ def _today():
 
 class Indication(ABC):
 
-    def __init__(self, id):
+    def __init__(self, id=None):
         """
         Register the id in uppercase
         Resolve the id to get the corresponding description
@@ -28,6 +28,10 @@ class Indication(ABC):
     @abstractmethod
     def indications(self):
         pass  # pragma: no cover
+
+    @property
+    def identifiers(self):
+        return {v: k for k, v in self.indications.items()}
 
     @property
     def description(self):
@@ -235,3 +239,14 @@ class MKSConverter:
     @classmethod
     def get_land_omschrijving(cls, mks_code):
         return CodeResolver.get_land(mks_code)
+
+    @classmethod
+    def true_if_exists(cls, property):
+        """
+        Return True if the property has a value, None if the property is empty
+
+        :param property:
+        :return:
+        """
+        if property is not None:
+            return True
