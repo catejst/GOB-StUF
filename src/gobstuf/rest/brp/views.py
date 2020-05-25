@@ -25,7 +25,8 @@ class IngeschrevenpersonenFilterView(IngeschrevenpersonenView, StufRestFilterVie
     name = 'ingeschrevenpersonen'
 
     query_parameter_combinations = [
-        ('verblijfplaats__postcode', 'verblijfplaats__huisnummer'),
+        ['burgerservicenummer'],
+        ['verblijfplaats__postcode', 'verblijfplaats__huisnummer'],
     ]
 
 
