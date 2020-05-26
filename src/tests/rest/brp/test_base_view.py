@@ -227,9 +227,6 @@ class TestStufRestView(TestCase):
         class StuffRestViewImpl(StufRestView):
             request_template = mock_request_template
             response_template = MagicMock()
-            response_template_properties = {
-                'some_property': 42
-            }
 
         view = StuffRestViewImpl()
         view._make_request = MagicMock()
@@ -243,7 +240,6 @@ class TestStufRestView(TestCase):
         view.request_template.assert_called_with('user', 'application', {'a': 1, 'b': 2})
         view._make_request.assert_called_with(view.request_template.return_value)
 
-        view.response_template.assert_called_with(view._make_request.return_value.text, funcparam=True, some_property=42)
         mock_rest_response.ok.assert_called_with(view.response_template.return_value.get_answer_object.return_value)
 
         # Error response

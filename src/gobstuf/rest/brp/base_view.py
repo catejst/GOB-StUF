@@ -42,9 +42,6 @@ class StufRestView(MethodView):
     # Decorator makes sure the MKS headers are set
     decorators = [headers_required_decorator([MKS_USER_HEADER, MKS_APPLICATION_HEADER])]
 
-    # The key/value pairs in this dictionary will be set as properties on the response template object
-    response_template_properties = {}
-
     # Passed to the response template. Values are the default values.
     functional_query_parameters = {
         'expand': None,
@@ -139,8 +136,7 @@ class StufRestView(MethodView):
 
         # Map MKS response back to REST response.
         response_obj = self.response_template(response.text,
-                                              **self._get_functional_query_parameters(),
-                                              **self.response_template_properties)
+                                              **self._get_functional_query_parameters())
 
         return self._build_response(response_obj, **kwargs)
 
