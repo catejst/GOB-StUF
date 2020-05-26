@@ -240,6 +240,7 @@ class TestStufRestView(TestCase):
         view.request_template.assert_called_with('user', 'application', {'a': 1, 'b': 2})
         view._make_request.assert_called_with(view.request_template.return_value)
 
+        view.response_template.assert_called_with(view._make_request.return_value.text, funcparam=True)
         mock_rest_response.ok.assert_called_with(view.response_template.return_value.get_answer_object.return_value)
 
         # Error response
