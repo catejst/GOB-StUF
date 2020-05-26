@@ -95,9 +95,36 @@ class NPSMapping(Mapping):
 
     @property
     def mapping(self):
+
+        communicatie_parameters = {
+            'persoon': {
+                'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding, 'BG:geslachtsaanduiding'),
+                'naam': {
+                    'aanduidingNaamgebruik': (MKSConverter.as_aanduiding_naamgebruik, 'BG:aanduidingNaamgebruik'),
+                    'voorletters': 'BG:voorletters',
+                    'geslachtsnaam': 'BG:geslachtsnaam',
+                    'voorvoegsel': 'BG:voorvoegselGeslachtsnaam',
+                }
+            },
+            'partners': ['BG:inp.heeftAlsEchtgenootPartner', {
+                'naam': {
+                    'geslachtsnaam': 'BG:gerelateerde BG:geslachtsnaam',
+                    'voorvoegsel': 'BG:gerelateerde BG:voorvoegselGeslachtsnaam',
+                },
+                'aangaanHuwelijkPartnerschap': {
+                    'datum': 'BG:datumSluiting'
+                },
+                'ontbindingHuwelijkPartnerschap': {
+                    'datum': 'BG:datumOntbinding'
+                }
+            }]
+        }
+
         return {
             'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding, 'BG:geslachtsaanduiding'),
             'naam': {
+                'aanhef': (MKSConverter.get_aanhef, communicatie_parameters),
+                'aanschrijfwijze': (MKSConverter.get_aanschrijfwijze, communicatie_parameters),
                 'aanduidingNaamgebruik': (MKSConverter.as_aanduiding_naamgebruik, 'BG:aanduidingNaamgebruik'),
                 'voornamen': 'BG:voornamen',
                 'voorletters': 'BG:voorletters',

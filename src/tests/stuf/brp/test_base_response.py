@@ -35,7 +35,8 @@ class StufMappedResponseImpl(StufMappedResponse):
             'attr4': (len, 'XML PATH D'),
             'attr5': '=attr5 value',
             'attr6': 'XML PATH E@ATTR',
-            'attr7': 'XML PATH F!XPATH EXPRESSION'
+            'attr7': 'XML PATH F!XPATH EXPRESSION',
+            'attr8': ['XML PATH A', 'attr']
         }
 
         def filter(self, obj, **kwargs):
@@ -104,13 +105,6 @@ class MappedObjectWrapperTest(TestCase):
         self.assertIsNone(wrapper.get_filtered_object())
 
 
-
-
-
-
-
-
-
 @patch("gobstuf.stuf.brp.base_response.StufMessage", MagicMock())
 class StufMappedResponseTest(TestCase):
 
@@ -162,7 +156,8 @@ class StufMappedResponseTest(TestCase):
             'attr4': len(resp.stuf_message.get_elm_value(mapping['attr4'][1])),
             'attr5': 'attr5 value',
             'attr6': resp.stuf_message.get_elm_attr(mapping['attr6'], 'ATTR'),
-            'attr7': 'xpath XPATH EXPRESSION'
+            'attr7': 'xpath XPATH EXPRESSION',
+            'attr8': []
         }
 
     def _mock_stuf_message(self, resp):
