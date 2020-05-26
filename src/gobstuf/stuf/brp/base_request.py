@@ -55,6 +55,8 @@ class StufRequest(ABC):
         :param values:
         :return:
         """
+        assert set(values.keys()) <= set(self.parameter_paths.keys())
+
         for key, value in values.items():
             self.set_element(self.parameter_paths[key], value)
 
