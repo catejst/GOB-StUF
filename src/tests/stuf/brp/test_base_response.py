@@ -312,3 +312,65 @@ class StufMappedResponseTest(TestCase):
         self.assertEqual(mock_get_for_entity_type.return_value, resp._get_mapping(element))
         mock_get_for_entity_type.assert_called_with('TST')
 
+
+import xml.etree.ElementTree as ET
+
+
+class TestMappedObject(TestCase):
+
+    def test_mapped_object(self):
+        class MappedResponse(StufMappedResponse):
+            @property
+            def answer_section(self):
+                pass
+            @property
+            def object_elm(self):
+                pass
+
+        xml_msg = '''
+<root>
+  <elm1 attr="attr">value</elm1>
+  <elm2>
+    <elm2sub><value>subvalue1</value></elm2sub>
+    <elm2sub><value>subvalue2</value></elm2sub>
+  </elm2>
+  <elm3>
+    <elm3sub>sub3</elm3sub>
+  </elm3>
+  <elm4 attr="4" />
+  <elm8>
+    <elm8sub x="11">1</elm8sub> 
+    <elm8sub x="12">2</elm8sub> 
+    <elm8sub x="13">3</elm8sub> 
+  </elm8>
+</root>
+'''
+        mapping = {
+            'plain_element_value': 'elm1',
+            'list_value': ['elm2 elm2sub', 'value'],
+            'dict_value': {
+                'a': 'elm1',
+                'b': 'elm3 elm3sub'
+            },
+            'tuple_value': (len, 'elm1'),
+            'literal_value': '=aap',
+            'attribute_value': 'elm4@attr',
+            'xpath_value': 'root elm8!.//elm8sub[@x="12"]'
+        }
+        expect = {
+            'plain_element_value': 'value',
+            'list_value': ['subvalue1', 'subvalue2'],
+            'dict_value': {
+                'a': 'value',
+                'b': 'sub3'
+            },
+            'tuple_value': len('value'),
+            'literal_value': 'aap',
+            'attribute_value': '4',
+            'xpath_value': '2'
+        }
+
+        response = MappedResponse(xml_msg)
+        tree = ET.fromstring(xml_msg)
+        result = response.get_mapped_object(tree, mapping)
+        self.assertEqual(result, expect)
