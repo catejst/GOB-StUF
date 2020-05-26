@@ -6,7 +6,7 @@ from gobstuf.stuf.brp.request.ingeschrevenpersonen import (
 from gobstuf.stuf.brp.response.ingeschrevenpersonen import IngeschrevenpersonenStufResponse
 
 
-class IngeschrevenpersonenView:
+class IngeschrevenpersonenView(StufRestView):
     """
     Contains options that are applicable to all Ingeschrevenpersonen Views
     Use as first parent class
@@ -15,13 +15,18 @@ class IngeschrevenpersonenView:
         'partners'
     ]
 
+    @property
+    def functional_query_parameters(self):
+        return {
+            **super().functional_query_parameters,
+            'inclusiefoverledenpersonen': False,
+        }
+
 
 class IngeschrevenpersonenFilterView(IngeschrevenpersonenView, StufRestFilterView):
     request_template = IngeschrevenpersonenFilterStufRequest
     response_template = IngeschrevenpersonenStufResponse
-    response_template_properties = {
-        'inclusiefoverledenpersonen': False,
-    }
+
     name = 'ingeschrevenpersonen'
 
     query_parameter_combinations = [
@@ -30,7 +35,7 @@ class IngeschrevenpersonenFilterView(IngeschrevenpersonenView, StufRestFilterVie
     ]
 
 
-class IngeschrevenpersonenBsnView(IngeschrevenpersonenView, StufRestView):
+class IngeschrevenpersonenBsnView(IngeschrevenpersonenView):
     request_template = IngeschrevenpersonenBsnStufRequest
     response_template = IngeschrevenpersonenStufResponse
 

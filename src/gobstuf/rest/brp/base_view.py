@@ -107,7 +107,8 @@ class StufRestView(MethodView):
         return {}
 
     def _get_functional_query_parameters(self):
-        return {k: request.args.get(k, v) for k, v in self.functional_query_parameters.items()}
+        return {k: self._transform_query_parameter_value(request.args.get(k, v))
+                for k, v in self.functional_query_parameters.items()}
 
     def _get(self, **kwargs):
         """kwargs contains the URL parameters, for example {'bsn': xxxx'} when the requested resource is
@@ -190,6 +191,27 @@ class StufRestView(MethodView):
         print(f"MKS error {response_obj.get_error_code()}. Code {response_obj.get_error_string()}")
 
         return RESTResponse.bad_request()
+
+    def _transform_query_parameter_value(self, value: str):
+        """Transforms the string value of the query parameter to the corresponding python type for booleans and null
+        values.
+
+        :param value:
+        :return:
+        """
+        if not value:
+            return None
+
+        lower = value.lower()
+
+        if lower in ('null', 'none'):
+            return None
+        elif lower in ('true',):
+            return True
+        elif lower in ('false',):
+            return False
+        else:
+            return value
 
     @property
     @abstractmethod
@@ -301,26 +323,6 @@ class StufRestFilterView(StufRestView):
                 self.name: data,
             }
         }, {})
-
-    def _transform_query_parameter_value(self, value: str):
-        """Transforms the string value of the query parameter to the corresponding python type for booleans and null
-        values.
-
-        :param value:
-        :return:
-        """
-        if not value:
-            return None
-        lower = value.lower()
-
-        if lower in ('null', 'none'):
-            return None
-        elif lower in ('true'):
-            return True
-        elif lower in ('false'):
-            return False
-        else:
-            return value
 
     def _get_query_parameters(self) -> dict:
         """Returns the query parameters as k:v pairs. Returns only the parameters that are in the first matching

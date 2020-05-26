@@ -172,7 +172,7 @@ class TestStufRestView(TestCase):
         self.assertIsNone(getattr(view, '_validate_called', None))
 
         valid_options = ['a', 'b', 'a,b']
-        invalid_options = ['', 'c']
+        invalid_options = ['1', 'c']
 
         for expand in valid_options:
             mock_request.args = {'expand': expand}
@@ -197,6 +197,7 @@ class TestStufRestView(TestCase):
             'd': False,
         }
         view = StufRestView()
+        view._transform_query_parameter_value = lambda x: x
         view.functional_query_parameters = {
             'a': 15,
             'b': 16,
