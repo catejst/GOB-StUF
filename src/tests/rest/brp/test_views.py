@@ -2,6 +2,7 @@ from unittest import TestCase
 from unittest.mock import patch, MagicMock
 
 from gobstuf.rest.brp.views import (
+    IngeschrevenpersonenView,
     IngeschrevenpersonenBsnView,
     IngeschrevenpersonenFilterView,
     IngeschrevenpersonenStufResponse,
@@ -9,10 +10,16 @@ from gobstuf.rest.brp.views import (
 )
 
 
-class TestIngeschrevernpersonenFilterView(TestCase):
+class TestIngeschrevenpersonenView(TestCase):
+    def test_functional_query_parameters(self):
+        view = IngeschrevenpersonenView()
+
+        self.assertIn('inclusiefoverledenpersonen', view.functional_query_parameters)
+
+
+class TestIngeschrevenpersonenFilterView(TestCase):
     def test_template_properties(self):
         view = IngeschrevenpersonenFilterView()
-        self.assertEqual(False, view.response_template_properties['inclusiefoverledenpersonen'])
 
 
 class TestIngeschrevenpersonenBsnView(TestCase):

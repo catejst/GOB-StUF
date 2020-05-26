@@ -42,9 +42,6 @@ class StufRestView(MethodView):
     # Decorator makes sure the MKS headers are set
     decorators = [headers_required_decorator([MKS_USER_HEADER, MKS_APPLICATION_HEADER])]
 
-    # The key/value pairs in this dictionary will be set as properties on the response template object
-    response_template_properties = {}
-
     # Passed to the response template. Values are the default values.
     functional_query_parameters = {
         'expand': None,
@@ -107,7 +104,8 @@ class StufRestView(MethodView):
         return {}
 
     def _get_functional_query_parameters(self):
-        return {k: request.args.get(k, v) for k, v in self.functional_query_parameters.items()}
+        return {k: self._transform_query_parameter_value(request.args.get(k, v))
+                for k, v in self.functional_query_parameters.items()}
 
     def _get(self, **kwargs):
         """kwargs contains the URL parameters, for example {'bsn': xxxx'} when the requested resource is
@@ -138,8 +136,7 @@ class StufRestView(MethodView):
 
         # Map MKS response back to REST response.
         response_obj = self.response_template(response.text,
-                                              **self._get_functional_query_parameters(),
-                                              **self.response_template_properties)
+                                              **self._get_functional_query_parameters())
 
         return self._build_response(response_obj, **kwargs)
 
@@ -190,6 +187,27 @@ class StufRestView(MethodView):
         print(f"MKS error {response_obj.get_error_code()}. Code {response_obj.get_error_string()}")
 
         return RESTResponse.bad_request()
+
+    def _transform_query_parameter_value(self, value: str):
+        """Transforms the string value of the query parameter to the corresponding python type for booleans and null
+        values.
+
+        :param value:
+        :return:
+        """
+        if not value:
+            return None
+
+        lower = value.lower()
+
+        if lower in ('null', 'none'):
+            return None
+        elif lower in ('true',):
+            return True
+        elif lower in ('false',):
+            return False
+        else:
+            return value
 
     @property
     @abstractmethod
@@ -301,26 +319,6 @@ class StufRestFilterView(StufRestView):
                 self.name: data,
             }
         }, {})
-
-    def _transform_query_parameter_value(self, value: str):
-        """Transforms the string value of the query parameter to the corresponding python type for booleans and null
-        values.
-
-        :param value:
-        :return:
-        """
-        if not value:
-            return None
-        lower = value.lower()
-
-        if lower in ('null', 'none'):
-            return None
-        elif lower in ('true'):
-            return True
-        elif lower in ('false'):
-            return False
-        else:
-            return value
 
     def _get_query_parameters(self) -> dict:
         """Returns the query parameters as k:v pairs. Returns only the parameters that are in the first matching

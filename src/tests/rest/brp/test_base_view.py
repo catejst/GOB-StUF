@@ -172,7 +172,7 @@ class TestStufRestView(TestCase):
         self.assertIsNone(getattr(view, '_validate_called', None))
 
         valid_options = ['a', 'b', 'a,b']
-        invalid_options = ['', 'c']
+        invalid_options = ['1', 'c']
 
         for expand in valid_options:
             mock_request.args = {'expand': expand}
@@ -197,6 +197,7 @@ class TestStufRestView(TestCase):
             'd': False,
         }
         view = StufRestView()
+        view._transform_query_parameter_value = lambda x: x
         view.functional_query_parameters = {
             'a': 15,
             'b': 16,
@@ -226,9 +227,6 @@ class TestStufRestView(TestCase):
         class StuffRestViewImpl(StufRestView):
             request_template = mock_request_template
             response_template = MagicMock()
-            response_template_properties = {
-                'some_property': 42
-            }
 
         view = StuffRestViewImpl()
         view._make_request = MagicMock()
@@ -242,7 +240,7 @@ class TestStufRestView(TestCase):
         view.request_template.assert_called_with('user', 'application', {'a': 1, 'b': 2})
         view._make_request.assert_called_with(view.request_template.return_value)
 
-        view.response_template.assert_called_with(view._make_request.return_value.text, funcparam=True, some_property=42)
+        view.response_template.assert_called_with(view._make_request.return_value.text, funcparam=True)
         mock_rest_response.ok.assert_called_with(view.response_template.return_value.get_answer_object.return_value)
 
         # Error response
