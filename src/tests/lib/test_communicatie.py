@@ -290,6 +290,18 @@ class TestCommunicatie(TestCase):
         with self.assertRaises(NotImplementedError):
             communicatie._geachte()
 
+    def test_naamgebruik_with_missing_partner_data(self):
+        groenen = {
+            'geslachtsaanduiding': 'man',
+            'naam': {
+                'aanduidingNaamgebruik': 'partner_eigen',
+                'geslachtsnaam': 'Groen',
+            }
+        }
+        communicatie = Communicatie(Persoon(groenen))
+        self.assertIsNone(communicatie.aanhef)
+        self.assertIsNone(communicatie.aanschrijfwijze)
+
 
 class TestPersoon(TestCase):
 
