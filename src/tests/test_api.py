@@ -13,6 +13,7 @@ class MockResponse:
         self.status_code = status_code
 
 
+@mock.patch('gobstuf.api.AuditLogMiddleware', mock.MagicMock())
 class TestAPI(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -113,11 +114,9 @@ class TestAPI(unittest.TestCase):
             _handle_stuf_request(request, routed_url)
 
 
-    @mock.patch("gobstuf.api.AuditLogger")
     @mock.patch("gobstuf.api._handle_stuf_request", return_value=MockResponse('get', 123))
     @mock.patch("gobstuf.api.flask")
-    @mock.patch("gobstuf.api.uuid.uuid4", return_value="the uuid")
-    def test_stuf(self, mock_uuid, mock_flask, mock_handle_stuf, mock_audit_logger):
+    def test_stuf(self, mock_flask, mock_handle_stuf):
         mock_flask.request.method = 'GET'
         mock_flask.request.url = "any url"
         mock_flask.request.data = b"any data"
@@ -129,36 +128,9 @@ class TestAPI(unittest.TestCase):
         response = _stuf()
         self.assertEqual(response.data, b"get")
 
-        # Make sure audit log is called
-        audit_logger_instance = mock_audit_logger.get_instance.return_value
-        audit_logger_instance.log_request.assert_called_with(
-            '1.2.3.4',
-            'ROUTE_SCHEME://ROUTE_NETLOC/any url',
-            {
-                'soapaction': 'zeepactie',
-                'original_url': 'any url',
-                'method': 'GET',
-            },
-            'the uuid',
-        )
-
-        audit_logger_instance.log_response.assert_called_with(
-            '1.2.3.4',
-            'ROUTE_SCHEME://ROUTE_NETLOC/any url',
-            {
-                'soapaction': 'zeepactie',
-                'remote_response_code': 123,
-                'original_url': 'any url',
-                'method': 'GET',
-            },
-            'the uuid',
-        )
-
-    @mock.patch("gobstuf.api.AuditLogger")
     @mock.patch("gobstuf.api._handle_stuf_request", return_value=MockResponse('get', 123))
     @mock.patch("gobstuf.api.flask")
-    @mock.patch("gobstuf.api.uuid.uuid4", return_value="the uuid")
-    def test_stuf_exception(self, mock_uuid, mock_flask, mock_handle_stuf, mock_audit_logger):
+    def test_stuf_exception(self, mock_flask, mock_handle_stuf):
         mock_handle_stuf.side_effect = BadRequest("Exception message")
 
         mock_flask.request.method = 'GET'
@@ -171,31 +143,6 @@ class TestAPI(unittest.TestCase):
 
         with self.assertRaises(BadRequest):
             response = _stuf()
-
-        # Make sure audit log is called
-        audit_logger_instance = mock_audit_logger.get_instance.return_value
-        audit_logger_instance.log_request.assert_called_with(
-            '1.2.3.4',
-            'ROUTE_SCHEME://ROUTE_NETLOC/any url',
-            {
-                'soapaction': 'zeepactie',
-                'original_url': 'any url',
-                'method': 'GET',
-            },
-            'the uuid',
-        )
-
-        audit_logger_instance.log_response.assert_called_with(
-            '1.2.3.4',
-            'ROUTE_SCHEME://ROUTE_NETLOC/any url',
-            {
-                'soapaction': 'zeepactie',
-                'exception': '400 Bad Request: Exception message',
-                'original_url': 'any url',
-                'method': 'GET',
-            },
-            'the uuid',
-        )
 
     @mock.patch("gobstuf.api.CORS", mock.MagicMock())
     @mock.patch("gobstuf.api.Flask")
@@ -214,3 +161,14 @@ class TestAPI(unittest.TestCase):
         run()
         mock_app.run.assert_called_with(port=1234)
 
+
+class TestAPIMiddleware(unittest.TestCase):
+
+    @mock.patch('gobstuf.api.AuditLogMiddleware')
+    @mock.patch("gobstuf.api.CORS", mock.MagicMock())
+    @mock.patch("gobstuf.api.Flask")
+    def test_get_app(self, mock_flask, mock_middleware):
+        mock_app = mock.MagicMock()
+        mock_flask.return_value = mock_app
+        app = get_app()
+        mock_middleware.assert_called_with(app)

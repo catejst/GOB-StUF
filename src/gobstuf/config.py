@@ -29,3 +29,9 @@ PKCS12_FILENAME = _getenv("PKCS12_FILENAME", is_optional=True)
 PKCS12_PASSWORD = _getenv("PKCS12_PASSWORD", is_optional=True)
 
 API_BASE_PATH = _getenv("BASE_PATH", default_value="", is_optional=True)
+
+AUDIT_LOG_CONFIG = {
+    'EXEMPT_URLS': [],
+    'LOG_HANDLER_CALLABLE_PATH': 'gobstuf.audit_log.get_log_handler',
+    'USER_FROM_REQUEST_CALLABLE_PATH': 'gobstuf.audit_log.get_user_from_request'
+}
