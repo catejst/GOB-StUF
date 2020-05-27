@@ -124,7 +124,7 @@ class Partner(Persoon):
         :return:
         """
         if self._ontbinding_huwelijk_partnerschap and\
-                self._ontbinding_huwelijk_partnerschap.get('indicatieHuwelijkPartnerschapBeeindigd'):
+                self._ontbinding_huwelijk_partnerschap.get('indicatieHuwelijkPartnerschapBeeindigd', True):
             return _datum_to_date(self._ontbinding_huwelijk_partnerschap.get('datum'))
 
 

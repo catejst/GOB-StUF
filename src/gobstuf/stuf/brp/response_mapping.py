@@ -112,10 +112,10 @@ class NPSMapping(Mapping):
                     'voorvoegsel': 'BG:gerelateerde BG:voorvoegselGeslachtsnaam',
                 },
                 'aangaanHuwelijkPartnerschap': {
-                    'datum': 'BG:datumSluiting'
+                    'datum': (MKSConverter.as_datum_broken_down, 'BG:datumSluiting')
                 },
                 'ontbindingHuwelijkPartnerschap': {
-                    'datum': 'BG:datumOntbinding'
+                    'datum': (MKSConverter.as_datum_broken_down, 'BG:datumOntbinding')
                 }
             }]
         }
