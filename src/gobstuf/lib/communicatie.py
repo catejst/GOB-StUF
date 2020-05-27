@@ -11,7 +11,7 @@ from typing import List
 from functools import reduce
 from operator import getitem
 
-from gobstuf.mks_utils import AanduidingNaamgebruik, Geslachtsaanduiding
+from gobstuf.indications import AanduidingNaamgebruik, Geslachtsaanduiding
 
 
 def _get_value(dict, *args):

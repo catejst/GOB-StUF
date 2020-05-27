@@ -269,6 +269,13 @@ class StufMappedResponse(StufResponse):
             method, *mappings = mapping
             attributes = [self.get_mapped_object(obj, v) for v in mappings]
             return method(*attributes)
+        elif isinstance(mapping, list):
+            # Iterate over a list of items
+            # The main key is the first element in the list
+            # The mapping to be resolved for every instance of this key is the second element
+            elms = self.stuf_message.find_all_elms(mapping[0], obj)
+            subobj = mapping[1]
+            return [self.get_mapped_object(elm, subobj) for elm in elms]
         elif mapping and mapping[0] == '=':
             # Literal value, eg: =value results in value
             return mapping[1:]

@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 import datetime
 
-from gobstuf.mks_utils import MKSConverter, _today, Indication
+from gobstuf.mks_utils import MKSConverter, _today
+from gobstuf.indications import Indication
 
 class TestMKSConverter(TestCase):
 
@@ -171,3 +172,50 @@ class TestMKSConverter(TestCase):
     def test_true_if_exists(self):
         self.assertTrue(MKSConverter.true_if_exists('anything'))
         self.assertIsNone(MKSConverter.true_if_exists(None))
+
+    def test_get_communicatie(self):
+        communicatie_parameters = {
+            'persoon': {
+                'geslachtsaanduiding': 'man',
+                'naam': {
+                    'aanduidingNaamgebruik': 'eigen',
+                    'voorletters': 'M.',
+                    'geslachtsnaam': 'Ruyter',
+                    'voorvoegsel': 'de',
+                }
+            },
+            'partners': [
+                {
+                    'naam': {
+                        'geslachtsnaam': 'Engels',
+                        'voorvoegsel': '',
+                    },
+                    'aangaanHuwelijkPartnerschap': {
+                        'datum': '16360701'
+                    },
+                    'ontbindingHuwelijkPartnerschap': {
+                        'datum': None
+                    }
+                },
+                {
+                    'naam': {
+                        'geslachtsnaam': 'Velders',
+                        'voorvoegsel': '',
+                    },
+                    'aangaanHuwelijkPartnerschap': {
+                        'datum': '16310316'
+                    },
+                    'ontbindingHuwelijkPartnerschap': {
+                        'datum': '16311231'
+                    }
+                },
+            ]
+        }
+        communicatie = MKSConverter._get_communicatie(communicatie_parameters)
+        self.assertEqual(communicatie.persoon.geslachtsnaam, 'Ruyter')
+        self.assertEqual(communicatie.partner.geslachtsnaam, 'Engels')
+        self.assertEqual(communicatie.partners[0].geslachtsnaam, 'Engels')
+        self.assertEqual(communicatie.partnerhistorie[0].geslachtsnaam, 'Velders')
+
+        self.assertEqual(MKSConverter.get_aanhef(communicatie_parameters), "Geachte heer De Ruyter")
+        self.assertEqual(MKSConverter.get_aanschrijfwijze(communicatie_parameters), "M. de Ruyter")
