@@ -204,7 +204,11 @@ class Communicatie():
 
         :return:
         """
-        return f"{self._geachte()} {self._naamgebruik(capitalize_eerste_voorvoegsel=True)}"
+        try:
+            return f"{self._geachte()} {self._naamgebruik(capitalize_eerste_voorvoegsel=True)}"
+        except AttributeError:
+            # A required attribute is missing, eg partner name with naamgebruik != eigen
+            pass
 
     @property
     def aanschrijfwijze(self):
@@ -213,7 +217,11 @@ class Communicatie():
 
         :return:
         """
-        return f"{self.persoon.voorletters} {self._naamgebruik(capitalize_eerste_voorvoegsel=False)}"
+        try:
+            return f"{self.persoon.voorletters} {self._naamgebruik(capitalize_eerste_voorvoegsel=False)}"
+        except AttributeError:
+            # A required attribute is missing, eg partner name with naamgebruik != eigen
+            pass
 
     def _get_partner(self):
         """
