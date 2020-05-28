@@ -302,6 +302,18 @@ class TestCommunicatie(TestCase):
         self.assertIsNone(communicatie.aanhef)
         self.assertIsNone(communicatie.aanschrijfwijze)
 
+    def test_naamgebruik_with_missing_naamgebruik(self):
+        groenen = {
+            'geslachtsaanduiding': 'man',
+            'naam': {
+                'aanduidingNaamgebruik': None,
+                'geslachtsnaam': 'Groen',
+            }
+        }
+        communicatie = Communicatie(Persoon(groenen))
+        self.assertIsNone(communicatie.aanhef)
+        self.assertIsNone(communicatie.aanschrijfwijze)
+
 
 class TestPersoon(TestCase):
 
