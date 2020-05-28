@@ -15,6 +15,9 @@ class StufRequestImpl(StufRequest):
     }
     soap_action = 'SOAP ACTION'
 
+    def convert_param_attr2(self, value: str):
+        return value * 2
+
 
 @patch("gobstuf.stuf.brp.base_request.TEMPLATE_DIR", "/template/dir")
 class StufRequestTestInit(TestCase):
@@ -23,19 +26,21 @@ class StufRequestTestInit(TestCase):
     @patch("builtins.open")
     @patch("gobstuf.stuf.brp.base_request.StufMessage")
     @patch("gobstuf.stuf.brp.base_request.StufRequest.set_element")
-    def test_init(self, mock_set_element, mock_message, mock_open):
+    def test_init_set_values(self, mock_set_element, mock_message, mock_open):
         values = {
             'attr1': 'value1',
             'attr2': 'value2',
         }
 
-        req = StufRequestImpl('USERNAME', 'APPLICATION_NAME', values)
+        req = StufRequestImpl('USERNAME', 'APPLICATION_NAME')
+        req.set_values(values)
 
         mock_set_element.assert_has_calls([
             call(req.applicatie_path, 'APPLICATION_NAME'),
             call(req.gebruiker_path, 'USERNAME'),
             call('PATH TO ATTR1', 'value1'),
-            call('PATH TO ATTR2', 'value2'),
+            # This attribute is converted by convert_param_attr2
+            call('PATH TO ATTR2', 'value2value2'),
         ])
 
         self.assertEqual(mock_message.return_value, req.stuf_message)
@@ -47,18 +52,17 @@ class StufRequestTestInit(TestCase):
 @patch("gobstuf.stuf.brp.base_request.StufRequest._load", MagicMock())
 @patch("gobstuf.stuf.brp.base_request.StufRequest._set_applicatie", MagicMock())
 @patch("gobstuf.stuf.brp.base_request.StufRequest._set_gebruiker", MagicMock())
-@patch("gobstuf.stuf.brp.base_request.StufRequest._set_values", MagicMock())
 class StufRequestTest(TestCase):
     """ All initialisation methods are mocked; initialisation is tested in StufRequestTestInit """
 
     def test_time_str(self):
         dt = datetime.datetime.utcnow().replace(2020, 4, 9, 12, 59, 59, 88402, tzinfo=None)
-        req = StufRequestImpl('', '', {})
+        req = StufRequestImpl('', '')
 
         self.assertEqual('20200409125959088', req.time_str(dt))
 
     def test_set_element(self):
-        req = StufRequestImpl('', '', {})
+        req = StufRequestImpl('', '')
         req.stuf_message = MagicMock()
         req.stuf_message.find_elm.return_value = True
 
@@ -73,11 +77,11 @@ class StufRequestTest(TestCase):
 
     def test_validate(self):
         # Default validation is to return no errors: None
-        req = StufRequestImpl('', '', {})
+        req = StufRequestImpl('', '')
         self.assertIsNone(req.validate({}))
 
     def test_params_errors(self):
-        req = StufRequestImpl('', '', {})
+        req = StufRequestImpl('', '')
         result = req.params_errors([], [])
         self.assertEqual(result, {
             "invalid-params": [],
@@ -94,7 +98,7 @@ class StufRequestTest(TestCase):
     @patch("gobstuf.stuf.brp.base_request.random")
     def test_to_string(self, mock_random, mock_datetime):
         mock_random.randint.return_value = 12345
-        req = StufRequestImpl('', '', {})
+        req = StufRequestImpl('', '')
         req.stuf_message = MagicMock()
         req.set_element = MagicMock()
         req.time_str = MagicMock(return_value='TIMESTR')
@@ -107,7 +111,7 @@ class StufRequestTest(TestCase):
         ])
 
     def test_str(self):
-        req = StufRequestImpl('', '', {})
+        req = StufRequestImpl('', '')
         req.to_string = MagicMock(return_value='sttrrrrring')
 
         self.assertEqual(req.to_string(), str(req))

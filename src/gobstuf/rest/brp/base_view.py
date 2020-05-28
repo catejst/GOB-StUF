@@ -121,12 +121,13 @@ class StufRestView(MethodView):
         # Request MKS with given request_template
         request_template = self.request_template(
             request.headers.get(MKS_USER_HEADER),
-            request.headers.get(MKS_APPLICATION_HEADER),
-            self._request_template_parameters(**kwargs)
+            request.headers.get(MKS_APPLICATION_HEADER)
         )
         errors = request_template.validate(self._request_template_parameters(**kwargs))
         if errors:
             return RESTResponse.bad_request(**errors)
+
+        request_template.set_values(self._request_template_parameters(**kwargs))
 
         response = self._make_request(request_template)
 
