@@ -1,3 +1,5 @@
+import traceback
+
 from flask.views import MethodView
 from flask import request, abort, Response
 from requests.exceptions import HTTPError
@@ -61,8 +63,9 @@ class StufRestView(MethodView):
 
         try:
             return self._get(**kwargs)
-        except Exception as e:
-            print(f"ERROR: Request failed: {str(e)}")
+        except Exception:
+            print(f"ERROR: Request failed:")
+            traceback.print_exc()
             return RESTResponse.internal_server_error()
 
     def _request_template_parameters(self, **kwargs):
