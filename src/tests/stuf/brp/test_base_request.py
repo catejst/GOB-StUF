@@ -75,11 +75,6 @@ class StufRequestTest(TestCase):
         req.set_element('THE PATH', 'the value')
         req.stuf_message.create_elm.assert_called_with('A B C THE PATH')
 
-    def test_validate(self):
-        # Default validation is to return no errors: None
-        req = StufRequestImpl('', '')
-        self.assertIsNone(req.validate({}))
-
     def test_params_errors(self):
         req = StufRequestImpl('', '')
         result = req.params_errors([], [])

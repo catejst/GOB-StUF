@@ -25,6 +25,8 @@ class StufRequest(ABC):
     tijdstip_bericht_path = 'BG:stuurgegevens StUF:tijdstipBericht'
     referentienummer_path = 'BG:stuurgegevens StUF:referentienummer'
 
+    parameter_checks = {}
+
     def __init__(self, gebruiker: str, applicatie: str):
         """
 
@@ -126,15 +128,6 @@ class StufRequest(ABC):
         self.set_element(self.referentienummer_path, f"GOB{timestr}_{random.randint(0, sys.maxsize)}")
 
         return self.stuf_message.to_string()
-
-    def validate(self, args):
-        """
-        Validate the request arguments. The default implementation is to return no errors (None)
-
-        :param args:
-        :return: None if no errors, else a params error result
-        """
-        return None
 
     def params_errors(self, names, invalid_params):
         """

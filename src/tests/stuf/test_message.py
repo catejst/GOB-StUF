@@ -240,6 +240,11 @@ class TestXML(TestCase):
         stuf_message.set_elm_value('elm7', 'elm7value')
         self.assertEqual('elm7value', stuf_message.get_elm_value('elm7'))
 
+        # Try to create element with namespace
+        stuf_message.create_elm('elm9 StUF:elm10')
+        stuf_message.set_elm_value('elm9 StUF:elm10', 'the value')
+        self.assertEqual('the value', stuf_message.get_elm_value('elm9 StUF:elm10'))
+
     def test_find_all_elms(self):
         stuf_message = StufMessage(self.msg)
 
