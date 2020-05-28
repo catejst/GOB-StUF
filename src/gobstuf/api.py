@@ -1,5 +1,4 @@
 import re
-import uuid
 
 import flask
 from flask import Flask, Response
@@ -7,9 +6,9 @@ from flask_cors import CORS
 
 from urllib.parse import urlsplit, urlunsplit, SplitResult
 
-from gobcore.logging.audit_logger import AuditLogger
+from flask_audit_log.middleware import AuditLogMiddleware
 
-from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH, API_BASE_PATH
+from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH, API_BASE_PATH, AUDIT_LOG_CONFIG
 from gobstuf.certrequest import cert_get, cert_post
 from gobstuf.rest.routes import REST_ROUTES
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, HTTPException
@@ -122,19 +121,14 @@ def _stuf():
 
     :return: XML response
     """
-    audit_logger = AuditLogger.get_instance()
-
     request = flask.request
     url = _routed_url(request.url)
-
-    request_uuid = str(uuid.uuid4())
 
     request_log_data = {
         'soapaction': request.headers.get('Soapaction'),
         'original_url': request.url,
         'method': request.method,
     }
-    audit_logger.log_request(request.remote_addr, url, request_log_data, request_uuid)
 
     response_log_data = {**request_log_data}
 
@@ -143,12 +137,10 @@ def _stuf():
     except HTTPException as e:
         # If Exception occurs, log exception and re-raise
         response_log_data['exception'] = str(e)
-        audit_logger.log_response(request.remote_addr, url, response_log_data, request_uuid)
         raise e
 
     # Successful
     response_log_data['remote_response_code'] = response.status_code
-    audit_logger.log_response(request.remote_addr, url, response_log_data, request_uuid)
     text = _update_response(response.text)
 
     return Response(text, mimetype="text/xml")
@@ -171,6 +163,10 @@ def get_app():
 
     app = Flask(__name__)
     CORS(app)
+
+    # Add the AuditLogMiddleware
+    app.config['AUDIT_LOG'] = AUDIT_LOG_CONFIG
+    AuditLogMiddleware(app)
 
     print("Available endpoints:")
 
