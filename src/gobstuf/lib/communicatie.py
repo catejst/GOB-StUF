@@ -158,6 +158,10 @@ class Communicatie():
         # GA VV1 GN1 [- VV2 GN2]
         # De waarde van aanduidingNaamgebruik bepaalt hoe de aanhef wordt samengesteld
         # uit de naam van de persoon en de naam van de partner.
+        if not self.persoon.aanduiding_naamgebruik:
+            # Required attribute is missing
+            raise AttributeError
+
         vv1, gn1, vv2, gn2 = {
             AanduidingNaamgebruik.EIGEN: self._eigen_naam,
             AanduidingNaamgebruik.EIGEN_PARTNER: self._eigen_partner_naam,
