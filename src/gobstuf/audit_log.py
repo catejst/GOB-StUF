@@ -16,10 +16,6 @@ def get_log_handler():
     return GOBAuditLogHandler()
 
 
-class AuditLogException(Exception):
-    pass
-
-
 class GOBAuditLogHandler(logging.StreamHandler):
 
     def emit(self, record):
@@ -42,9 +38,9 @@ class GOBAuditLogHandler(logging.StreamHandler):
         """
         try:
             msg = json.loads(self.format(record))
-        except (json.JSONDecodeError, TypeError) as e:
-            # Fail to log is an (fatal) exception, don't return a non-logged response !
-            raise AuditLogException(f'ERROR: Failed to log request/response: {str(e)}')
+        except (json.JSONDecodeError, TypeError) as exception:
+            on_audit_log_exception(exception, record)
+            return
 
         request_uuid = str(uuid.uuid4())
         # Get the source and destination from the middleware log message
@@ -56,17 +52,34 @@ class GOBAuditLogHandler(logging.StreamHandler):
 
         audit_logger = AuditLogger.get_instance()
 
-        audit_logger.log_request(
-            source=source,
-            destination=destination,
-            extra_data=request_data,
-            request_uuid=request_uuid)
+        try:
+            audit_logger.log_request(
+                source=source,
+                destination=destination,
+                extra_data=request_data,
+                request_uuid=request_uuid)
 
-        audit_logger.log_response(
-            source=source,
-            destination=destination,
-            extra_data=response_data,
-            request_uuid=request_uuid)
+            audit_logger.log_response(
+                source=source,
+                destination=destination,
+                extra_data=response_data,
+                request_uuid=request_uuid)
+        except Exception as exception:
+            on_audit_log_exception(exception, msg)
+
+
+def on_audit_log_exception(exception, msg):
+    """
+    If for any reason the audit log should fail
+    an error message is printed
+    and the message that ought to be logged is printed
+
+    :param exception:
+    :param msg:
+    :return:
+    """
+    print(f"ERROR: Audit log request/response failed: {str(exception)}")
+    print("AUDIT LOG", msg)
 
 
 def get_user_from_request() -> dict:

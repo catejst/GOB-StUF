@@ -1,9 +1,9 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, ANY
 
 import json
 
-from gobstuf.audit_log import GOBAuditLogHandler, AuditLogException, get_log_handler, get_user_from_request, get_nested_item
+from gobstuf.audit_log import GOBAuditLogHandler, get_log_handler, get_user_from_request, get_nested_item, on_audit_log_exception
 
 class TestAuditLog(unittest.TestCase):
 
@@ -13,13 +13,14 @@ class TestAuditLog(unittest.TestCase):
 
     @patch('gobstuf.audit_log.uuid.uuid4', lambda: 'any uuid')
     @patch('gobstuf.audit_log.AuditLogger')
-    def test_emit(self, mock_audit_logger):
+    @patch('gobstuf.audit_log.on_audit_log_exception')
+    def test_emit(self, mock_on_audit_log_exception, mock_audit_logger):
         log_handler = GOBAuditLogHandler()
 
         log_handler.format = MagicMock()
         record = None
-        with self.assertRaises(AuditLogException):
-            log_handler.emit(record)
+        log_handler.emit(record)
+        mock_on_audit_log_exception.assert_called_with(ANY, record)
 
         log_handler.format.side_effect = lambda record: json.dumps(record)
         record = {
@@ -58,6 +59,11 @@ class TestAuditLog(unittest.TestCase):
             request_uuid="any uuid"
         )
 
+        mock_on_audit_log_exception.reset_mock()
+        audit_logger.log_request.side_effect = Exception("any exception")
+        log_handler.emit(record)
+        mock_on_audit_log_exception.assert_called_with(audit_logger.log_request.side_effect, record)
+
     @patch('gobstuf.audit_log.get_client_ip')
     @patch('gobstuf.audit_log.request')
     def test_get_user_from_request(self, mock_request, mock_get_client_ip):
@@ -80,3 +86,9 @@ class TestAuditLog(unittest.TestCase):
     def test_get_log_handler(self):
         log_handler = get_log_handler()
         self.assertIsInstance(log_handler, GOBAuditLogHandler)
+
+    @patch("builtins.print")
+    def test_on_audit_log_exception(self, mock_print):
+        msg_to_be_logged = 'any message'
+        on_audit_log_exception(Exception(), msg_to_be_logged)
+        mock_print.assert_called_with(ANY, msg_to_be_logged)
