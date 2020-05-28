@@ -115,6 +115,7 @@ class TestStufRestView(TestCase):
 
         # Naughty child does not call super()._validate() and raises an error
         naughty_child = StufRestViewNaughtyChild()
+        naughty_child._validate_request_args = MagicMock(return_value=None)
 
         kwargs = {'kw': 'arg'}
         with self.assertRaises(AssertionError):
@@ -122,6 +123,7 @@ class TestStufRestView(TestCase):
 
         # Obedient child does call super()._validate() and succeeds
         obedient_child = StufRestViewObedientChild()
+        obedient_child._validate_request_args = MagicMock(return_value=None)
 
         self.assertEqual('OK', obedient_child.get(**kwargs))
 
@@ -168,6 +170,7 @@ class TestStufRestView(TestCase):
     @patch("gobstuf.rest.brp.base_view.request")
     def test_validate(self, mock_request):
         view = StufRestView()
+        view._validate_request_args = MagicMock(return_value=None)
         view.expand_options = ['a', 'b']
         self.assertIsNone(getattr(view, '_validate_called', None))
 
@@ -187,6 +190,13 @@ class TestStufRestView(TestCase):
         for expand in invalid_options:
             mock_request.args = {'expand': expand}
             self.assertEqual(error, view._validate())
+
+    def test_validate_call_request_args(self):
+        view = StufRestView()
+        view._validate_request_args = MagicMock(return_value={'the': 'errors'})
+
+        self.assertEqual({'the': 'errors'}, view._validate(kw='arg'))
+        view._validate_request_args.assert_called_with(kw='arg')
 
     @patch("gobstuf.rest.brp.base_view.request")
     def test_get_functional_query_parameters(self, mock_request):
@@ -222,7 +232,6 @@ class TestStufRestView(TestCase):
         mock_request.args = {}
 
         mock_request_template = MagicMock()
-        mock_request_template.return_value.validate.return_value = None
 
         class StuffRestViewImpl(StufRestView):
             request_template = mock_request_template
@@ -237,7 +246,8 @@ class TestStufRestView(TestCase):
 
         # Success response
         self.assertEqual(mock_rest_response.ok.return_value, view._get(a=1, b=2))
-        view.request_template.assert_called_with('user', 'application', {'a': 1, 'b': 2})
+        view.request_template.assert_called_with('user', 'application')
+        view.request_template.return_value.set_values.assert_called_with({'a': 1, 'b': 2})
         view._make_request.assert_called_with(view.request_template.return_value)
 
         view.response_template.assert_called_with(view._make_request.return_value.text, funcparam=True)
@@ -256,12 +266,6 @@ class TestStufRestView(TestCase):
 
         self.assertEqual(mock_rest_response.not_found(), view._get(a=1, b=2))
 
-        # 400 Bad Request
-        mock_request_template.return_value.validate.return_value = {'error': 'any error', 'code': 'any code'}
-        view._bad_request_response = MagicMock()
-        self.assertEqual(mock_rest_response.bad_request.return_value, view._get(a=1, b=2))
-        mock_rest_response.bad_request.assert_called_with(error='any error', code='any code')
-
         # Test invalid request
         view._validate = lambda **kwargs: {'some': 'error'}
         kwargs = {'kw': 'args'}
@@ -275,6 +279,7 @@ class TestStufRestView(TestCase):
         view._validate = MagicMock(return_value={})
         view._get_functional_query_parameters = MagicMock(return_value={})
         view._validate_called = True
+        view._validate_request_args = MagicMock(return_value=None)
 
         # Regular response
         result = view.get(any='thing')
@@ -408,4 +413,56 @@ class TestStufRestFilterView(TestCase):
 
         with self.assertRaises(view.InvalidQueryParametersException):
             view._get_query_parameters()
+
+    @patch("gobstuf.rest.brp.base_view.RESTResponse")
+    def test_argument_check(self, mock_rest_response):
+        view = StufRestView()
+        view._validate_request_args = MagicMock(return_value={'error': 'any error'})
+        self.assertEqual(view.get(), mock_rest_response.bad_request.return_value)
+        mock_rest_response.bad_request.assert_called_with(error='any error')
+
+    @patch("gobstuf.rest.brp.base_view.request")
+    def test_validate_request_args(self, mock_request):
+        class StufRestViewImpl(StufRestView):
+            request_template = MagicMock()
+
+        view = StufRestViewImpl()
+        view._request_template_parameters = MagicMock(return_value={
+            'attr1': 'value1',
+            'attr2': 'value2',
+            'attr3': 'value3',
+            'attr4': 'value4',
+        })
+
+        view.request_template.parameter_checks = {
+            'attr1': {
+                'check': lambda v: False,
+                'msg': {
+                    'the msg': 'oh oh',
+                }
+            },
+            'attr2': {
+                'check': lambda v: True,
+                'msg': {
+                    'the msg': 'this one will not be shown',
+                }
+            },
+            'attr4': {
+                'check': lambda v: False,
+                'msg': {
+                    'the msg': 'foute boel',
+                }
+            }
+        }
+
+        self.assertEqual({
+            'invalid-params': [
+                {'name': 'attr1', 'the msg': 'oh oh'},
+                {'name': 'attr4', 'the msg': 'foute boel'},
+            ],
+            'title': 'Een of meerdere parameters zijn niet correct.',
+            'detail': 'De foutieve parameter(s) zijn: attr1, attr4.',
+            'code': 'paramsValidation',
+        }, view._validate_request_args(some='kwargs'))
+        view._request_template_parameters.assert_called_with(some='kwargs')
 

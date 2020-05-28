@@ -1,3 +1,5 @@
+import traceback
+
 from flask.views import MethodView
 from flask import request, abort, Response
 from requests.exceptions import HTTPError
@@ -10,6 +12,7 @@ from gobstuf.stuf.exception import NoStufAnswerException
 from gobstuf.stuf.brp.error_response import StufErrorResponse
 from gobstuf.rest.brp.rest_response import RESTResponse
 from gobstuf.config import ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH
+from gobstuf.rest.brp.argument_checks import ArgumentCheck
 
 MKS_USER_HEADER = 'MKS_GEBRUIKER'
 MKS_APPLICATION_HEADER = 'MKS_APPLICATIE'
@@ -51,6 +54,7 @@ class StufRestView(MethodView):
     expand_options = []
 
     def get(self, **kwargs):
+
         errors = self._validate(**kwargs)
 
         assert getattr(self, '_validate_called', False), \
@@ -61,9 +65,55 @@ class StufRestView(MethodView):
 
         try:
             return self._get(**kwargs)
-        except Exception as e:
-            print(f"ERROR: Request failed: {str(e)}")
+        except Exception:
+            print(f"ERROR: Request failed:")
+            traceback.print_exc()
             return RESTResponse.internal_server_error()
+
+    def _validate_request_args(self, **kwargs):
+        """
+        Validate the request arguments and path variables
+
+        :param args:
+        :return:
+        """
+        args = self._request_template_parameters(**kwargs)
+        invalid_params = []
+        for arg, value in args.items():
+            invalid_param = self._validate_request_arg(arg, value)
+            if invalid_param:
+                invalid_params.append(invalid_param)
+
+        if invalid_params:
+            param_names = ', '.join([param['name'] for param in invalid_params])
+            return {
+                "invalid-params": invalid_params,
+                "title": "Een of meerdere parameters zijn niet correct.",
+                "detail": f"De foutieve parameter(s) zijn: {param_names}.",
+                "code": "paramsValidation"
+            }
+
+    def _validate_request_arg(self, arg, value):
+        """
+        Validate a request argument
+
+        This is a default implementation. Any subclass can override this method
+        and perform a custom check on any or all request arguments
+
+        :param arg:
+        :param value:
+        :return:
+        """
+        checks = self.request_template.parameter_checks.get(arg)
+
+        if not checks:
+            return
+        error = ArgumentCheck.validate(checks, value)
+        if error:
+            return {
+                'name': arg,
+                **error['msg'],
+            }
 
     def _request_template_parameters(self, **kwargs):
         """Return kwargs by default. Childs may override this
@@ -84,6 +134,12 @@ class StufRestView(MethodView):
         # Control variable to make sure this method is called from child classes
         self._validate_called = True
 
+        # Start with validation of query parameters and path variables
+        invalid_params = self._validate_request_args(**kwargs)
+        if invalid_params:
+            return invalid_params
+
+        # Validate functional query parameters (expand)
         functional_params = self._get_functional_query_parameters()
 
         """
@@ -118,12 +174,9 @@ class StufRestView(MethodView):
         # Request MKS with given request_template
         request_template = self.request_template(
             request.headers.get(MKS_USER_HEADER),
-            request.headers.get(MKS_APPLICATION_HEADER),
-            self._request_template_parameters(**kwargs)
+            request.headers.get(MKS_APPLICATION_HEADER)
         )
-        errors = request_template.validate(self._request_template_parameters(**kwargs))
-        if errors:
-            return RESTResponse.bad_request(**errors)
+        request_template.set_values(self._request_template_parameters(**kwargs))
 
         response = self._make_request(request_template)
 

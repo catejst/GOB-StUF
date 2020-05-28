@@ -102,7 +102,7 @@ class StufMessageTest(TestCase):
         message.tree = MagicMock()
 
         self.assertEqual(mock_et.tostring(), message.to_string())
-        mock_et.tostring.assert_called_with(message.tree, encoding='unicode')
+        mock_et.tostring.assert_called_with(message.tree, encoding='utf-8')
 
     @patch("gobstuf.stuf.message.ET")
     @patch("gobstuf.stuf.message.minidom.parseString")
@@ -123,7 +123,7 @@ class StufMessageTest(TestCase):
 
         res = message.pretty_print()
         mock_parsestr.assert_called_with(mock_et.tostring.return_value)
-        mock_et.tostring.assert_called_with(message.tree)
+        mock_et.tostring.assert_called_with(message.tree, encoding='utf-8')
         self.assertEqual('A\nB\nC', res)
 
 
@@ -239,6 +239,11 @@ class TestXML(TestCase):
         stuf_message.create_elm('elm7')
         stuf_message.set_elm_value('elm7', 'elm7value')
         self.assertEqual('elm7value', stuf_message.get_elm_value('elm7'))
+
+        # Try to create element with namespace
+        stuf_message.create_elm('elm9 StUF:elm10')
+        stuf_message.set_elm_value('elm9 StUF:elm10', 'the value')
+        self.assertEqual('the value', stuf_message.get_elm_value('elm9 StUF:elm10'))
 
     def test_find_all_elms(self):
         stuf_message = StufMessage(self.msg)

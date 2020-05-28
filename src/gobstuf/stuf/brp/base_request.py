@@ -25,12 +25,13 @@ class StufRequest(ABC):
     tijdstip_bericht_path = 'BG:stuurgegevens StUF:tijdstipBericht'
     referentienummer_path = 'BG:stuurgegevens StUF:referentienummer'
 
-    def __init__(self, gebruiker: str, applicatie: str, values: dict):
+    parameter_checks = {}
+
+    def __init__(self, gebruiker: str, applicatie: str):
         """
 
         :param gebruiker: MKS gebruiker
         :param applicatie: MKS applicatie
-        :param values: dict with key/values. Key paths are defined in replace_paths
         """
         self.gebruiker = gebruiker
         self.applicatie = applicatie
@@ -40,7 +41,6 @@ class StufRequest(ABC):
 
         self._set_applicatie(applicatie)
         self._set_gebruiker(gebruiker)
-        self._set_values(values)
 
     def _set_applicatie(self, applicatie: str):
         self.set_element(self.applicatie_path, applicatie)
@@ -48,7 +48,7 @@ class StufRequest(ABC):
     def _set_gebruiker(self, gebruiker: str):
         self.set_element(self.gebruiker_path, gebruiker)
 
-    def _set_values(self, values: dict):
+    def set_values(self, values: dict):
         """Sets values in XML. Accepts a dict with {key: value} pairs, where key exists in
         replace_paths and value is the new value of the matching path.
 
@@ -58,7 +58,25 @@ class StufRequest(ABC):
         assert set(values.keys()) <= set(self.parameter_paths.keys())
 
         for key, value in values.items():
-            self.set_element(self.parameter_paths[key], value)
+            self.set_element(self.parameter_paths[key], self._convert_parameter_value(key, value))
+
+    def _convert_parameter_value(self, key: str, value: str):
+        """Converts parameter value for key before injecting the value in the template.
+        Looks for a method convert_param_{KEY} to convert value. If such a method doesn't exist, value is returned
+        without conversion.
+
+        Used, for example for geboorte__datum. The incoming value is of the format YYYY-MM-DD, but this value needs to
+        be converted to the format YYYYMMDD
+
+        :param key:
+        :param value:
+        :return:
+        """
+        convert_func = getattr(self, f'convert_param_{key}', None)
+
+        if callable(convert_func):
+            return convert_func(value)
+        return value
 
     def _load(self):
         """Loads xml template file.
@@ -110,15 +128,6 @@ class StufRequest(ABC):
         self.set_element(self.referentienummer_path, f"GOB{timestr}_{random.randint(0, sys.maxsize)}")
 
         return self.stuf_message.to_string()
-
-    def validate(self, args):
-        """
-        Validate the request arguments. The default implementation is to return no errors (None)
-
-        :param args:
-        :return: None if no errors, else a params error result
-        """
-        return None
 
     def params_errors(self, names, invalid_params):
         """

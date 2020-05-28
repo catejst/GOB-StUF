@@ -166,10 +166,10 @@ class StufMessage:
             return elm.get(element_attr)
 
     def to_string(self):
-        return ET.tostring(self.tree, encoding='unicode')
+        return ET.tostring(self.tree, encoding='utf-8')
 
     def pretty_print(self):
-        xml_string = minidom.parseString(ET.tostring(self.tree)).toprettyxml()
+        xml_string = minidom.parseString(ET.tostring(self.tree, encoding='utf-8')).toprettyxml()
 
         # normalise newlines
         xml_string = os.linesep.join([s for s in xml_string.splitlines() if s.strip()])
