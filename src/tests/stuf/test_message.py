@@ -102,7 +102,7 @@ class StufMessageTest(TestCase):
         message.tree = MagicMock()
 
         self.assertEqual(mock_et.tostring(), message.to_string())
-        mock_et.tostring.assert_called_with(message.tree, encoding='unicode')
+        mock_et.tostring.assert_called_with(message.tree, encoding='utf-8')
 
     @patch("gobstuf.stuf.message.ET")
     @patch("gobstuf.stuf.message.minidom.parseString")
@@ -123,7 +123,7 @@ class StufMessageTest(TestCase):
 
         res = message.pretty_print()
         mock_parsestr.assert_called_with(mock_et.tostring.return_value)
-        mock_et.tostring.assert_called_with(message.tree)
+        mock_et.tostring.assert_called_with(message.tree, encoding='utf-8')
         self.assertEqual('A\nB\nC', res)
 
 
