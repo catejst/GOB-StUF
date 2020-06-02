@@ -13,34 +13,3 @@ class TestIngeschrevenPersonenFilterStufRequest(TestCase):
         with self.assertRaises(AssertionError):
             request.convert_param_geboorte__datum('INVALID')
 
-    # def test_validate(self):
-    #     request = IngeschrevenpersonenFilterStufRequest('gebruiker', 'applicatie')
-    #
-    #     result = request.validate({'geboorte__datum': '2000-02-28'})
-    #     self.assertIsNone(result)
-    #
-    #     result = request.validate({'geboorte__datum': '2000-02-30'})
-    #     self.assertEqual(result['invalid-params'], [{
-    #         'code': 'invalidDate',
-    #         'reason': 'Ongeldige datum opgegeven',
-    #         'name': 'geboorte__datum'
-    #     }])
-    #
-    #     result = request.validate({'geboorte__datum': '2000-0229'})
-    #     self.assertEqual(result['invalid-params'], [{
-    #         'code': 'invalidFormat',
-    #         'reason': 'Waarde voldoet niet aan het formaat YYYY-MM-DD',
-    #         'name': 'geboorte__datum'
-    #     }])
-    #
-    #     result = request.validate({'naam__geslachtsnaam': 'Gage'})
-    #     self.assertIsNone(result)
-    #
-    #     result = request.validate({'naam__geslachtsnaam': 'Mannix' * 100})
-    #     self.assertEqual(result['invalid-params'], [{
-    #         'code': 'maxLength',
-    #         'reason': 'Waarde is langer dan maximale lengte 200',
-    #         'name': 'naam__geslachtsnaam',
-    #     }])
-    #
-    #
