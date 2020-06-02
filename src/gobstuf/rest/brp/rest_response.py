@@ -98,7 +98,6 @@ class RESTResponse():
         :return:
         """
         data = {
-            'invalid-params': [],
             'title': 'Error occurred when requesting external system. See logs for more information.',
             'detail': 'The request could not be understood by the server due to malformed syntax. ' +
                       'The client SHOULD NOT repeat the request without modification.',
