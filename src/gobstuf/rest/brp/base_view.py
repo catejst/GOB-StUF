@@ -110,7 +110,8 @@ class StufRestView(MethodView):
         :param value:
         :return:
         """
-        checks = self.request_template.parameter_checks.get(arg)
+        # Use a temporary instance of request_template to get the parameter_checks, hence the (None, None)
+        checks = self.request_template(None, None).parameter_checks.get(arg)
 
         if not checks:
             return
@@ -254,8 +255,10 @@ class StufRestView(MethodView):
         :param value:
         :return:
         """
-        if not value:
+        if value is None or value == '':
             return None
+        elif not isinstance(value, str):
+            return value
 
         lower = value.lower()
 
@@ -313,7 +316,7 @@ class StufRestFilterView(StufRestView):
     def _request_template_parameters(self, **kwargs):
         """Returns the url path variables and query parameters as request template parameters
 
-        Raises an InvalidQueryParametersException. Should call _validate() first.
+        Raises an InvalidQueryParametersException. Caller should have called _validate() first.
 
         :param kwargs:
         :return:

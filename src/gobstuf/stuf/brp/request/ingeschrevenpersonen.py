@@ -56,5 +56,6 @@ class IngeschrevenpersonenBsnStufRequest(IngeschrevenpersonenStufRequest):
     }
 
     parameter_checks = {
-        'bsn': IngeschrevenpersonenStufRequest.bsn_check
+        'bsn': IngeschrevenpersonenStufRequest.bsn_check,
+        'inclusiefoverledenpersonen': ArgumentCheck.is_boolean,
     }

@@ -40,5 +40,12 @@ class IngeschrevenpersonenBsnView(IngeschrevenpersonenView):
     request_template = IngeschrevenpersonenBsnStufRequest
     response_template = IngeschrevenpersonenStufResponse
 
+    @property
+    def functional_query_parameters(self):
+        return {
+            **super().functional_query_parameters,
+            'inclusiefoverledenpersonen': True,
+        }
+
     def get_not_found_message(self, **kwargs):
         return f"Ingeschreven persoon niet gevonden met burgerservicenummer {kwargs['bsn']}."

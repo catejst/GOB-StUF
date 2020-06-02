@@ -15,6 +15,7 @@ class TestIngeschrevenpersonenView(TestCase):
         view = IngeschrevenpersonenView()
 
         self.assertIn('inclusiefoverledenpersonen', view.functional_query_parameters)
+        self.assertFalse(view.functional_query_parameters['inclusiefoverledenpersonen'])
 
 
 class TestIngeschrevenpersonenFilterView(TestCase):
@@ -33,4 +34,10 @@ class TestIngeschrevenpersonenBsnView(TestCase):
         kwargs = {'bsn': 'BEE ES EN'}
         self.assertEqual('Ingeschreven persoon niet gevonden met burgerservicenummer BEE ES EN.',
                          IngeschrevenpersonenBsnView().get_not_found_message(**kwargs))
+
+    def test_functional_query_parameters(self):
+        view = IngeschrevenpersonenBsnView()
+
+        self.assertIn('inclusiefoverledenpersonen', view.functional_query_parameters)
+        self.assertTrue(view.functional_query_parameters['inclusiefoverledenpersonen'])
 
