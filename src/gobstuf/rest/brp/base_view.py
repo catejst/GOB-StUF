@@ -77,7 +77,11 @@ class StufRestView(MethodView):
         :param args:
         :return:
         """
-        args = self._request_template_parameters(**kwargs)
+        args = {**self._request_template_parameters(**kwargs)}
+
+        # Add other request args (such as functional query parameters)
+        args.update({k: v for k, v in request.args.items() if k not in args})
+
         invalid_params = []
         for arg, value in args.items():
             invalid_param = self._validate_request_arg(arg, value)

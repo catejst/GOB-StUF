@@ -426,6 +426,10 @@ class TestStufRestFilterView(TestCase):
         class StufRestViewImpl(StufRestView):
             request_template = MagicMock()
 
+        mock_request.args = {
+            'attr5': 'value5',
+        }
+
         view = StufRestViewImpl()
         view._request_template_parameters = MagicMock(return_value={
             'attr1': 'value1',
@@ -452,6 +456,12 @@ class TestStufRestFilterView(TestCase):
                 'msg': {
                     'the msg': 'foute boel',
                 }
+            },
+            'attr5': {
+                'check': lambda v: False,
+                'msg': {
+                    'the msg': 'If this error shows up, all request args that are not request_template_parameters are correctly validated',
+                }
             }
         }
 
@@ -459,9 +469,10 @@ class TestStufRestFilterView(TestCase):
             'invalid-params': [
                 {'name': 'attr1', 'the msg': 'oh oh'},
                 {'name': 'attr4', 'the msg': 'foute boel'},
+                {'name': 'attr5', 'the msg': 'If this error shows up, all request args that are not request_template_parameters are correctly validated'}
             ],
             'title': 'Een of meerdere parameters zijn niet correct.',
-            'detail': 'De foutieve parameter(s) zijn: attr1, attr4.',
+            'detail': 'De foutieve parameter(s) zijn: attr1, attr4, attr5.',
             'code': 'paramsValidation',
         }, view._validate_request_args(some='kwargs'))
         view._request_template_parameters.assert_called_with(some='kwargs')
