@@ -255,10 +255,10 @@ class StufRestView(MethodView):
         :param value:
         :return:
         """
-        if value is None or value == '':
-            return None
-        elif not isinstance(value, str):
+        if not isinstance(value, str):
             return value
+        elif value == '':
+            return None
 
         lower = value.lower()
 
