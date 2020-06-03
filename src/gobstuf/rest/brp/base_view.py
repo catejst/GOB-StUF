@@ -254,7 +254,9 @@ class StufRestView(MethodView):
         :param value:
         :return:
         """
-        if not value:
+        if not isinstance(value, str):
+            return value
+        elif value == '':
             return None
 
         lower = value.lower()
@@ -313,7 +315,7 @@ class StufRestFilterView(StufRestView):
     def _request_template_parameters(self, **kwargs):
         """Returns the url path variables and query parameters as request template parameters
 
-        Raises an InvalidQueryParametersException. Should call _validate() first.
+        Raises an InvalidQueryParametersException. Caller should have called _validate() first.
 
         :param kwargs:
         :return:

@@ -371,6 +371,7 @@ class TestStufRestFilterView(TestCase):
 
     def test_transform_query_parameter_value(self):
         view = StufRestFilterViewImpl()
+        some_mock = MagicMock()
 
         test_cases = [
             (None, None),
@@ -380,6 +381,10 @@ class TestStufRestFilterView(TestCase):
             ('true', True),
             ('false', False),
             ('13', '13'),
+            (True, True),
+            (False, False),
+            (11, 11),
+            (some_mock, some_mock),
         ]
 
         for inp, outp in test_cases:
