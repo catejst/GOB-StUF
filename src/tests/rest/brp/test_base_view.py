@@ -290,6 +290,10 @@ class TestStufRestView(TestCase):
         result = view.get(any='thing')
         self.assertEqual(result, mock_rest_response.internal_server_error.return_value)
 
+        view._validate.side_effect = StufRestFilterView.InvalidQueryParametersException({'any': 'error'})
+        view.get(any='thing')
+        mock_rest_response.bad_request.assert_called_with(any='error')
+
 
 class StufRestFilterViewImpl(StufRestFilterView):
     name = 'stufrestfilterviewobjects'

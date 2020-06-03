@@ -54,8 +54,10 @@ class StufRestView(MethodView):
     expand_options = []
 
     def get(self, **kwargs):
-
-        errors = self._validate(**kwargs)
+        try:
+            errors = self._validate(**kwargs)
+        except StufRestFilterView.InvalidQueryParametersException as e:
+            errors = e.err
 
         assert getattr(self, '_validate_called', False), \
             f"Make sure to call super()._validate() from children of {self.__class__}"
@@ -398,7 +400,14 @@ class StufRestFilterView(StufRestView):
             if all(args.values()):
                 return args
 
-        raise self.InvalidQueryParametersException()
+        detail = "Combinatie van gevulde velden was niet correct. " +\
+                 "Geef waarde aan één van de volgende veld combinaties: " + \
+                 " of ".join([" en ".join(c) for c in self.query_parameter_combinations])
+        raise self.InvalidQueryParametersException({
+            'title': "Minimale combinatie van parameters moet worden opgegeven.",
+            'detail': detail,
+            'code': "paramsCombination"
+        })
 
     def get_not_found_message(self, **kwargs):  # pragma: no cover
         raise NotImplementedError('Method should never be called')
@@ -416,4 +425,7 @@ class StufRestFilterView(StufRestView):
         raise NotImplementedError('Implement this method in the child')
 
     class InvalidQueryParametersException(Exception):
-        pass
+
+        def __init__(self, err=None):
+            self.err = err
+            super().__init__()
