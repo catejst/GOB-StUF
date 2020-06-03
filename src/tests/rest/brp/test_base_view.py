@@ -447,7 +447,7 @@ class TestStufRestFilterView(TestCase):
             'attr4': 'value4',
         })
 
-        view.request_template().parameter_checks = {
+        view.request_template.parameter_checks = {
             'attr1': {
                 'check': lambda v: False,
                 'msg': {

@@ -110,8 +110,7 @@ class StufRestView(MethodView):
         :param value:
         :return:
         """
-        # Use a temporary instance of request_template to get the parameter_checks, hence the (None, None)
-        checks = self.request_template(None, None).parameter_checks.get(arg)
+        checks = self.request_template.parameter_checks.get(arg)
 
         if not checks:
             return
