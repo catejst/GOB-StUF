@@ -2,6 +2,7 @@ from unittest import TestCase
 from unittest.mock import patch, MagicMock
 
 from gobstuf.rest.brp.argument_checks import ArgumentCheck
+from gobstuf.reference_data.code_resolver import DataItemNotFoundException
 
 class TestArgumentCheck(TestCase):
 
@@ -56,3 +57,12 @@ class TestArgumentCheck(TestCase):
             self.assertIsNone(ArgumentCheck.validate(check, v))
         for v in [21*'a', 100*'a']:
             self.assertEqual(ArgumentCheck.validate(check, v), check)
+
+    @patch('gobstuf.rest.brp.argument_checks.CodeResolver')
+    def test_validate_gemeente(self, mock_code_resolver):
+        mock_code_resolver.get_gemeente_code.side_effect = ['any code', DataItemNotFoundException()]
+
+        check = ArgumentCheck.is_valid_gemeente
+
+        self.assertIsNone(ArgumentCheck.validate(check, 'any gemeente'))
+        self.assertTrue(ArgumentCheck.validate(check, 'invalid gemeente'))

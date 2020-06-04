@@ -5,6 +5,8 @@ Request argument checks are defined here
 import re
 import datetime
 
+from gobstuf.reference_data.code_resolver import CodeResolver, DataItemNotFoundException
+
 
 def validate_date(value: str):
     try:
@@ -12,6 +14,15 @@ def validate_date(value: str):
     except ValueError:
         return False
 
+    return True
+
+
+def validate_gemeente(value: str):
+    # Try to lookup a valid gemeente code for the supplied value
+    try:
+        CodeResolver.get_gemeente_code(value)
+    except DataItemNotFoundException:
+        return False
     return True
 
 
@@ -62,6 +73,14 @@ class ArgumentCheck():
         'msg': {
             "code": "invalidDate",
             "reason": "Waarde is geen geldige datum",
+        }
+    }
+
+    is_valid_gemeente = {
+        'check': validate_gemeente,
+        'msg': {
+            "code": "invalidGemeente",
+            "reason": "Waarde is geen geldige gemeente",
         }
     }
 
