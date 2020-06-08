@@ -151,12 +151,25 @@ class MKSConverter:
         return as_code
 
     @classmethod
+    def resolve_code(cls, resolver, mks_code):
+        # Make sure we send a 4 digit code to the code resolver
+        as_code = MKSConverter.as_code(4)
+        code = as_code(mks_code)
+        return resolver(code) if code else code
+
+    @classmethod
+    def get_gemeente_code(cls, omschrijving):
+        return CodeResolver.get_gemeente_code(omschrijving)
+
+    @classmethod
     def get_gemeente_omschrijving(cls, mks_code):
-        return CodeResolver.get_gemeente(mks_code)
+        resolver = CodeResolver.get_gemeente
+        return cls.resolve_code(resolver, mks_code)
 
     @classmethod
     def get_land_omschrijving(cls, mks_code):
-        return CodeResolver.get_land(mks_code)
+        resolver = CodeResolver.get_land
+        return cls.resolve_code(resolver, mks_code)
 
     @classmethod
     def true_if_exists(cls, property):

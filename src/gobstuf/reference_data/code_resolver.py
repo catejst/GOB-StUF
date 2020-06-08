@@ -2,7 +2,11 @@ import os
 import csv
 
 
-class CodeNotFoundException(Exception):
+class DataNotFoundException(Exception):
+    pass
+
+
+class DataItemNotFoundException(Exception):
     pass
 
 
@@ -41,6 +45,7 @@ class CodeResolver:
     # Local dictionaries
     _landen = {}
     _gemeenten = {}
+    _gemeenten_omschrijving = {}
 
     @classmethod
     def initialize(cls):
@@ -49,11 +54,12 @@ class CodeResolver:
 
         :return:
         """
-        cls._gemeenten = cls._load_data(cls.GEMEENTEN)
-        cls._landen = cls._load_data(cls.LANDEN)
+        cls._gemeenten = cls._load_data(cls.GEMEENTEN, cls.CODE)
+        cls._gemeenten_omschrijving = cls._load_data(cls.GEMEENTEN, cls.DESCRIPTION)
+        cls._landen = cls._load_data(cls.LANDEN, cls.CODE)
 
     @classmethod
-    def _load_data(cls, config):
+    def _load_data(cls, config, key_field):
         """
         Load reference data from internal data file
 
@@ -65,54 +71,75 @@ class CodeResolver:
             with open(path, 'r', encoding='utf16') as f:
                 lines = [line for line in csv.reader(f)]
         except FileNotFoundError:
-            raise CodeNotFoundException(f"ERROR: Table {config['table']} not found")
+            raise DataNotFoundException(f"ERROR: Table {config['table']} not found")
 
         data = {}
         for line in lines[1:]:  # Skip header
-            code = line[config['fields'][cls.CODE]]
+            code = line[config['fields'][key_field]]
             data[code] = {
                 attr: line[index] for attr, index in config['fields'].items()
             }
         return data
 
     @classmethod
-    def _get_dataitem(cls, data, code):
+    def _get_dataitem(cls, data, key, value_field):
         """
-        Get the description for the given code
+        Get the value field for the given code
 
-        :param code:
+        :param data: The dictionary to search in
+        :param key: The key to look for
+        :param value_field: Which field to return from the dictionary
         :return:
         """
         assert data, f"{cls.__name__} initialize method not called"
 
-        if not code:
+        if not key:
             return
 
-        code = code.zfill(4)
         try:
-            return data[code][cls.DESCRIPTION]
+            return data[key][value_field]
         except KeyError:
-            print(f"ERROR: {code} could not be found")
+            raise DataItemNotFoundException(f"ERROR: {key} could not be found")
+
+    @classmethod
+    def format_code(cls, code):
+        """
+        Pad a code to 4 digits if it contains a value
+
+        :param code:
+        :return:
+        """
+        return code.zfill(4) if code else code
 
     @classmethod
     def get_land(cls, code):
         """
-        Get the land name for the given code
+        Get the land name for the given code, padded to 4 digits
 
         :param code:
         :return:
         """
-        return cls._get_dataitem(cls._landen, code)
+        return cls._get_dataitem(cls._landen, cls.format_code(code), cls.DESCRIPTION)
 
     @classmethod
     def get_gemeente(cls, code):
         """
-        Get the gemeente naam for the given code
+        Get the gemeente naam for the given code, padded to 4 digits
 
         :param code:
         :return:
         """
-        return cls._get_dataitem(cls._gemeenten, code)
+        return cls._get_dataitem(cls._gemeenten, cls.format_code(code), cls.DESCRIPTION)
+
+    @classmethod
+    def get_gemeente_code(cls, omschrijving):
+        """
+        Get the gemeente code for the given omschrijving
+
+        :param naam:
+        :return:
+        """
+        return cls._get_dataitem(cls._gemeenten_omschrijving, omschrijving, cls.CODE)
 
 
 CodeResolver.initialize()

@@ -2,6 +2,7 @@ import re
 
 from abc import ABC
 
+from gobstuf.reference_data.code_resolver import CodeResolver
 from gobstuf.rest.brp.argument_checks import ArgumentCheck
 from gobstuf.stuf.brp.base_request import StufRequest
 
@@ -24,6 +25,8 @@ class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
         'burgerservicenummer': 'BG:gelijk BG:inp.bsn',
         'verblijfplaats__postcode': 'BG:gelijk BG:verblijfsadres BG:aoa.postcode',
         'verblijfplaats__huisnummer': 'BG:gelijk BG:verblijfsadres BG:aoa.huisnummer',
+        'verblijfplaats__naamopenbareruimte': 'BG:gelijk BG:verblijfsadres BG:gor.openbareRuimteNaam',
+        'verblijfplaats__gemeentevaninschrijving': 'BG:gelijk BG:gem.gemeenteCode',
         'geboorte__datum': 'BG:gelijk BG:geboortedatum',
         'naam__geslachtsnaam': 'BG:gelijk BG:geslachtsnaam',
     }
@@ -32,6 +35,7 @@ class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
         'inclusiefoverledenpersonen': ArgumentCheck.is_boolean,
         'verblijfplaats__postcode': ArgumentCheck.is_postcode,
         'verblijfplaats__huisnummer': [ArgumentCheck.is_integer, ArgumentCheck.is_positive_integer],
+        'verblijfplaats__gemeentevaninschrijving': [ArgumentCheck.is_valid_gemeente],
         'geboorte__datum': [ArgumentCheck.is_valid_date_format, ArgumentCheck.is_valid_date],
         'naam__geslachtsnaam': [ArgumentCheck.has_max_length(200)],
         'burgerservicenummer': IngeschrevenpersonenStufRequest.bsn_check
@@ -46,6 +50,14 @@ class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
         assert date_match.match(value), "This value should already be validated here"
 
         return value.replace('-', '')
+
+    def convert_param_verblijfplaats__gemeentevaninschrijving(self, value: str):
+        """Transforms the supplied gemeente value to a valid gemeentecode
+
+        :param value:
+        :return:
+        """
+        return CodeResolver.get_gemeente_code(value).lstrip('0')
 
 
 class IngeschrevenpersonenBsnStufRequest(IngeschrevenpersonenStufRequest):
