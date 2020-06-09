@@ -7,7 +7,7 @@ from calendar import isleap
 
 from gobstuf.reference_data.code_resolver import CodeResolver
 from gobstuf.lib.communicatie import Persoon, Partner, Communicatie
-from gobstuf.indications import Geslachtsaanduiding, AanduidingNaamgebruik, IncompleteDateIndicator
+from gobstuf.indications import Geslachtsaanduiding, AanduidingNaamgebruik, IncompleteDateIndicator, SoortVerbintenis
 
 
 def _today():
@@ -133,6 +133,10 @@ class MKSConverter:
     def as_geslachtsaanduiding(cls, mks_geslachtsaanduiding):
         return Geslachtsaanduiding(mks_geslachtsaanduiding).description or \
                Geslachtsaanduiding(Geslachtsaanduiding.ONBEKEND).description
+
+    @classmethod
+    def as_soort_verbintenis(cls, mks_soort_verbintenis):
+        return SoortVerbintenis(mks_soort_verbintenis).description
 
     @classmethod
     def as_aanduiding_naamgebruik(cls, mks_aanduiding_naamgebruik):

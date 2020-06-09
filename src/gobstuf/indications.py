@@ -40,6 +40,18 @@ class Geslachtsaanduiding(Indication):
         }
 
 
+class SoortVerbintenis(Indication):
+    HUWELIJK = 'H'
+    GEREGISTREERD_PARTNERSCHAP = 'P'
+
+    @property
+    def indications(self):
+        return {
+            self.HUWELIJK: 'huwelijk',
+            self.GEREGISTREERD_PARTNERSCHAP: 'geregistreerd_partnerschap'
+        }
+
+
 class AanduidingNaamgebruik(Indication):
     EIGEN = 'E'
     EIGEN_PARTNER = 'N'

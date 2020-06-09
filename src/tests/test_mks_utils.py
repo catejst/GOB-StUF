@@ -161,6 +161,17 @@ class TestMKSConverter(TestCase):
         for a in ['x', 'X', '', 'anything', None]:
             self.assertEqual(MKSConverter.as_geslachtsaanduiding(a), 'onbekend')
 
+    def test_as_soort_verbintenis(self):
+        valid = {
+            'h': 'huwelijk',
+            'p': 'geregistreerd_partnerschap'
+        }
+        for code, expected_result in valid.items():
+            for aanduiding in [code.upper(), code.lower()]:
+                self.assertEqual(MKSConverter.as_soort_verbintenis(aanduiding), expected_result)
+        for a in ['x', 'X', '', 'anything', None]:
+            self.assertEqual(MKSConverter.as_soort_verbintenis(a), None)
+
     def test_as_aanduiding_naamgebruik(self):
         valid = {
             'e': 'eigen',
