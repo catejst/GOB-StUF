@@ -328,6 +328,7 @@ class NPSNPSHUWMapping(RelatedMapping):
     @property
     def mapping(self):  # pragma: no cover
         return {
+            'soortVerbintenis': (MKSConverter.as_soort_verbintenis, 'BG:soortVerbintenis'),
             'aangaanHuwelijkPartnerschap': {
                 'datum': (MKSConverter.as_datum_broken_down,
                           'BG:datumSluiting',
