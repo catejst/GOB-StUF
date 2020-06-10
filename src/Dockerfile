@@ -1,4 +1,4 @@
-FROM amsterdam/python:3.7-buster
+FROM amsterdam/python:3.7.2-stretch
 MAINTAINER datapunt@amsterdam.nl
 
 # Install StUF service in /app folder
