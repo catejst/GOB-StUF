@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from flask import request
 from typing import List, Optional
 from xml.etree.ElementTree import Element
 
@@ -73,12 +74,19 @@ class StufMappedResponse(StufResponse):
     # Class properties to pass to the mapped object filter
     filter_kwargs = []
 
+    response_filters = []
+    response_filters_instances = []
+
     def __init__(self, msg: str, **kwargs):
         if 'expand' in kwargs:
             self.expand = kwargs['expand'].split(',') if kwargs['expand'] else []
             del kwargs['expand']
         else:
             self.expand = []
+
+        # Initialize a response filter if one is provided to allow them to add expand properties
+        self.response_filters_instances = [filter(self, **kwargs) for filter in self.response_filters]
+
         super().__init__(msg, **kwargs)
 
     def get_object_elm(self):
@@ -152,6 +160,10 @@ class StufMappedResponse(StufResponse):
         """
         object = self.get_object_elm()
         answer_object = self.create_object_from_element(object)
+
+        # Filter the response if a response type is defined
+        for filter in self.response_filters_instances:
+            answer_object = filter.filter_response(answer_object)
 
         if not answer_object:
             raise NoStufAnswerException()
@@ -308,3 +320,99 @@ class StufMappedResponse(StufResponse):
         :return:
         """
         pass  # pragma: no cover
+
+
+class ResponseFilter(ABC):
+
+    def __init__(self, response: StufMappedResponse, **kwargs):
+        self.response = response
+
+    @abstractmethod
+    def filter_response(self, response_object: dict) -> dict:  # pragma: no cover
+        pass
+
+
+class RelatedListResponseFilter(ResponseFilter):
+    related_type = None
+
+    def __init__(self, response: StufMappedResponse, **kwargs):
+        # Add the related_type to the list of expand parameters on the parent response
+        response.expand.append(self.related_type) if self.related_type not in response.expand else response.expand
+
+        super().__init__(response, **kwargs)
+
+    def filter_response(self, response_object: dict):
+        """Filter the response object to only return the requested relations from _embedded
+
+        For example a RelatedListResponse for partners:
+        {'_embedded': {
+            'partners': [],
+            'kinderen': [],
+        }}
+
+        Will return
+
+        {'_embedded': {
+            'partners': [],
+        }}
+
+        The correct link to self is added to make it a valid HAL response
+
+        :param response_obj: The mapped and filtered response object
+        :return: A filtered responsed object
+        """
+        relations = response_object.get('_embedded', {}).get(self.related_type, [])
+        response_object = {
+            '_embedded': {
+                self.related_type: relations
+            }
+        }
+
+        # Add the link to self in the new response object
+        response_object['_links'] = {
+            'self': {
+                'href': request.base_url
+            }
+        }
+        return response_object
+
+
+class RelatedDetailResponseFilter(RelatedListResponseFilter):
+
+    def __init__(self, response: StufMappedResponse, **kwargs):
+        # Get the requested relation id passed from the URL, e.g. partner_id = 1
+        self.related_id = int(kwargs.get(f'{self.related_type}_id'))
+
+        super().__init__(response, **kwargs)
+
+    def filter_response(self, response_object: dict):
+        """Filter the response object to only return the requested relation from _embedded
+
+        For example a RelatedDetailResponse for partners with id 1:
+        {'_embedded': {
+            'partners': [{'id': 1}, {'id': 2}, {'id': 3}],
+            'kinderen': [],
+        }}
+
+        Will return
+
+        {'id': 1}
+
+        The correct link to self is added to make it a valid HAL response.
+
+        :param response_obj: The mapped and filtered response object
+        :return: A filtered responsed object
+        """
+        try:
+            response_object = response_object['_embedded'][self.related_type][self.related_id-1]
+        except (KeyError, IndexError):
+            return
+        # Add the link to self in the new response object
+        response_object['_links'] = {
+            **response_object.get('_links', {}),
+            'self': {
+                'href': request.base_url
+            }
+        }
+
+        return response_object

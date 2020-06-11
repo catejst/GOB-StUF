@@ -193,9 +193,10 @@ class StufRestView(MethodView):
             response_obj = StufErrorResponse(response.text)
             return self._error_response(response_obj)
 
-        # Map MKS response back to REST response.
+        # Map MKS response back to REST response. Include the path parameters to the response
         response_obj = self.response_template(response.text,
-                                              **self._get_functional_query_parameters())
+                                              **self._get_functional_query_parameters(),
+                                              **kwargs)
 
         return self._build_response(response_obj, **kwargs)
 

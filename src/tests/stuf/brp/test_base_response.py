@@ -2,7 +2,7 @@ from unittest import TestCase
 from unittest.mock import patch, MagicMock, call
 
 from gobstuf.stuf.brp.base_response import StufResponse, StufMappedResponse, NoStufAnswerException, Mapping, \
-    MappedObjectWrapper
+    MappedObjectWrapper, RelatedDetailResponseFilter, RelatedListResponseFilter
 from gobstuf.stuf.brp.response_mapping import RelatedMapping
 
 
@@ -51,6 +51,19 @@ class StufMappedResponseImpl(StufMappedResponse):
 
     def _get_mapping(self, *args):
         return self.MockMapping()
+
+
+class MockRelatedResponseFilter(MagicMock):
+    related_type = 'relation'
+    
+    filter_response = MagicMock()
+
+
+class StufMappedResponseRelatedImpl(StufMappedResponse):
+    answer_section = 'ANSWER SECTION'
+    object_elm = 'OBJECT'
+
+    response_filters = [MockRelatedResponseFilter]
 
 
 class MappedObjectWrapperTest(TestCase):
@@ -108,6 +121,7 @@ class MappedObjectWrapperTest(TestCase):
 @patch("gobstuf.stuf.brp.base_response.StufMessage", MagicMock())
 class StufMappedResponseTest(TestCase):
 
+    @patch("gobstuf.stuf.brp.base_response.RelatedListResponseFilter", MockRelatedResponseFilter)
     def test_init(self):
         resp = StufMappedResponseImpl('msg', expand='a,b')
         self.assertEqual(['a', 'b'], resp.expand)
@@ -117,6 +131,10 @@ class StufMappedResponseTest(TestCase):
 
         resp = StufMappedResponseImpl('msg')
         self.assertEqual([], resp.expand)
+
+        # When a ResponseFilter is defined, expect the filter to be initialized
+        resp = StufMappedResponseRelatedImpl('msg', expand=None)
+        self.assertEqual(1, len(resp.response_filters_instances))
 
     def test_get_object_elm(self):
         resp = StufMappedResponseImpl('msg')
@@ -223,6 +241,16 @@ class StufMappedResponseTest(TestCase):
 
         with self.assertRaises(NoStufAnswerException):
             result = resp.get_answer_object()
+
+    def test_get_answer_object_related(self):
+        resp = StufMappedResponseRelatedImpl('msg')
+        resp.get_object_elm = MagicMock()
+        resp.create_object_from_element = MagicMock()
+
+        result = resp.get_answer_object()
+        self.assertEqual(resp.response_filters_instances[0].filter_response.return_value, result)
+
+        resp.create_object_from_element.assert_called_with(resp.get_object_elm.return_value)
 
     def test_create_object_from_element(self):
         resp = StufMappedResponseImpl('msg')
@@ -374,3 +402,140 @@ class TestMappedObject(TestCase):
         tree = ET.fromstring(xml_msg)
         result = response.get_mapped_object(tree, mapping)
         self.assertEqual(result, expect)
+
+
+class RelatedDetailResponseFilterImpl(RelatedDetailResponseFilter):
+    related_type = 'relation'
+
+
+class TestRelatedDetailResponseFilter(TestCase):
+    mock_response = MagicMock()
+
+    def test_init(self):
+        kwargs = {'relation_id': 1}
+        resp = RelatedDetailResponseFilterImpl(self.mock_response, **kwargs)
+
+        self.assertEqual(resp.related_type, 'relation')
+
+    @patch("gobstuf.stuf.brp.base_response.request")
+    def test_filter_response(self, mock_request):
+        kwargs = {'relation_id': 1}
+        resp = RelatedDetailResponseFilterImpl(self.mock_response, **kwargs)
+
+        mapped_object = {
+            'other': 'value',
+            '_embedded': {
+                'relation': [
+                    {'a': 1},
+                    {'a': 2}
+                ],
+                'other relation': []
+            }
+        }
+        
+        expected = {
+            'a': 1,
+            '_links': {'self': {'href': mock_request.base_url}}
+        }
+
+        result = resp.filter_response(mapped_object)
+        self.assertEqual(result, expected)
+
+    @patch("gobstuf.stuf.brp.base_response.request")
+    def test_filter_response_no_relations(self, mock_request):
+        kwargs = {'relation_id': 1}
+        resp = RelatedDetailResponseFilterImpl(self.mock_response, **kwargs)
+
+        mapped_object = {
+            'other': 'value',
+            '_embedded': {
+                'other': [
+                    {'a': 1},
+                    {'a': 2}
+                ]
+            }
+        }
+        
+        result = resp.filter_response(mapped_object)
+        self.assertEqual(result, None)
+
+    @patch("gobstuf.stuf.brp.base_response.request")
+    def test_filter_response_no_relation(self, mock_request):
+        kwargs = {'relation_id': 3}
+        resp = RelatedDetailResponseFilterImpl(self.mock_response, **kwargs)
+
+        mapped_object = {
+            'other': 'value',
+            '_embedded': {
+                'relation': [
+                    {'a': 1},
+                    {'a': 2}
+                ]
+            }
+        }
+
+        result = resp.filter_response(mapped_object)
+        self.assertEqual(result, None)
+
+
+class RelatedListResponseFilterImpl(RelatedListResponseFilter):
+    related_type = 'relation'
+
+
+class TestRelatedListResponseFilter(TestCase):
+    mock_response = MagicMock()
+    resp = RelatedListResponseFilterImpl(mock_response)
+
+    def test_init(self):
+        self.assertEqual(self.resp.related_type, 'relation')
+
+    @patch("gobstuf.stuf.brp.base_response.request")
+    def test_filter_response(self, mock_request):
+        mock_mapped_response = MagicMock()
+        mapped_object = {
+            'other': 'value',
+            '_embedded': {
+                'relation': [
+                    {'a': 1},
+                    {'a': 2}
+                ],
+                'other relation': []
+            }
+        }
+        
+        expected = {
+            '_embedded': {
+                'relation': [
+                    {'a': 1},
+                    {'a': 2}
+                ]
+            },
+            '_links': {'self': {'href': mock_request.base_url}}
+        }
+
+        result = self.resp.filter_response(mapped_object)
+        self.assertEqual(result, expected)
+
+    @patch("gobstuf.stuf.brp.base_response.request")
+    def test_filter_response_no_relations(self, mock_request):
+        mock_mapped_response = MagicMock()
+        mock_mapped_response.relation_id = 1
+        mapped_object = {
+            'other': 'value',
+            '_embedded': {
+                'other': [
+                    {'a': 1},
+                    {'a': 2}
+                ]
+            }
+        }
+        
+        expected = {
+            '_embedded': {
+                'relation': []
+            },
+            '_links': {'self': {'href': mock_request.base_url}}
+        }
+
+        result = self.resp.filter_response(mapped_object)
+        self.assertEqual(result, expected)

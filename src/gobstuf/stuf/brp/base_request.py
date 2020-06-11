@@ -26,6 +26,7 @@ class StufRequest(ABC):
     referentienummer_path = 'BG:stuurgegevens StUF:referentienummer'
 
     parameter_checks = {}
+    parameters = []
 
     def __init__(self, gebruiker: str, applicatie: str):
         """
@@ -55,10 +56,13 @@ class StufRequest(ABC):
         :param values:
         :return:
         """
-        assert set(values.keys()) <= set(self.parameter_paths.keys())
+        all_parameters = set([*self.parameter_paths] + self.parameters)
+        assert set(values.keys()) <= all_parameters
 
         for key, value in values.items():
-            self.set_element(self.parameter_paths[key], self._convert_parameter_value(key, value))
+            # Only set the values of parameters which have a path defined
+            if key in self.parameter_paths:
+                self.set_element(self.parameter_paths[key], self._convert_parameter_value(key, value))
 
     def _convert_parameter_value(self, key: str, value: str):
         """Converts parameter value for key before injecting the value in the template.
