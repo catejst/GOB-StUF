@@ -71,3 +71,18 @@ class IngeschrevenpersonenBsnStufRequest(IngeschrevenpersonenStufRequest):
         'bsn': IngeschrevenpersonenStufRequest.bsn_check,
         'inclusiefoverledenpersonen': ArgumentCheck.is_boolean,
     }
+
+
+class IngeschrevenpersonenBsnPartnerStufRequest(IngeschrevenpersonenStufRequest):
+    BSN_LENGTH = 9
+
+    parameters = ['partners_id']
+
+    parameter_paths = {
+        'bsn': 'BG:gelijk BG:inp.bsn',
+    }
+
+    parameter_checks = {
+        'bsn': IngeschrevenpersonenStufRequest.bsn_check,
+        'inclusiefoverledenpersonen': ArgumentCheck.is_boolean,
+    }

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from flask import request
 from typing import List, Optional
 from xml.etree.ElementTree import Element
 
@@ -73,12 +74,20 @@ class StufMappedResponse(StufResponse):
     # Class properties to pass to the mapped object filter
     filter_kwargs = []
 
+    response_type = None
+
     def __init__(self, msg: str, **kwargs):
         if 'expand' in kwargs:
             self.expand = kwargs['expand'].split(',') if kwargs['expand'] else []
             del kwargs['expand']
         else:
             self.expand = []
+
+        # If the response type is one of Related detail or list, we need to expand the specific relation
+        if isinstance(self.response_type, (RelatedDetailResponse, RelatedListResponse)):
+            expand_parameter = self.response_type.related_type
+            self.expand.append(expand_parameter) if expand_parameter not in self.expand else self.expand
+
         super().__init__(msg, **kwargs)
 
     def get_object_elm(self):
@@ -152,6 +161,10 @@ class StufMappedResponse(StufResponse):
         """
         object = self.get_object_elm()
         answer_object = self.create_object_from_element(object)
+
+        # Filter the response if a response type is defined
+        if self.response_type:
+            answer_object = self.response_type.filter_response(self, answer_object)
 
         if not answer_object:
             raise NoStufAnswerException()
@@ -308,3 +321,83 @@ class StufMappedResponse(StufResponse):
         :return:
         """
         pass  # pragma: no cover
+
+
+class RelatedDetailResponse:
+
+    def __init__(self, related_type: str):
+        self.related_type = related_type
+
+    def filter_response(self, response: StufMappedResponse, response_object: dict):
+        """Filter the response object to only return the requested relation from _embedded
+
+        For example a RelatedDetailResponse for partners with id 1:
+        {'_embedded': {
+            'partners': [{'id': 1}, {'id': 2}, {'id': 3}],
+            'kinderen': [],
+        }}
+
+        Will return
+
+        {'id': 1}
+
+        The correct link to self is added to make it a valid HAL response.
+
+        :param response: The StufMappedResponse
+        :param response_obj: The mapped and filtered response object
+        :return: A filtered responsed object
+        """
+        # Get the requested relation id passed from the URL, e.g. partner_id = 1
+        related_id = int(getattr(response, f'{self.related_type}_id'))
+        try:
+            response_object = response_object['_embedded'][self.related_type][related_id-1]
+        except (KeyError, IndexError):
+            return
+        # Add the link to self in the new response object
+        response_object['_links'] = {
+            **response_object.get('_links', {}),
+            'self': {
+                'href': request.base_url
+            }
+        }
+
+        return response_object
+
+
+class RelatedListResponse(RelatedDetailResponse):
+
+    def filter_response(self, response: StufMappedResponse, response_object: dict):
+        """Filter the response object to only return the requested relations from _embedded
+
+        For example a RelatedListResponse for partners:
+        {'_embedded': {
+            'partners': [],
+            'kinderen': [],
+        }}
+
+        Will return
+
+        {'_embedded': {
+            'partners': [],
+        }}
+
+        The correct link to self is added to make it a valid HAL response
+
+        :param response: The StufMappedResponse
+        :param response_obj: The mapped and filtered response object
+        :return: A filtered responsed object
+        """
+        relations = response_object.get('_embedded', {}).get(self.related_type, [])
+        response_object = {
+            '_embedded': {
+                self.related_type: relations
+            }
+        }
+
+        # Add the link to self in the new response object
+        response_object['_links'] = {
+            'self': {
+                'href': request.base_url
+            }
+        }
+        return response_object

@@ -244,6 +244,24 @@ class NPSMapping(Mapping):
                 'href': flask_url('brp_ingeschrevenpersonen_bsn', bsn=mapped_object['burgerservicenummer'])
             }
 
+        if mapped_object.get('_embedded', {}).get('partners'):
+            # Add the link to all partners
+            links['partners'] = {
+                'href': flask_url('brp_ingeschrevenpersonen_bsn_partners_list',
+                                  bsn=mapped_object['burgerservicenummer'])
+            }
+
+            # Add the links to the partner details
+            for c, partner in enumerate(mapped_object['_embedded']['partners'], 1):
+                partner['_links'] = {
+                    **partner.get('_links', {}),
+                    'self': {
+                        'href': flask_url('brp_ingeschrevenpersonen_bsn_partners_detail',
+                                          bsn=mapped_object['burgerservicenummer'],
+                                          partners_id=c)
+                    }
+                }
+
         return links
 
 

@@ -4,9 +4,14 @@ from unittest.mock import patch, MagicMock
 from gobstuf.rest.brp.views import (
     IngeschrevenpersonenView,
     IngeschrevenpersonenBsnView,
+    IngeschrevenpersonenBsnPartnerListView,
+    IngeschrevenpersonenBsnPartnerDetailView,
     IngeschrevenpersonenFilterView,
     IngeschrevenpersonenStufResponse,
-    IngeschrevenpersonenBsnStufRequest
+    IngeschrevenpersonenStufPartnersListResponse,
+    IngeschrevenpersonenStufPartnersDetailResponse,
+    IngeschrevenpersonenBsnStufRequest,
+    IngeschrevenpersonenBsnPartnerStufRequest
 )
 
 
@@ -41,3 +46,23 @@ class TestIngeschrevenpersonenBsnView(TestCase):
         self.assertIn('inclusiefoverledenpersonen', view.functional_query_parameters)
         self.assertTrue(view.functional_query_parameters['inclusiefoverledenpersonen'])
 
+
+class TestIngeschrevenpersonenBsnPartnerListView(TestCase):
+
+    @patch("gobstuf.rest.brp.views.StufRestView", MagicMock())
+    def test_templates_set(self):
+        self.assertEqual(IngeschrevenpersonenStufPartnersListResponse, IngeschrevenpersonenBsnPartnerListView.response_template)
+        self.assertEqual(IngeschrevenpersonenBsnStufRequest, IngeschrevenpersonenBsnPartnerListView.request_template)
+
+
+class TestIngeschrevenpersonenBsnPartnerDetailView(TestCase):
+
+    @patch("gobstuf.rest.brp.views.StufRestView", MagicMock())
+    def test_templates_set(self):
+        self.assertEqual(IngeschrevenpersonenStufPartnersDetailResponse, IngeschrevenpersonenBsnPartnerDetailView.response_template)
+        self.assertEqual(IngeschrevenpersonenBsnPartnerStufRequest, IngeschrevenpersonenBsnPartnerDetailView.request_template)
+
+    def test_get_not_found_message(self):
+        kwargs = {'bsn': 'BEE ES EN'}
+        self.assertEqual('Ingeschreven partner voor persoon niet gevonden met burgerservicenummer BEE ES EN.',
+                         IngeschrevenpersonenBsnPartnerDetailView().get_not_found_message(**kwargs))

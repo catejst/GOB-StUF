@@ -1,4 +1,4 @@
-from gobstuf.stuf.brp.base_response import StufMappedResponse
+from gobstuf.stuf.brp.base_response import RelatedDetailResponse, RelatedListResponse, StufMappedResponse
 
 
 class IngeschrevenpersonenStufResponse(StufMappedResponse):
@@ -7,3 +7,11 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
 
     # These properties are passed to the filter method of the mapped object
     filter_kwargs = ['inclusiefoverledenpersonen']
+
+
+class IngeschrevenpersonenStufPartnersDetailResponse(IngeschrevenpersonenStufResponse):
+    response_type = RelatedDetailResponse('partners')
+
+
+class IngeschrevenpersonenStufPartnersListResponse(IngeschrevenpersonenStufResponse):
+    response_type = RelatedListResponse('partners')

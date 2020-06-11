@@ -1,9 +1,14 @@
 from gobstuf.rest.brp.base_view import StufRestView, StufRestFilterView
 from gobstuf.stuf.brp.request.ingeschrevenpersonen import (
     IngeschrevenpersonenBsnStufRequest,
+    IngeschrevenpersonenBsnPartnerStufRequest,
     IngeschrevenpersonenFilterStufRequest
 )
-from gobstuf.stuf.brp.response.ingeschrevenpersonen import IngeschrevenpersonenStufResponse
+from gobstuf.stuf.brp.response.ingeschrevenpersonen import (
+    IngeschrevenpersonenStufResponse,
+    IngeschrevenpersonenStufPartnersDetailResponse,
+    IngeschrevenpersonenStufPartnersListResponse
+)
 
 
 class IngeschrevenpersonenView(StufRestView):
@@ -52,3 +57,15 @@ class IngeschrevenpersonenBsnView(IngeschrevenpersonenView):
 
     def get_not_found_message(self, **kwargs):
         return f"Ingeschreven persoon niet gevonden met burgerservicenummer {kwargs['bsn']}."
+
+
+class IngeschrevenpersonenBsnPartnerListView(IngeschrevenpersonenBsnView):
+    response_template = IngeschrevenpersonenStufPartnersListResponse
+
+
+class IngeschrevenpersonenBsnPartnerDetailView(IngeschrevenpersonenBsnView):
+    request_template = IngeschrevenpersonenBsnPartnerStufRequest
+    response_template = IngeschrevenpersonenStufPartnersDetailResponse
+
+    def get_not_found_message(self, **kwargs):
+        return f"Ingeschreven partner voor persoon niet gevonden met burgerservicenummer {kwargs['bsn']}."

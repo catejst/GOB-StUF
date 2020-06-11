@@ -122,6 +122,12 @@ class TestNPSMapping(TestCase):
                 }
             },
             'burgerservicenummer': 'digitdigitdigit',
+            '_embedded': {
+                'partners': [
+                    {'burgerservicenummer': 'digitdigitdigit1'},
+                    {'burgerservicenummer': 'digitdigitdigit2'}
+                ]
+            }
         }
 
         self.assertEqual({
@@ -130,8 +136,14 @@ class TestNPSMapping(TestCase):
             },
             'self': {
                 'href': 'http(s)://thishost/brp_ingeschrevenpersonen_bsn/digitdigitdigit'
+            },
+            'partners': {
+                'href': 'http(s)://thishost/brp_ingeschrevenpersonen_bsn_partners_list/digitdigitdigit'
             }
         }, mapping.get_links(mapped_object))
+
+        for c, partner in enumerate(mapped_object['_embedded']['partners']):
+            self.assertEqual(partner['_links']['self']['href'], 'http(s)://thishost/brp_ingeschrevenpersonen_bsn_partners_detail/digitdigitdigit')
 
         mapped_object = {}
         self.assertEqual({}, mapping.get_links(mapped_object))
