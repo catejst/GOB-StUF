@@ -1,4 +1,5 @@
-from gobstuf.stuf.brp.base_response import RelatedDetailResponse, RelatedListResponse, StufMappedResponse
+from gobstuf.stuf.brp.base_response import StufMappedResponse
+from gobstuf.stuf.brp.response.filters import PartnersDetailResponseFilter, PartnersListResponseFilter
 
 
 class IngeschrevenpersonenStufResponse(StufMappedResponse):
@@ -10,8 +11,8 @@ class IngeschrevenpersonenStufResponse(StufMappedResponse):
 
 
 class IngeschrevenpersonenStufPartnersDetailResponse(IngeschrevenpersonenStufResponse):
-    response_type = RelatedDetailResponse('partners')
+    response_filters = [PartnersDetailResponseFilter]
 
 
 class IngeschrevenpersonenStufPartnersListResponse(IngeschrevenpersonenStufResponse):
-    response_type = RelatedListResponse('partners')
+    response_filters = [PartnersListResponseFilter]

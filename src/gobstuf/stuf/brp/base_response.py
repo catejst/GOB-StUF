@@ -74,7 +74,8 @@ class StufMappedResponse(StufResponse):
     # Class properties to pass to the mapped object filter
     filter_kwargs = []
 
-    response_type = None
+    response_filters = []
+    response_filters_instances = []
 
     def __init__(self, msg: str, **kwargs):
         if 'expand' in kwargs:
@@ -83,10 +84,8 @@ class StufMappedResponse(StufResponse):
         else:
             self.expand = []
 
-        # If the response type is one of Related detail or list, we need to expand the specific relation
-        if isinstance(self.response_type, (RelatedDetailResponse, RelatedListResponse)):
-            expand_parameter = self.response_type.related_type
-            self.expand.append(expand_parameter) if expand_parameter not in self.expand else self.expand
+        # Initialize a response filter if one is provided to allow them to add expand properties
+        self.response_filters_instances = [filter(self, **kwargs) for filter in self.response_filters]
 
         super().__init__(msg, **kwargs)
 
@@ -163,8 +162,8 @@ class StufMappedResponse(StufResponse):
         answer_object = self.create_object_from_element(object)
 
         # Filter the response if a response type is defined
-        if self.response_type:
-            answer_object = self.response_type.filter_response(self, answer_object)
+        for filter in self.response_filters_instances:
+            answer_object = filter.filter_response(answer_object)
 
         if not answer_object:
             raise NoStufAnswerException()
@@ -323,50 +322,26 @@ class StufMappedResponse(StufResponse):
         pass  # pragma: no cover
 
 
-class RelatedDetailResponse:
+class ResponseFilter(ABC):
 
-    def __init__(self, related_type: str):
-        self.related_type = related_type
+    def __init__(self, response: StufMappedResponse, **kwargs):
+        self.response = response
 
-    def filter_response(self, response: StufMappedResponse, response_object: dict):
-        """Filter the response object to only return the requested relation from _embedded
-
-        For example a RelatedDetailResponse for partners with id 1:
-        {'_embedded': {
-            'partners': [{'id': 1}, {'id': 2}, {'id': 3}],
-            'kinderen': [],
-        }}
-
-        Will return
-
-        {'id': 1}
-
-        The correct link to self is added to make it a valid HAL response.
-
-        :param response: The StufMappedResponse
-        :param response_obj: The mapped and filtered response object
-        :return: A filtered responsed object
-        """
-        # Get the requested relation id passed from the URL, e.g. partner_id = 1
-        related_id = int(getattr(response, f'{self.related_type}_id'))
-        try:
-            response_object = response_object['_embedded'][self.related_type][related_id-1]
-        except (KeyError, IndexError):
-            return
-        # Add the link to self in the new response object
-        response_object['_links'] = {
-            **response_object.get('_links', {}),
-            'self': {
-                'href': request.base_url
-            }
-        }
-
-        return response_object
+    @abstractmethod
+    def filter_response(self, response_object: dict) -> dict:  # pragma: no cover
+        pass
 
 
-class RelatedListResponse(RelatedDetailResponse):
+class RelatedListResponseFilter(ResponseFilter):
+    related_type = None
 
-    def filter_response(self, response: StufMappedResponse, response_object: dict):
+    def __init__(self, response: StufMappedResponse, **kwargs):
+        # Add the related_type to the list of expand parameters on the parent response
+        response.expand.append(self.related_type) if self.related_type not in response.expand else response.expand
+
+        super().__init__(response, **kwargs)
+
+    def filter_response(self, response_object: dict):
         """Filter the response object to only return the requested relations from _embedded
 
         For example a RelatedListResponse for partners:
@@ -383,7 +358,6 @@ class RelatedListResponse(RelatedDetailResponse):
 
         The correct link to self is added to make it a valid HAL response
 
-        :param response: The StufMappedResponse
         :param response_obj: The mapped and filtered response object
         :return: A filtered responsed object
         """
@@ -400,4 +374,45 @@ class RelatedListResponse(RelatedDetailResponse):
                 'href': request.base_url
             }
         }
+        return response_object
+
+
+class RelatedDetailResponseFilter(RelatedListResponseFilter):
+
+    def __init__(self, response: StufMappedResponse, **kwargs):
+        # Get the requested relation id passed from the URL, e.g. partner_id = 1
+        self.related_id = int(kwargs.get(f'{self.related_type}_id'))
+
+        super().__init__(response, **kwargs)
+
+    def filter_response(self, response_object: dict):
+        """Filter the response object to only return the requested relation from _embedded
+
+        For example a RelatedDetailResponse for partners with id 1:
+        {'_embedded': {
+            'partners': [{'id': 1}, {'id': 2}, {'id': 3}],
+            'kinderen': [],
+        }}
+
+        Will return
+
+        {'id': 1}
+
+        The correct link to self is added to make it a valid HAL response.
+
+        :param response_obj: The mapped and filtered response object
+        :return: A filtered responsed object
+        """
+        try:
+            response_object = response_object['_embedded'][self.related_type][self.related_id-1]
+        except (KeyError, IndexError):
+            return
+        # Add the link to self in the new response object
+        response_object['_links'] = {
+            **response_object.get('_links', {}),
+            'self': {
+                'href': request.base_url
+            }
+        }
+
         return response_object
