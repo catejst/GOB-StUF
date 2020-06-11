@@ -61,8 +61,6 @@ class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
 
 
 class IngeschrevenpersonenBsnStufRequest(IngeschrevenpersonenStufRequest):
-    BSN_LENGTH = 9
-
     parameter_paths = {
         'bsn': 'BG:gelijk BG:inp.bsn'
     }
@@ -73,16 +71,5 @@ class IngeschrevenpersonenBsnStufRequest(IngeschrevenpersonenStufRequest):
     }
 
 
-class IngeschrevenpersonenBsnPartnerStufRequest(IngeschrevenpersonenStufRequest):
-    BSN_LENGTH = 9
-
+class IngeschrevenpersonenBsnPartnerStufRequest(IngeschrevenpersonenBsnStufRequest):
     parameters = ['partners_id']
-
-    parameter_paths = {
-        'bsn': 'BG:gelijk BG:inp.bsn',
-    }
-
-    parameter_checks = {
-        'bsn': IngeschrevenpersonenStufRequest.bsn_check,
-        'inclusiefoverledenpersonen': ArgumentCheck.is_boolean,
-    }
