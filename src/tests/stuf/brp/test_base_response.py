@@ -159,7 +159,6 @@ class StufMappedResponseTest(TestCase):
     def _get_expected_mapped_result(self, resp):
         mapping = resp._get_mapping(None).mapping
         return {
-            '_embedded': {},
             '_links': {
                 'self': {
                     'href': 'http://path/to/me'
@@ -205,7 +204,6 @@ class StufMappedResponseTest(TestCase):
             }
 
         resp = StufMappedResponseImpl('msg')
-        resp.expand = ['partners']
         resp.stuf_message.find_all_elms = lambda x, y: x
         resp.create_objects_from_elements = lambda x: 'THE OBJECTS AT ' + x
 
@@ -215,6 +213,7 @@ class StufMappedResponseTest(TestCase):
         self.assertEqual({
             '_embedded': {
                 'partners': 'THE OBJECTS AT SOME PATH TO PARTNERS',
+                'ouders': 'THE OBJECTS AT SOME OTHER PATH TO OUDERS',
             }
         }, mapped_object.mapped_object)
 
@@ -232,6 +231,7 @@ class StufMappedResponseTest(TestCase):
         self._mock_stuf_message(resp)
 
         result = resp.get_answer_object()
+        print(result)
         self.assertEqual(result, self._get_expected_mapped_result(resp))
 
     def test_get_answer_object_no_answer(self):
@@ -251,6 +251,26 @@ class StufMappedResponseTest(TestCase):
         self.assertEqual(resp.response_filters_instances[0].filter_response.return_value, result)
 
         resp.create_object_from_element.assert_called_with(resp.get_object_elm.return_value)
+
+    def test_get_answer_object_related_not_expanded(self):
+        # When expand is not filled, expect the relation to get filtered
+        resp = StufMappedResponseImpl('msg')
+        resp.get_object_elm = MagicMock()
+        resp.create_object_from_element = MagicMock()
+        resp.create_object_from_element.return_value = {'_embedded': {'relation': {}}}
+
+        result = resp.get_answer_object()
+        self.assertEqual({}, result)
+
+    def test_get_answer_object_related_expanded(self):
+        # When expand is filled, expect the relation to be present
+        resp = StufMappedResponseImpl('msg', **{'expand': 'relation'})
+        resp.get_object_elm = MagicMock()
+        resp.create_object_from_element = MagicMock()
+        resp.create_object_from_element.return_value = {'_embedded': {'relation': {}}}
+
+        result = resp.get_answer_object()
+        self.assertEqual({'_embedded': {'relation': {}}}, result)
 
     def test_create_object_from_element(self):
         resp = StufMappedResponseImpl('msg')

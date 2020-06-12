@@ -137,9 +137,6 @@ class StufMappedResponse(StufResponse):
         mapping = mapped_object.mapping_class
         embedded = {}
         for related_attr, root_obj in mapping.related.items():
-            if related_attr not in self.expand:
-                continue
-
             embedded[related_attr] = self.create_objects_from_elements(
                 self.stuf_message.find_all_elms(root_obj, mapped_object.element)
             )
@@ -167,6 +164,16 @@ class StufMappedResponse(StufResponse):
 
         if not answer_object:
             raise NoStufAnswerException()
+
+        # Filter embedded values not in expand, this is done now to include the links
+        filtered_embedded = {key: value for key, value in answer_object.get('_embedded', {}).items()
+                             if key in self.expand}
+
+        # Replace the embedded values with the filtered embedded or remove if empty
+        if filtered_embedded:
+            answer_object['_embedded'] = filtered_embedded
+        else:
+            answer_object.pop('_embedded', None)
 
         return answer_object
 
