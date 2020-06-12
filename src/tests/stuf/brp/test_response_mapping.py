@@ -137,9 +137,10 @@ class TestNPSMapping(TestCase):
             'self': {
                 'href': 'http(s)://thishost/brp_ingeschrevenpersonen_bsn/digitdigitdigit'
             },
-            'partners': {
-                'href': 'http(s)://thishost/brp_ingeschrevenpersonen_bsn_partners_list/digitdigitdigit'
-            }
+            'partners': [
+                {'href': 'http(s)://thishost/brp_ingeschrevenpersonen_bsn_partners_detail/digitdigitdigit'},
+                {'href': 'http(s)://thishost/brp_ingeschrevenpersonen_bsn_partners_detail/digitdigitdigit'}
+            ]
         }, mapping.get_links(mapped_object))
 
         for c, partner in enumerate(mapped_object['_embedded']['partners']):
