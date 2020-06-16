@@ -230,11 +230,8 @@ class NPSMapping(Mapping):
         """
         links = super().get_links(mapped_object)
 
-        try:
+        if mapped_object.get('verblijfplaats', {}).get('woonadres', {}).get('identificatiecodeNummeraanduiding'):
             nummeraanduiding = mapped_object['verblijfplaats']['woonadres']['identificatiecodeNummeraanduiding']
-        except KeyError:
-            pass
-        else:
             links['verblijfplaatsNummeraanduiding'] = {
                 'href': f"https://api.data.amsterdam.nl/gob/bag/nummeraanduidingen/{nummeraanduiding}/"
             }
