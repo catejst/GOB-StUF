@@ -80,7 +80,7 @@ class ArgumentCheck():
         'check': validate_gemeentecode,
         'msg': {
             "code": "invalidGemeente",
-            "reason": "Waarde komt niet voor in de tabel.",
+            "reason": "Waarde is geen geldige gemeentecode.",
         }
     }
 
