@@ -59,10 +59,10 @@ class TestArgumentCheck(TestCase):
             self.assertEqual(ArgumentCheck.validate(check, v), check)
 
     @patch('gobstuf.rest.brp.argument_checks.CodeResolver')
-    def test_validate_gemeente(self, mock_code_resolver):
-        mock_code_resolver.get_gemeente_code.side_effect = ['any code', DataItemNotFoundException()]
+    def test_validate_gemeentecode(self, mock_code_resolver):
+        mock_code_resolver.get_gemeente.side_effect = ['any code', DataItemNotFoundException()]
 
-        check = ArgumentCheck.is_valid_gemeente
+        check = ArgumentCheck.is_valid_gemeentecode
 
         self.assertIsNone(ArgumentCheck.validate(check, 'any gemeente'))
         self.assertTrue(ArgumentCheck.validate(check, 'invalid gemeente'))
