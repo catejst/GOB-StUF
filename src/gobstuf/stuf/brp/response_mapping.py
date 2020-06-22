@@ -146,16 +146,28 @@ class NPSMapping(Mapping):
                     'code': (MKSConverter.as_code(4), 'BG:inp.gemeenteVanInschrijving'),
                     'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.gemeenteVanInschrijving')
                 },
+                'datumVestigingInNederland':
+                    (MKSConverter.as_datum_broken_down, 'BG:inp.datumVestigingInNederland'),
+                'indicatieVestigingVanuitBuitenland':
+                    (MKSConverter.true_if_exists, 'BG:inp.datumVestigingInNederland'),
+                'vanuitVertrokkenOnbekendWaarheen':
+                    (MKSConverter.true_if_equals('0000'), (MKSConverter.as_code(4), 'BG:inp.immigratieLand')),
+                'landVanwaarIngeschreven': {
+                    'code': (MKSConverter.as_code(4), 'BG:inp.immigratieLand'),
+                    'omschrijving': (MKSConverter.get_land_omschrijving, 'BG:inp.immigratieLand')
+                },
                 'woonadres': {
                     'identificatiecodeNummeraanduiding':
                         'BG:inp.verblijftIn BG:gerelateerde StUF:extraElementen' +
                         '!.//StUF:extraElement[@naam="identificatieNummerAanduiding"]',
                     'identificatiecodeAdresseerbaarObject': 'BG:verblijfsadres BG:aoa.identificatie',
+                    'naamOpenbareRuimte': 'BG:verblijfsadres BG:gor.openbareRuimteNaam',
                     'huisletter': 'BG:verblijfsadres BG:aoa.huisletter',
                     'huisnummer': 'BG:verblijfsadres BG:aoa.huisnummer',
                     'huisnummertoevoeging': 'BG:verblijfsadres BG:aoa.huisnummertoevoeging',
                     'postcode': 'BG:verblijfsadres BG:aoa.postcode',
                     'woonplaatsnaam': 'BG:verblijfsadres BG:wpl.woonplaatsNaam',
+                    'locatiebeschrijving': 'BG:verblijfsadres BG:inp.locatiebeschrijving',
                     'straatnaam': 'BG:verblijfsadres BG:gor.straatnaam',
                     'datumAanvangAdreshouding':
                         (MKSConverter.as_datum_broken_down, 'BG:verblijfsadres BG:begindatumVerblijf'),
@@ -167,7 +179,9 @@ class NPSMapping(Mapping):
                     'huisnummertoevoeging': 'BG:sub.correspondentieAdres BG:aoa.huisnummertoevoeging',
                     'postcode': 'BG:sub.correspondentieAdres BG:postcode',
                     'woonplaatsnaam': 'BG:sub.correspondentieAdres BG:wpl.woonplaatsNaam',
-                    'straatnaam': 'BG:sub.correspondentieAdres BG:gor.straatnaam'
+                    'locatiebeschrijving': 'BG:sub.correspondentieAdres BG:inp.locatiebeschrijving',
+                    'straatnaam': 'BG:sub.correspondentieAdres BG:gor.straatnaam',
+                    'naamOpenbareRuimte': 'BG:sub.correspondentieAdres BG:gor.openbareRuimteNaam',
                 },
             },
             'overlijden': {
