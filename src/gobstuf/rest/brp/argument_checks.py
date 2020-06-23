@@ -17,10 +17,10 @@ def validate_date(value: str):
     return True
 
 
-def validate_gemeente(value: str):
-    # Try to lookup a valid gemeente code for the supplied value
+def validate_gemeentecode(value: str):
+    # Try to lookup a valid gemeente for the supplied value
     try:
-        CodeResolver.get_gemeente_code(value)
+        CodeResolver.get_gemeente(value)
     except DataItemNotFoundException:
         return False
     return True
@@ -76,11 +76,11 @@ class ArgumentCheck():
         }
     }
 
-    is_valid_gemeente = {
-        'check': validate_gemeente,
+    is_valid_gemeentecode = {
+        'check': validate_gemeentecode,
         'msg': {
             "code": "invalidGemeente",
-            "reason": "Waarde is geen geldige gemeente",
+            "reason": "Waarde is geen geldige gemeentecode.",
         }
     }
 

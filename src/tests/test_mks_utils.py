@@ -189,6 +189,16 @@ class TestMKSConverter(TestCase):
         self.assertTrue(MKSConverter.true_if_exists('anything'))
         self.assertIsNone(MKSConverter.true_if_exists(None))
 
+    def test_true_if_equals(self):
+        values = [1, '1', True, False, '', None]
+        false_values = [2, '2', False, True, None, '']
+        for c, value in enumerate(values):
+            true_if_equals = MKSConverter.true_if_equals(value)
+            self.assertTrue(true_if_equals(value))
+            
+            self.assertFalse(true_if_equals(false_values[c]))
+
+
     def test_get_communicatie(self):
         communicatie_parameters = {
             'persoon': {
