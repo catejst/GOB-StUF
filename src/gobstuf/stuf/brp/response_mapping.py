@@ -147,7 +147,8 @@ class NPSMapping(Mapping):
                     'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.gemeenteVanInschrijving')
                 },
                 'datumVestigingInNederland':
-                    (MKSConverter.as_datum_broken_down, 'BG:inp.datumVestigingInNederland'),
+                    (MKSConverter.as_datum_broken_down, 'BG:inp.datumVestigingInNederland',
+                     'BG:inp.datumVestigingInNederland@StUF:indOnvolledigeDatum'),
                 'indicatieVestigingVanuitBuitenland':
                     (MKSConverter.true_if_exists, 'BG:inp.datumVestigingInNederland'),
                 'vanuitVertrokkenOnbekendWaarheen':
