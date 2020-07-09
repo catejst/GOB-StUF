@@ -108,11 +108,8 @@ class TestNPSMapping(TestCase):
         result = mapping.filter(obj)
         self.assertEqual(result, {'verblijfplaats': {'any key': 'any value', 'functieAdres': 'briefadres'}})
 
-    @patch("gobstuf.stuf.brp.response_mapping.request")
-    @patch("gobstuf.stuf.brp.response_mapping.url_for", lambda name, **kwargs: f'/{name}/{kwargs["bsn"]}')
-    def test_get_links(self, mock_request):
-        mock_request.scheme = 'http(s)'
-        mock_request.host = 'thishost'
+    @patch("gobstuf.stuf.brp.response_mapping.get_auth_url", lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
+    def test_get_links(self):
 
         mapping = NPSMapping()
         mapped_object = {
@@ -176,11 +173,8 @@ class TestRelatedMapping(TestCase):
 
 class TestNPSNPSHUWMapping(TestCase):
 
-    @patch("gobstuf.stuf.brp.response_mapping.request")
-    @patch("gobstuf.stuf.brp.response_mapping.url_for", lambda name, **kwargs: f'/{name}/{kwargs["bsn"]}')
-    def test_get_links(self, mock_request):
-        mock_request.scheme = 'http(s)'
-        mock_request.host = 'thishost'
+    @patch("gobstuf.stuf.brp.response_mapping.get_auth_url", lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
+    def test_get_links(self):
 
         mapping = NPSNPSHUWMapping()
         mapped_object = {

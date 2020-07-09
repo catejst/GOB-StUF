@@ -1,13 +1,8 @@
 from typing import Type
 from abc import ABC, abstractmethod
-from flask import url_for, request
 
+from gobstuf.auth.routes import get_auth_url
 from gobstuf.mks_utils import MKSConverter
-
-
-def flask_url(view_name, **kwargs):
-    url = url_for(view_name, **kwargs)
-    return f"{request.scheme}://{request.host}{url}"
 
 
 class Mapping(ABC):
@@ -253,24 +248,24 @@ class NPSMapping(Mapping):
 
         if mapped_object.get('burgerservicenummer'):
             links['self'] = {
-                'href': flask_url('brp_ingeschrevenpersonen_bsn', bsn=mapped_object['burgerservicenummer'])
+                'href': get_auth_url('brp_ingeschrevenpersonen_bsn', bsn=mapped_object['burgerservicenummer'])
             }
 
         if mapped_object.get('_embedded', {}).get('partners'):
             partners = mapped_object['_embedded']['partners']
             # Add the link to all partners
-            links['partners'] = [{'href': flask_url('brp_ingeschrevenpersonen_bsn_partners_detail',
-                                  bsn=mapped_object['burgerservicenummer'],
-                                  partners_id=c)} for c, p in enumerate(partners, 1)]
+            links['partners'] = [{'href': get_auth_url('brp_ingeschrevenpersonen_bsn_partners_detail',
+                                                       bsn=mapped_object['burgerservicenummer'],
+                                                       partners_id=c)} for c, p in enumerate(partners, 1)]
 
             # Add the links to the partner details
             for c, partner in enumerate(partners, 1):
                 partner['_links'] = {
                     **partner.get('_links', {}),
                     'self': {
-                        'href': flask_url('brp_ingeschrevenpersonen_bsn_partners_detail',
-                                          bsn=mapped_object['burgerservicenummer'],
-                                          partners_id=c)
+                        'href': get_auth_url('brp_ingeschrevenpersonen_bsn_partners_detail',
+                                             bsn=mapped_object['burgerservicenummer'],
+                                             partners_id=c)
                     }
                 }
 
@@ -387,7 +382,7 @@ class NPSNPSHUWMapping(RelatedMapping):
 
         if mapped_object.get('burgerservicenummer'):
             links['ingeschrevenPersoon'] = {
-                'href': flask_url('brp_ingeschrevenpersonen_bsn', bsn=mapped_object['burgerservicenummer'])
+                'href': get_auth_url('brp_ingeschrevenpersonen_bsn', bsn=mapped_object['burgerservicenummer'])
             }
         return links
 

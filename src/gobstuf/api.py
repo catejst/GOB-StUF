@@ -8,7 +8,9 @@ from urllib.parse import urlsplit, urlunsplit, SplitResult
 
 from flask_audit_log.middleware import AuditLogMiddleware
 
-from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH, API_BASE_PATH, AUDIT_LOG_CONFIG
+from gobstuf.auth.routes import secure_route, public_route
+from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH, \
+                           API_BASE_PATH, API_INSECURE_BASE_PATH, INSECURE_PATH, AUDIT_LOG_CONFIG
 from gobstuf.certrequest import cert_get, cert_post
 from gobstuf.rest.routes import REST_ROUTES
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, HTTPException
@@ -30,9 +32,13 @@ def _routed_url(url):
     :return: the transformed url that points to the underlying SOAP API
     """
     split_result = urlsplit(url)
+
+    # Remove INSECURE_PATH from the url when present
+    path = split_result.path.replace(INSECURE_PATH, '')
+
     split_result = SplitResult(scheme=ROUTE_SCHEME,
                                netloc=ROUTE_NETLOC,
-                               path=split_result.path,
+                               path=path,
                                query=split_result.query,
                                fragment=split_result.fragment)
     routed_url = urlunsplit(split_result)
@@ -146,21 +152,38 @@ def _stuf():
     return Response(text, mimetype="text/xml")
 
 
+def _add_route(app, paths, rule, view_func, methods):
+    """
+    For every rule add a public and a secure endpoint
+
+    Both the public and the secure endpoints are protected.
+    The secure endpoint expects the keycloak headers to be present and the endpoint is protected by gatekeeper
+    The public endpoint assures that none of the keycloak headers is present
+
+    :param app:
+    :param rule:
+    :param view_func:
+    :param methods:
+    :return:
+    """
+    wrappers = {
+        API_BASE_PATH: secure_route,
+        API_INSECURE_BASE_PATH: public_route
+    }
+    for path in paths:
+        wrapper = wrappers[path]
+        wrapped_rule = f"{path}{rule}"
+        app.add_url_rule(rule=wrapped_rule, methods=methods, view_func=wrapper(wrapped_rule, view_func))
+        # Output the urls on startup
+        print(wrapped_rule)
+
+
 def get_app():
     """
     Initializes the Flask App that serves the SOAP endpoint(s)
 
     :return: Flask App
     """
-    ROUTES = [
-        # Health check URL
-        ('/status/health/', _health, ['GET']),
-
-        # StUF endpoints
-        (f'{API_BASE_PATH}{ROUTE_PATH}', _stuf, ['GET', 'POST']),
-        (f'{API_BASE_PATH}{ROUTE_PATH}/', _stuf, ['GET', 'POST']),
-    ]
-
     app = Flask(__name__)
     CORS(app)
 
@@ -170,14 +193,22 @@ def get_app():
 
     print("Available endpoints:")
 
-    for route, view_func, methods in ROUTES:
-        app.route(rule=route, methods=methods)(view_func)
-        print(route)
+    # Health check route
+    app.route(rule='/status/health/')(_health)
+
+    # Application routes
+    PUBLIC = [API_BASE_PATH, API_INSECURE_BASE_PATH]
+
+    ROUTES = [
+        (PUBLIC, f'{API_BASE_PATH}{ROUTE_PATH}', _stuf, ['GET', 'POST']),
+    ]
+
+    for paths, rule, view_func, methods in ROUTES:
+        _add_route(app, paths, rule, view_func, methods)
 
     for route, view_func in REST_ROUTES:
         full_route = f"{API_BASE_PATH}{route}"
-        app.add_url_rule(f"{full_route}", view_func=view_func)
-        print(f"{full_route}")
+        _add_route(app, PUBLIC, full_route, view_func, methods)
 
     return app
 
