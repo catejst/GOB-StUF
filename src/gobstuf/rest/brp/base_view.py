@@ -1,11 +1,12 @@
 import traceback
 
 from flask.views import MethodView
-from flask import request, abort, Response
+from flask import g, request, abort, Response
 from requests.exceptions import HTTPError
 from abc import abstractmethod
 
 from gobstuf.certrequest import cert_post
+from gobstuf.auth.routes import MKS_USER_KEY, MKS_APPLICATION_KEY
 from gobstuf.stuf.brp.base_request import StufRequest
 from gobstuf.stuf.brp.base_response import StufMappedResponse
 from gobstuf.stuf.exception import NoStufAnswerException
@@ -14,24 +15,21 @@ from gobstuf.rest.brp.rest_response import RESTResponse
 from gobstuf.config import ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH
 from gobstuf.rest.brp.argument_checks import ArgumentCheck
 
-MKS_USER_HEADER = 'MKS_GEBRUIKER'
-MKS_APPLICATION_HEADER = 'MKS_APPLICATIE'
 
-
-def headers_required_decorator(headers):
-    """Decorator used in StufRestView to check that MKS headers are set
+def authentication_required_decorator(keys):
+    """Decorator used in StufRestView to check that MKS authentication is set
 
     :param headers:
     :return:
     """
-    def headers_required(f):
+    def keys_required(f):
         def decorator(*args, **kwargs):
-            if not all([request.headers.get(h) for h in headers]):
-                return abort(Response(response='Missing required MKS headers', status=400))
+            if not all([g.get(key) for key in keys]):
+                return abort(Response(response='Missing required MKS authentication', status=400))
 
             return f(*args, **kwargs)
         return decorator
-    return headers_required
+    return keys_required
 
 
 class StufRestView(MethodView):
@@ -42,8 +40,8 @@ class StufRestView(MethodView):
     Should be extended with a request_template and response_template.
     """
 
-    # Decorator makes sure the MKS headers are set
-    decorators = [headers_required_decorator([MKS_USER_HEADER, MKS_APPLICATION_HEADER])]
+    # Decorator makes sure MKS authentication is set
+    decorators = [authentication_required_decorator([MKS_USER_KEY, MKS_APPLICATION_KEY])]
 
     # Passed to the response template. Values are the default values.
     functional_query_parameters = {
@@ -179,8 +177,8 @@ class StufRestView(MethodView):
 
         # Request MKS with given request_template
         request_template = self.request_template(
-            request.headers.get(MKS_USER_HEADER),
-            request.headers.get(MKS_APPLICATION_HEADER)
+            g.get(MKS_USER_KEY),
+            g.get(MKS_APPLICATION_KEY)
         )
         request_template.set_values(self._request_template_parameters(**kwargs))
 

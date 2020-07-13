@@ -1,8 +1,9 @@
 from unittest import TestCase
 from unittest.mock import patch, MagicMock
 
+from gobstuf.auth.routes import MKS_USER_KEY, MKS_APPLICATION_KEY
 from gobstuf.rest.brp.base_view import (
-    StufRestView, headers_required_decorator, MKS_USER_HEADER, MKS_APPLICATION_HEADER, HTTPError,
+    StufRestView, authentication_required_decorator, HTTPError,
     NoStufAnswerException,
     StufRestFilterView
 )
@@ -11,14 +12,15 @@ from gobstuf.rest.brp.base_view import (
 class TestDecorator(TestCase):
 
     @patch("gobstuf.rest.brp.base_view.abort")
-    @patch("gobstuf.rest.brp.base_view.request")
+    @patch("gobstuf.rest.brp.base_view.g")
     @patch("gobstuf.rest.brp.base_view.Response")
-    def test_headers_required_decorator(self, mock_response, mock_request, mock_abort):
-        mock_request.headers = {'a': 'A', 'b': 'B'}
+    def test_authentication_required_decorator(self, mock_response, mock_g, mock_abort):
+        g_attrs = {'a': 'A', 'b': 'B'}
+        mock_g.get = lambda x: g_attrs.get(x)
         decorated_f = MagicMock()
 
         # Success
-        decorator = headers_required_decorator(['a', 'b'])
+        decorator = authentication_required_decorator(['a', 'b'])
         inner_decorator = decorator(decorated_f)
 
         res = inner_decorator('arg1', 'arg2', kw1='kwarg1', kw2='kwarg2')
@@ -29,7 +31,7 @@ class TestDecorator(TestCase):
         decorated_f.reset_mock()
 
         # Abort, header 'c' is missing
-        decorator = headers_required_decorator(['a', 'b', 'c'])
+        decorator = authentication_required_decorator(['a', 'b', 'c'])
         inner_decorator = decorator(decorated_f)
 
         res = inner_decorator('arg1', 'arg2', kw1='kwarg1', kw2='kwarg2')
@@ -38,33 +40,33 @@ class TestDecorator(TestCase):
         self.assertEqual(mock_abort.return_value, res)
         decorated_f.assert_not_called()
         mock_abort.assert_called_with(mock_response.return_value)
-        mock_response.assert_called_with(response='Missing required MKS headers', status=400)
+        mock_response.assert_called_with(response='Missing required MKS authentication', status=400)
 
 
 class TestStufRestView(TestCase):
 
     @patch("gobstuf.rest.brp.base_view.abort")
-    @patch("gobstuf.rest.brp.base_view.request")
+    @patch("gobstuf.rest.brp.base_view.g")
     @patch("gobstuf.rest.brp.base_view.Response", MagicMock())
-    def test_decorator_set(self, mock_request, mock_abort):
+    def test_decorator_set(self, mock_g, mock_abort):
         # Tests if view is decorated with the correct required headers.
 
         # Next line should contain the minimal valid set of headers
-        headers = {MKS_USER_HEADER: 'some value', MKS_APPLICATION_HEADER: 'some value'}
+        g_attrs = {MKS_USER_KEY: 'some value', MKS_APPLICATION_KEY: 'some value'}
 
         set_decorator = StufRestView.decorators[0]
 
         # Check all headers present
-        mock_request.headers = headers
+        mock_g.get = lambda x: g_attrs.get(x)
         set_decorator(MagicMock())()
         mock_abort.assert_not_called()
 
         # Remove headers one by one and expect abort to be called
-        for k in headers.keys():
+        for k in g_attrs.keys():
             mock_abort.reset_mock()
-            headers_copy = headers.copy()
-            headers_copy.pop(k)
-            mock_request.headers = headers_copy
+            g_attrs_copy = g_attrs.copy()
+            g_attrs_copy.pop(k)
+            mock_g.get = lambda x: g_attrs_copy.get(x)
 
             set_decorator(MagicMock())()
             mock_abort.assert_called_once()
@@ -221,14 +223,16 @@ class TestStufRestView(TestCase):
             'e': 19,
         }, view._get_functional_query_parameters())
 
+    @patch("gobstuf.rest.brp.base_view.g")
     @patch("gobstuf.rest.brp.base_view.request")
     @patch("gobstuf.rest.brp.base_view.StufErrorResponse")
     @patch("gobstuf.rest.brp.base_view.RESTResponse")
-    def test_get(self, mock_rest_response, mock_response, mock_request):
-        mock_request.headers = {
-            MKS_USER_HEADER: 'user',
-            MKS_APPLICATION_HEADER: 'application',
+    def test_get(self, mock_rest_response, mock_response, mock_request, mock_g):
+        g_attrs = {
+            MKS_USER_KEY: 'user',
+            MKS_APPLICATION_KEY: 'application',
         }
+        mock_g.get = lambda x: g_attrs.get(x)
         mock_request.args = {}
 
         mock_request_template = MagicMock()

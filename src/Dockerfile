@@ -12,4 +12,15 @@ RUN rm requirements.txt
 # Copy gob stuf module
 COPY gobstuf gobstuf
 
-CMD uwsgi
+# Copy deploy dir
+COPY deploy /deploy/
+
+# Gatekeeper
+COPY ./keycloak-gatekeeper.latest keycloak-gatekeeper
+COPY ./gatekeeper.conf gatekeeper.conf
+RUN chmod 755 keycloak-gatekeeper
+RUN mkdir -p /var/log/gatekeeper && chown datapunt /var/log/gatekeeper
+
+USER datapunt
+
+CMD ["/deploy/docker-run.sh"]
