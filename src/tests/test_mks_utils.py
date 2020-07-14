@@ -3,8 +3,9 @@ from unittest.mock import patch
 
 import datetime
 
-from gobstuf.mks_utils import MKSConverter, _today
+from gobstuf.mks_utils import MKSConverter, _today, DataItemNotFoundException
 from gobstuf.indications import Indication
+
 
 class TestMKSConverter(TestCase):
 
@@ -70,6 +71,10 @@ class TestMKSConverter(TestCase):
     def test_get_gemeente_omschrijving(self, mock_code_resolver):
         mock_code_resolver.get_gemeente.return_value = 'any omschrijving'
         self.assertEqual(MKSConverter.get_gemeente_omschrijving("any gemeente"), 'any omschrijving')
+
+        # If gemeente is not found, return code as omschrijving
+        mock_code_resolver.get_gemeente.side_effect = DataItemNotFoundException
+        self.assertEqual(MKSConverter.get_gemeente_omschrijving("any gemeente"), 'any gemeente')
 
     @patch('gobstuf.mks_utils.CodeResolver')
     def test_get_land_omschrijving(self, mock_code_resolver):

@@ -182,7 +182,11 @@ class NPSMapping(Mapping):
             },
             'overlijden': {
                 'indicatieOverleden': (MKSConverter.true_if_exists, 'BG:overlijdensdatum'),
-                'datum': (MKSConverter.as_datum_broken_down, 'BG:overlijdensdatum'),
+                'datum': (
+                    MKSConverter.as_datum_broken_down,
+                    'BG:overlijdensdatum',
+                    'BG:overlijdensdatum@StUF:indOnvolledigeDatum'
+                ),
                 'land': {
                     'code': (MKSConverter.as_code(4), 'BG:inp.overlijdenLand'),
                     'omschrijving': (MKSConverter.get_land_omschrijving, 'BG:inp.overlijdenLand')
