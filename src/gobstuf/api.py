@@ -200,15 +200,14 @@ def get_app():
     PUBLIC = [API_BASE_PATH, API_INSECURE_BASE_PATH]
 
     ROUTES = [
-        (PUBLIC, f'{API_BASE_PATH}{ROUTE_PATH}', _stuf, ['GET', 'POST']),
+        (PUBLIC, f'{ROUTE_PATH}', _stuf, ['GET', 'POST']),
     ]
 
     for paths, rule, view_func, methods in ROUTES:
         _add_route(app, paths, rule, view_func, methods)
 
     for route, view_func in REST_ROUTES:
-        full_route = f"{API_BASE_PATH}{route}"
-        _add_route(app, PUBLIC, full_route, view_func, methods)
+        _add_route(app, PUBLIC, route, view_func, methods)
 
     return app
 
