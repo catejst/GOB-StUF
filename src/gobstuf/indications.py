@@ -2,15 +2,27 @@ from abc import ABC, abstractmethod
 
 
 class Indication(ABC):
+    NIET_GEAUTORISEERD = 'nietGeautoriseerd'
+    WAARDE_ONBEKEND = 'waardeOnbekend'
 
-    def __init__(self, id=None):
+    def __init__(self, id=None, no_value=None):
         """
         Register the id in uppercase
         Resolve the id to get the corresponding description
         :param id:
         """
         self.id = (id or "").upper()
-        self._description = self.indications.get(self.id)
+
+        if no_value:
+            self._description = self.no_value.get(no_value)
+        else:
+            self._description = self.indications.get(self.id)
+
+    @property
+    def no_value(self):
+        return {
+            self.NIET_GEAUTORISEERD: '',
+        }
 
     @property
     @abstractmethod
@@ -30,6 +42,13 @@ class Geslachtsaanduiding(Indication):
     VROUW = 'V'
     MAN = 'M'
     ONBEKEND = 'O'
+
+    @property
+    def no_value(self):
+        return {
+            **super().no_value,
+            self.WAARDE_ONBEKEND: 'onbekend'
+        }
 
     @property
     def indications(self):

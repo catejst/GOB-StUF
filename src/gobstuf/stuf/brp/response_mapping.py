@@ -116,7 +116,9 @@ class NPSMapping(Mapping):
         }
 
         return {
-            'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding, 'BG:geslachtsaanduiding'),
+            'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding,
+                                    'BG:geslachtsaanduiding',
+                                    'BG:geslachtsaanduiding@StUF:noValue'),
             'naam': {
                 'aanhef': (MKSConverter.get_aanhef, communicatie_parameters),
                 'aanschrijfwijze': (MKSConverter.get_aanschrijfwijze, communicatie_parameters),

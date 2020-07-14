@@ -164,7 +164,10 @@ class TestMKSConverter(TestCase):
             for aanduiding in [code.upper(), code.lower()]:
                 self.assertEqual(MKSConverter.as_geslachtsaanduiding(aanduiding), expected_result)
         for a in ['x', 'X', '', 'anything', None]:
-            self.assertEqual(MKSConverter.as_geslachtsaanduiding(a), 'onbekend')
+            self.assertIsNone(MKSConverter.as_geslachtsaanduiding(a))
+
+        self.assertEqual('onbekend', MKSConverter.as_geslachtsaanduiding('something', no_value='waardeOnbekend'))
+        self.assertEqual('', MKSConverter.as_geslachtsaanduiding('something', no_value='nietGeautoriseerd'))
 
     def test_as_soort_verbintenis(self):
         valid = {

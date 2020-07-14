@@ -130,9 +130,8 @@ class MKSConverter:
                 return cls._get_age(now=now, birthday=birthday)
 
     @classmethod
-    def as_geslachtsaanduiding(cls, mks_geslachtsaanduiding):
-        return Geslachtsaanduiding(mks_geslachtsaanduiding).description or \
-               Geslachtsaanduiding(Geslachtsaanduiding.ONBEKEND).description
+    def as_geslachtsaanduiding(cls, mks_geslachtsaanduiding, no_value=None):
+        return Geslachtsaanduiding(mks_geslachtsaanduiding, no_value).description
 
     @classmethod
     def as_soort_verbintenis(cls, mks_soort_verbintenis):
