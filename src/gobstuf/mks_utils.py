@@ -171,6 +171,7 @@ class MKSConverter:
         try:
             return cls.resolve_code(resolver, mks_code)
         except DataItemNotFoundException:
+            # Return code. Can happen in case of foreign places
             return mks_code
 
     @classmethod
