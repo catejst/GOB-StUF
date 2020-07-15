@@ -5,7 +5,7 @@ MKS utility methods
 import datetime
 from calendar import isleap
 
-from gobstuf.reference_data.code_resolver import CodeResolver
+from gobstuf.reference_data.code_resolver import CodeResolver, DataItemNotFoundException
 from gobstuf.lib.communicatie import Persoon, Partner, Communicatie
 from gobstuf.indications import Geslachtsaanduiding, AanduidingNaamgebruik, IncompleteDateIndicator, SoortVerbintenis
 
@@ -130,9 +130,8 @@ class MKSConverter:
                 return cls._get_age(now=now, birthday=birthday)
 
     @classmethod
-    def as_geslachtsaanduiding(cls, mks_geslachtsaanduiding):
-        return Geslachtsaanduiding(mks_geslachtsaanduiding).description or \
-               Geslachtsaanduiding(Geslachtsaanduiding.ONBEKEND).description
+    def as_geslachtsaanduiding(cls, mks_geslachtsaanduiding, no_value=None):
+        return Geslachtsaanduiding(mks_geslachtsaanduiding, no_value).description
 
     @classmethod
     def as_soort_verbintenis(cls, mks_soort_verbintenis):
@@ -168,7 +167,11 @@ class MKSConverter:
     @classmethod
     def get_gemeente_omschrijving(cls, mks_code):
         resolver = CodeResolver.get_gemeente
-        return cls.resolve_code(resolver, mks_code)
+        try:
+            return cls.resolve_code(resolver, mks_code)
+        except DataItemNotFoundException:
+            # Return code. Can happen in case of foreign places
+            return mks_code
 
     @classmethod
     def get_land_omschrijving(cls, mks_code):

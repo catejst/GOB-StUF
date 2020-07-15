@@ -3,8 +3,9 @@ from unittest.mock import patch
 
 import datetime
 
-from gobstuf.mks_utils import MKSConverter, _today
+from gobstuf.mks_utils import MKSConverter, _today, DataItemNotFoundException
 from gobstuf.indications import Indication
+
 
 class TestMKSConverter(TestCase):
 
@@ -70,6 +71,10 @@ class TestMKSConverter(TestCase):
     def test_get_gemeente_omschrijving(self, mock_code_resolver):
         mock_code_resolver.get_gemeente.return_value = 'any omschrijving'
         self.assertEqual(MKSConverter.get_gemeente_omschrijving("any gemeente"), 'any omschrijving')
+
+        # If gemeente is not found, return code as omschrijving
+        mock_code_resolver.get_gemeente.side_effect = DataItemNotFoundException
+        self.assertEqual(MKSConverter.get_gemeente_omschrijving("any gemeente"), 'any gemeente')
 
     @patch('gobstuf.mks_utils.CodeResolver')
     def test_get_land_omschrijving(self, mock_code_resolver):
@@ -159,7 +164,10 @@ class TestMKSConverter(TestCase):
             for aanduiding in [code.upper(), code.lower()]:
                 self.assertEqual(MKSConverter.as_geslachtsaanduiding(aanduiding), expected_result)
         for a in ['x', 'X', '', 'anything', None]:
-            self.assertEqual(MKSConverter.as_geslachtsaanduiding(a), 'onbekend')
+            self.assertIsNone(MKSConverter.as_geslachtsaanduiding(a))
+
+        self.assertEqual('onbekend', MKSConverter.as_geslachtsaanduiding('something', no_value='waardeOnbekend'))
+        self.assertEqual('', MKSConverter.as_geslachtsaanduiding('something', no_value='nietGeautoriseerd'))
 
     def test_as_soort_verbintenis(self):
         valid = {
