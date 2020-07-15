@@ -286,7 +286,6 @@ class Communicatie():
                 Geslachtsaanduiding.ONBEKEND: 'Geachte'
             }[self.persoon.geslachtsaanduiding] if self.persoon.geslachtsaanduiding else None
 
-
     def _voorvoegsel_geslachtsnaam(self, voorvoegsel, geslachtsnaam):
         """
         Combine an optional voorvoegsel and the geslachtsnaam
