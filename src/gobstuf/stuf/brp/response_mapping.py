@@ -155,10 +155,10 @@ class NPSMapping(Mapping):
                     'omschrijving': (MKSConverter.get_land_omschrijving, 'BG:inp.immigratieLand')
                 },
                 'woonadres': {
-                    'identificatiecodeNummeraanduiding':
+                    'identificatiecodeNummeraanduiding': 'BG:verblijfsadres BG:aoa.identificatie',
+                    'identificatiecodeAdresseerbaarObject':
                         'BG:inp.verblijftIn BG:gerelateerde StUF:extraElementen' +
-                        '!.//StUF:extraElement[@naam="identificatieNummerAanduiding"]',
-                    'identificatiecodeAdresseerbaarObject': 'BG:verblijfsadres BG:aoa.identificatie',
+                        '!.//StUF:extraElement[@naam="identificatie"]',
                     'naamOpenbareRuimte': 'BG:verblijfsadres BG:gor.openbareRuimteNaam',
                     'huisletter': 'BG:verblijfsadres BG:aoa.huisletter',
                     'huisnummer': 'BG:verblijfsadres BG:aoa.huisnummer',
@@ -171,7 +171,7 @@ class NPSMapping(Mapping):
                         (MKSConverter.as_datum_broken_down, 'BG:verblijfsadres BG:begindatumVerblijf'),
                 },
                 'briefadres': {
-                    'identificatiecodeAdresseerbaarObject': 'BG:sub.correspondentieAdres BG:aoa.identificatie',
+                    'identificatiecodeNummeraanduiding': 'BG:sub.correspondentieAdres BG:aoa.identificatie',
                     'huisletter': 'BG:sub.correspondentieAdres BG:aoa.huisletter',
                     'huisnummer': 'BG:sub.correspondentieAdres BG:aoa.huisnummer',
                     'huisnummertoevoeging': 'BG:sub.correspondentieAdres BG:aoa.huisnummertoevoeging',
