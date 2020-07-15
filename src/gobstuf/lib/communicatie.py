@@ -284,7 +284,7 @@ class Communicatie():
                 Geslachtsaanduiding.MAN: 'Geachte heer',
                 Geslachtsaanduiding.VROUW: 'Geachte mevrouw',
                 Geslachtsaanduiding.ONBEKEND: 'Geachte'
-            }[self.persoon.geslachtsaanduiding]
+            }[self.persoon.geslachtsaanduiding] if self.persoon.geslachtsaanduiding else None
 
     def _voorvoegsel_geslachtsnaam(self, voorvoegsel, geslachtsnaam):
         """
