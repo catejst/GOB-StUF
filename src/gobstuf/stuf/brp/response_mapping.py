@@ -93,7 +93,9 @@ class NPSMapping(Mapping):
 
         communicatie_parameters = {
             'persoon': {
-                'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding, 'BG:geslachtsaanduiding'),
+                'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding,
+                                        'BG:geslachtsaanduiding',
+                                        'BG:geslachtsaanduiding@StUF:noValue'),
                 'naam': {
                     'aanduidingNaamgebruik': (MKSConverter.as_aanduiding_naamgebruik, 'BG:aanduidingNaamgebruik'),
                     'voorletters': 'BG:voorletters',
