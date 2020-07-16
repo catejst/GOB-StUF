@@ -68,6 +68,16 @@ class TestMKSConverter(TestCase):
         self.assertEqual(MKSConverter.get_gemeente_code("any omschrijving"), 'any code')
 
     @patch('gobstuf.mks_utils.CodeResolver')
+    def test_as_gemeente_code(self, mock_code_resolver):
+        # Case in which the gemeente_code is known. Return padded gemeente_code
+        mock_code_resolver.get_gemeente.return_value = 'any gemeente'
+        self.assertEqual(MKSConverter.as_gemeente_code('363'), '0363')
+
+        # Gemeente_code is not known, return None (code will be set in gemeente omschrijving)
+        mock_code_resolver.get_gemeente.side_effect = DataItemNotFoundException
+        self.assertEqual(MKSConverter.as_gemeente_code('363'), None)
+
+    @patch('gobstuf.mks_utils.CodeResolver')
     def test_get_gemeente_omschrijving(self, mock_code_resolver):
         mock_code_resolver.get_gemeente.return_value = 'any omschrijving'
         self.assertEqual(MKSConverter.get_gemeente_omschrijving("any gemeente"), 'any omschrijving')

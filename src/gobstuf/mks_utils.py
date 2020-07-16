@@ -165,6 +165,20 @@ class MKSConverter:
         return CodeResolver.get_gemeente_code(omschrijving)
 
     @classmethod
+    def as_gemeente_code(cls, mks_code):
+        """Returns zero-padded gemeente_code if gemeente_code is known. Returns None otherwise.
+        (If gemeente_code is not known, get_gemeente_omschrijving returns the code as well)
+
+        :param mks_code:
+        :return:
+        """
+        try:
+            cls.resolve_code(CodeResolver.get_gemeente, mks_code)
+            return cls.as_code(4)(mks_code)
+        except DataItemNotFoundException:
+            return None
+
+    @classmethod
     def get_gemeente_omschrijving(cls, mks_code):
         resolver = CodeResolver.get_gemeente
         try:

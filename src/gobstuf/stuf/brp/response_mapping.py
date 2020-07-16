@@ -93,7 +93,9 @@ class NPSMapping(Mapping):
 
         communicatie_parameters = {
             'persoon': {
-                'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding, 'BG:geslachtsaanduiding'),
+                'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding,
+                                        'BG:geslachtsaanduiding',
+                                        'BG:geslachtsaanduiding@StUF:noValue'),
                 'naam': {
                     'aanduidingNaamgebruik': (MKSConverter.as_aanduiding_naamgebruik, 'BG:aanduidingNaamgebruik'),
                     'voorletters': 'BG:voorletters',
@@ -140,7 +142,7 @@ class NPSMapping(Mapping):
             'verblijfplaats': {
                 'datumInschrijvingInGemeente': (MKSConverter.as_datum_broken_down, 'BG:inp.datumInschrijving'),
                 'gemeenteVanInschrijving': {
-                    'code': (MKSConverter.as_code(4), 'BG:inp.gemeenteVanInschrijving'),
+                    'code': (MKSConverter.as_gemeente_code, 'BG:inp.gemeenteVanInschrijving'),
                     'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.gemeenteVanInschrijving')
                 },
                 'datumVestigingInNederland':
@@ -194,7 +196,7 @@ class NPSMapping(Mapping):
                     'omschrijving': (MKSConverter.get_land_omschrijving, 'BG:inp.overlijdenLand')
                 },
                 'plaats': {
-                    'code': (MKSConverter.as_code(4), 'BG:inp.overlijdenplaats'),
+                    'code': (MKSConverter.as_gemeente_code, 'BG:inp.overlijdenplaats'),
                     'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.overlijdenplaats')
                 }
             }
