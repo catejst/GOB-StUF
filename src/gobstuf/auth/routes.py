@@ -11,7 +11,7 @@ MKS_USER_KEY = 'MKS_GEBRUIKER'
 MKS_APPLICATION_KEY = 'MKS_APPLICATIE'
 
 
-def secure_route(rule, func):
+def secure_route(rule, func, name=None):
     """
     Secure routes are protected by gatekeeper
 
@@ -28,7 +28,7 @@ def secure_route(rule, func):
         else:
             return "Forbidden", 403
 
-    wrapper.__name__ = f"secure_{func.__name__}"
+    wrapper.__name__ = f"secure_{func.__name__}" if name is None else f"secure_{name}"
     return wrapper
 
 
@@ -91,7 +91,7 @@ def _issue_fraud_warning(rule, *args, **kwargs):
         print(attr, getattr(request, attr))
 
 
-def public_route(rule, func, *args, **kwargs):
+def public_route(rule, func, name=None):
     """
     Public routes start with API_BASE_PATH and are not protected by gatekeeper
 
@@ -116,7 +116,7 @@ def public_route(rule, func, *args, **kwargs):
             setattr(g, MKS_APPLICATION_KEY, request.headers.get(MKS_APPLICATION_KEY))
             return func(*args, **kwargs)
 
-    wrapper.__name__ = f"public_{func.__name__}"
+    wrapper.__name__ = f"public_{func.__name__}" if name is None else f"public_{name}"
     return wrapper
 
 

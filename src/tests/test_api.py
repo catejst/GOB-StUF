@@ -23,15 +23,20 @@ class TestAPI(unittest.TestCase):
         result = _health()
         self.assertEqual(result, "Connectivity OK")
 
+    @mock.patch("gobstuf.api.API_INSECURE_BASE_PATH", "/gob_stuf/insecure")
     def test_routed_url(self):
         result = _routed_url("proto://domain/path?args")
-        self.assertEqual(result, "ROUTE_SCHEME://ROUTE_NETLOC/path?args")
+        self.assertEqual("ROUTE_SCHEME://ROUTE_NETLOC/path?args", result)
 
         result = _routed_url("proto://domain/path?wsdl")
-        self.assertEqual(result, "ROUTE_SCHEME://ROUTE_NETLOC/path?wsdl")
+        self.assertEqual("ROUTE_SCHEME://ROUTE_NETLOC/path?wsdl", result)
 
         result = _routed_url("proto://domain/path/?wsdl")
-        self.assertEqual(result, "ROUTE_SCHEME://ROUTE_NETLOC/path?wsdl")
+        self.assertEqual("ROUTE_SCHEME://ROUTE_NETLOC/path?wsdl", result)
+
+        # Should remove /gob_stuf/insecure
+        result = _routed_url("proto://domain/gob_stuf/insecure/path?wsdl")
+        self.assertEqual("ROUTE_SCHEME://ROUTE_NETLOC/path?wsdl", result)
 
     def test_update_response(self):
         result = _update_response("text")
