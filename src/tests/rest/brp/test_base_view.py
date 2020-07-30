@@ -131,7 +131,7 @@ class TestStufRestView(TestCase):
 
     @patch("gobstuf.rest.brp.base_view.ROUTE_SCHEME", 'scheme')
     @patch("gobstuf.rest.brp.base_view.ROUTE_NETLOC", 'netloc')
-    @patch("gobstuf.rest.brp.base_view.ROUTE_PATH", '/route/path')
+    @patch("gobstuf.rest.brp.base_view.ROUTE_PATH_310", '/route/path')
     @patch("gobstuf.rest.brp.base_view.cert_post")
     def test_make_request(self, mock_post):
         stufreq = MagicMock()

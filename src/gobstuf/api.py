@@ -9,8 +9,8 @@ from urllib.parse import urlsplit, urlunsplit, SplitResult
 from flask_audit_log.middleware import AuditLogMiddleware
 
 from gobstuf.auth.routes import secure_route, public_route
-from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH, \
-                           API_BASE_PATH, API_INSECURE_BASE_PATH, INSECURE_PATH, AUDIT_LOG_CONFIG
+from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH_310, ROUTE_PATH_204, \
+                           API_BASE_PATH, API_INSECURE_BASE_PATH, AUDIT_LOG_CONFIG
 from gobstuf.certrequest import cert_get, cert_post
 from gobstuf.rest.routes import REST_ROUTES
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, HTTPException
@@ -34,7 +34,7 @@ def _routed_url(url):
     split_result = urlsplit(url)
 
     # Remove INSECURE_PATH from the url when present
-    path = split_result.path.replace(INSECURE_PATH, '')
+    path = split_result.path.replace(API_INSECURE_BASE_PATH, '')
 
     split_result = SplitResult(scheme=ROUTE_SCHEME,
                                netloc=ROUTE_NETLOC,
@@ -152,7 +152,7 @@ def _stuf():
     return Response(text, mimetype="text/xml")
 
 
-def _add_route(app, paths, rule, view_func, methods):
+def _add_route(app, paths, rule, view_func, methods, name=None):
     """
     For every rule add a public and a secure endpoint
 
@@ -173,7 +173,7 @@ def _add_route(app, paths, rule, view_func, methods):
     for path in paths:
         wrapper = wrappers[path]
         wrapped_rule = f"{path}{rule}"
-        app.add_url_rule(rule=wrapped_rule, methods=methods, view_func=wrapper(wrapped_rule, view_func))
+        app.add_url_rule(rule=wrapped_rule, methods=methods, view_func=wrapper(wrapped_rule, view_func, name=name))
         # Output the urls on startup
         print(wrapped_rule)
 
@@ -200,11 +200,12 @@ def get_app():
     PUBLIC = [API_BASE_PATH, API_INSECURE_BASE_PATH]
 
     ROUTES = [
-        (PUBLIC, f'{ROUTE_PATH}', _stuf, ['GET', 'POST']),
+        (PUBLIC, f'{ROUTE_PATH_310}', _stuf, ['GET', 'POST'], '310'),
+        (PUBLIC, f'{ROUTE_PATH_204}', _stuf, ['GET', 'POST'], '204'),
     ]
 
-    for paths, rule, view_func, methods in ROUTES:
-        _add_route(app, paths, rule, view_func, methods)
+    for paths, rule, view_func, methods, name in ROUTES:
+        _add_route(app, paths, rule, view_func, methods, name=name)
 
     for route, view_func in REST_ROUTES:
         _add_route(app, PUBLIC, route, view_func, methods)

@@ -12,7 +12,7 @@ from gobstuf.stuf.brp.base_response import StufMappedResponse
 from gobstuf.stuf.exception import NoStufAnswerException
 from gobstuf.stuf.brp.error_response import StufErrorResponse
 from gobstuf.rest.brp.rest_response import RESTResponse
-from gobstuf.config import ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH
+from gobstuf.config import ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH_310
 from gobstuf.rest.brp.argument_checks import ArgumentCheck
 
 
@@ -225,7 +225,7 @@ class StufRestView(MethodView):
             'Soapaction': request_template.soap_action,
             'Content-Type': 'text/xml'
         }
-        url = f'{ROUTE_SCHEME}://{ROUTE_NETLOC}{ROUTE_PATH}'
+        url = f'{ROUTE_SCHEME}://{ROUTE_NETLOC}{ROUTE_PATH_310}'
 
         return cert_post(url, data=request_template.to_string(), headers=soap_headers)
 
