@@ -3,7 +3,7 @@ Flask==1.1.1
 Flask-API==2.0
 Flask-Cors==3.0.8
 freezegun==0.3.15
--e git+https://github.com/Amsterdam/GOB-Core.git@v0.16.7r#egg=gobcore
+-e git+https://github.com/Amsterdam/GOB-Core.git@v0.16.7t#egg=gobcore
 -e git+https://github.com/Amsterdam/GOB-Config.git@v0.4.11h#egg=gobconfig
 pytest==5.1.2
 pytest-cov==2.7.1

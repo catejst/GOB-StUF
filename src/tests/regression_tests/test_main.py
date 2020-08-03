@@ -8,15 +8,11 @@ class TestMain(TestCase):
 
     @patch("gobstuf.regression_tests.__main__.logging")
     @patch("gobstuf.regression_tests.__main__.BrpRegression")
-    @patch("gobstuf.regression_tests.__main__.ObjectstoreResultsWriter")
-    def test_main(self, mock_writer, mock_regression_test, mock_logging):
+    def test_main(self, mock_regression_test, mock_logging):
         main()
 
         mock_regression_test.assert_called_with(mock_logging.getLogger())
         mock_regression_test().run.assert_called_once()
-
-        mock_writer.assert_called_with(mock_regression_test().run(), 'regression_tests/results/brp')
-        mock_writer().write.assert_called_once()
 
     @patch("gobstuf.regression_tests.__main__.main")
     def test_module_main(self, mock_main):
