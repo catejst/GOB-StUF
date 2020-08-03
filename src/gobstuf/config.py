@@ -38,3 +38,8 @@ AUDIT_LOG_CONFIG = {
     'LOG_HANDLER_CALLABLE_PATH': 'gobstuf.audit_log.get_log_handler',
     'USER_FROM_REQUEST_CALLABLE_PATH': 'gobstuf.audit_log.get_user_from_request'
 }
+
+CONTAINER_BASE = _getenv("CONTAINER_BASE", default_value="development")
+BRP_REGRESSION_TEST_USER = _getenv("BRP_REGRESSION_TEST_USER")
+BRP_REGRESSION_TEST_APPLICATION = _getenv("BRP_REGRESSION_TEST_APPLICATION")
+GOB_OBJECTSTORE = 'GOBObjectstore'
