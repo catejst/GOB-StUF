@@ -59,8 +59,8 @@ class TestAuth(TestCase):
         }
         result = wrapped_func()
         self.assertEqual(result, "Any result")
-        self.assertEqual(getattr(mock_g, MKS_APPLICATION_KEY), "any user")
-        self.assertEqual(getattr(mock_g, MKS_USER_KEY), "fp_any role")
+        self.assertEqual(getattr(mock_g, MKS_APPLICATION_KEY), "fp_any role")
+        self.assertEqual(getattr(mock_g, MKS_USER_KEY), "any user")
 
     @patch('gobstuf.auth.routes.request', mock_request)
     def test_get_roles(self):
