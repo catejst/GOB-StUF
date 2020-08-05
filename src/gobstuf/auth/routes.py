@@ -70,8 +70,8 @@ def _allows_access(rule, *args, **kwargs):
     role = _get_role()
     if role:
         # When a role is found store the MKS USER and APPLICATION in the global object and allow acces
-        setattr(g, MKS_USER_KEY, role)
-        setattr(g, MKS_APPLICATION_KEY, request.headers.get(REQUEST_USER, ""))
+        setattr(g, MKS_APPLICATION_KEY, role)
+        setattr(g, MKS_USER_KEY, request.headers.get(REQUEST_USER, ""))
         return True
     else:
         return False
