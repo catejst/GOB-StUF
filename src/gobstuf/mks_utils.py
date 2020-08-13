@@ -217,6 +217,20 @@ class MKSConverter:
         return true_if_equals
 
     @classmethod
+    def true_if_in(cls, value):
+        """
+        Returns a function to check if the property is in the given list
+        :param property:
+        :param value:
+        :return:
+        """
+        def true_if_in(property):
+            if property is not None:
+                return property in value
+
+        return true_if_in
+
+    @classmethod
     def _get_communicatie(cls, communicatie_parameters):
         persoon = Persoon(communicatie_parameters['persoon'])
         partners = [Partner(partner) for partner in communicatie_parameters['partners']
