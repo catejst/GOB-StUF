@@ -216,6 +216,18 @@ class TestMKSConverter(TestCase):
             
             self.assertFalse(true_if_equals(false_values[c]))
 
+    def test_true_if_in(self):
+        values = [1,2,3,4]
+        true_if_in = MKSConverter.true_if_in(values)
+
+        for value in [1,2,3,4]:
+            self.assertTrue(true_if_in(value))
+
+        self.assertFalse(true_if_in(5))
+
+        # A None value should return a None value
+        self.assertIsNone(true_if_in(None))
+
 
     def test_get_communicatie(self):
         communicatie_parameters = {

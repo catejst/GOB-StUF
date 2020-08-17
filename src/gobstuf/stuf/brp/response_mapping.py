@@ -134,6 +134,8 @@ class NPSMapping(Mapping):
                          'BG:geboortedatum@StUF:indOnvolledigeDatum',
                          'BG:overlijdensdatum'),
             'burgerservicenummer': 'BG:inp.bsn',
+            'geheimhoudingPersoonsgegevens':
+                (MKSConverter.true_if_in(['1', '2', '3', '4', '5', '6', '7']), 'BG:inp.indicatieGeheim'),
             'geboorte': {
                 'datum':
                     (MKSConverter.as_datum_broken_down, 'BG:geboortedatum',
