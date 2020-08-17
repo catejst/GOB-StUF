@@ -223,7 +223,8 @@ class TestMKSConverter(TestCase):
         for value in [1,2,3,4]:
             self.assertTrue(true_if_in(value))
 
-        self.assertFalse(true_if_in(5))
+        # A value not in the list should return None
+        self.assertIsNone(true_if_in(5))
 
         # A None value should return a None value
         self.assertIsNone(true_if_in(None))

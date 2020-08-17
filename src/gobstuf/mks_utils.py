@@ -225,8 +225,8 @@ class MKSConverter:
         :return:
         """
         def true_if_in(property):
-            if property is not None:
-                return property in value
+            if property is not None and property in value:
+                return True
 
         return true_if_in
 
