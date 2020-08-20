@@ -22,10 +22,7 @@ def handle_brp_regression_test_msg(msg):
             **msg.get('header', {}),
             'timestamp': datetime.datetime.utcnow().isoformat(),
         },
-        'summary': {
-            'warnings': logger.get_warnings(),
-            'errors': logger.get_errors(),
-        }
+        'summary': logger.get_summary(),
     }
 
 

@@ -28,10 +28,7 @@ class TestMain(unittest.TestCase):
                 'header_attr': 'val',
                 'timestamp': '2020-08-03T15:30:00',
             },
-            'summary': {
-                'warnings': mock_logger.get_warnings(),
-                'errors': mock_logger.get_errors(),
-            }
+            'summary': mock_logger.get_summary()
         }, res)
 
     @patch("gobstuf.__main__.messagedriven_service")
