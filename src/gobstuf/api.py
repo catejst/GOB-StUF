@@ -178,7 +178,7 @@ def _add_route(app, paths, rule, view_func, methods, name=None):
         print(wrapped_rule)
 
 
-def get_app():
+def get_flask_app():
     """
     Initializes the Flask App that serves the SOAP endpoint(s)
 
@@ -211,13 +211,3 @@ def get_app():
         _add_route(app, PUBLIC, route, view_func, methods)
 
     return app
-
-
-def run():
-    """
-    Get the Flask app and run it at the port as defined in config
-
-    :return: None
-    """
-    app = get_app()
-    app.run(port=GOB_STUF_PORT)
