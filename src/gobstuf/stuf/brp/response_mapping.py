@@ -1,3 +1,5 @@
+import datetime
+
 from typing import Type
 from abc import ABC, abstractmethod
 
@@ -137,9 +139,19 @@ class NPSMapping(Mapping):
             'geheimhoudingPersoonsgegevens':
                 (MKSConverter.true_if_in(['1', '2', '3', '4', '5', '6', '7']), 'BG:inp.indicatieGeheim'),
             'geboorte': {
-                'datum':
-                    (MKSConverter.as_datum_broken_down, 'BG:geboortedatum',
-                     'BG:geboortedatum@StUF:indOnvolledigeDatum'),
+                'datum': (
+                    MKSConverter.as_datum_broken_down,
+                    'BG:geboortedatum',
+                    'BG:geboortedatum@StUF:indOnvolledigeDatum'
+                ),
+                'land': {
+                    'code': (MKSConverter.as_code(4), 'BG:inp.geboorteLand'),
+                    'omschrijving': (MKSConverter.get_land_omschrijving, 'BG:inp.geboorteLand'),
+                },
+                'plaats': {
+                    'code': (MKSConverter.as_gemeente_code, 'BG:inp.geboorteplaats'),
+                    'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.geboorteplaats'),
+                },
             },
             'verblijfplaats': {
                 'datumInschrijvingInGemeente': (MKSConverter.as_datum_broken_down, 'BG:inp.datumInschrijving'),
@@ -208,6 +220,7 @@ class NPSMapping(Mapping):
     def related(self):  # pragma: no cover
         return {
             'partners': 'BG:inp.heeftAlsEchtgenootPartner',
+            'ouders': 'BG:inp.heeftAlsOuders',
         }
 
     def filter(self, mapped_object: dict, **kwargs):
@@ -398,3 +411,80 @@ class NPSNPSHUWMapping(RelatedMapping):
 
 
 StufObjectMapping.register(NPSNPSHUWMapping)
+
+
+class NPSNPSOUDMapping(RelatedMapping):
+
+    @property
+    def entity_type(self):  # pragma: no cover
+        return 'NPSNPSOUD'
+
+    @property
+    def override_related_filters(self):  # pragma: no cover
+        return {
+            'inclusiefoverledenpersonen': True,
+        }
+
+    # Include these attributes from the embedded (NPS) object
+    @property
+    def include_related(self):  # pragma: no cover
+        return [
+            'burgerservicenummer',
+            'naam',
+            'geboorte',
+            'geslachtsaanduiding',
+            'geheimhoudingPersoonsgegevens',
+        ]
+
+    # And add these attributes
+    @property
+    def mapping(self):
+        return {
+            'ouderAanduiding': 'BG:ouderAanduiding',
+            'aanduidingStrijdigheidNietigheid': 'BG:aanduidingStrijdigheidNietigheid',
+            'datumIngangFamilierechtelijkeBetrekking': (
+                MKSConverter.as_datum_broken_down, 'BG:datumIngangFamilierechtelijkeBetrekking'),
+            'datumIngangFamilierechtelijkeBetrekkingRaw': 'BG:datumIngangFamilierechtelijkeBetrekking',
+            # Add raw value for filter
+            'datumEindeFamilierechtelijkeBetrekking': 'BG:datumEindeFamilierechtelijkeBetrekking',
+        }
+
+    def filter(self, mapped_object: dict, **kwargs):
+        naam = mapped_object.get('naam', {})
+        today = datetime.datetime.now().strftime('%Y%m%d')
+
+        if mapped_object.get('aanduidingStrijdigheidNietigheid') == 'true':
+            return None
+        elif mapped_object.get('datumIngangFamilierechtelijkeBetrekkingRaw') and \
+                mapped_object['datumIngangFamilierechtelijkeBetrekkingRaw'] > \
+                today[:len(mapped_object['datumIngangFamilierechtelijkeBetrekkingRaw'])]:
+            # datumIngangFamilierechtelijkeBetrekkingRaw should not be after today
+            # Compares only the same number of characters as the given string, to match precision
+            return None
+        elif mapped_object.get('datumEindeFamilierechtelijkeBetrekking') and \
+                mapped_object['datumEindeFamilierechtelijkeBetrekking'] < \
+                today[:len(mapped_object['datumEindeFamilierechtelijkeBetrekking'])]:
+            # datumEindeFamilierechtelijkeBetrekking should not be before today
+            # Compares only the same number of characters as the given string, to match precision
+            return None
+        elif not naam.get('geslachtsnaam') and not naam.get('voornamen') and not mapped_object.get('geboorte'):
+            return None
+
+        # Delete keys that were only included for filtering.
+        mapped_object.pop('aanduidingStrijdigheidNietigheid', None)
+        mapped_object.pop('datumIngangFamilierechtelijkeBetrekkingRaw', None)
+        mapped_object.pop('datumEindeFamilierechtelijkeBetrekking', None)
+
+        return super().filter(mapped_object, **kwargs)
+
+    def get_links(self, mapped_object: dict) -> dict:
+        links = super().get_links(mapped_object)
+
+        if mapped_object.get('burgerservicenummer'):
+            links['ingeschrevenPersoon'] = {
+                'href': get_auth_url('brp_ingeschrevenpersonen_bsn', bsn=mapped_object['burgerservicenummer'])
+            }
+        return links
+
+
+StufObjectMapping.register(NPSNPSOUDMapping)
