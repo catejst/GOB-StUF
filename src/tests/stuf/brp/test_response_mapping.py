@@ -1,7 +1,10 @@
+import freezegun
+
 from unittest import TestCase
 from unittest.mock import patch
-from gobstuf.stuf.brp.response_mapping import Mapping, NPSMapping, StufObjectMapping, RelatedMapping, NPSNPSHUWMapping
-
+from gobstuf.stuf.brp.response_mapping import (
+    Mapping, NPSMapping, StufObjectMapping, RelatedMapping, NPSNPSHUWMapping, NPSNPSOUDMapping
+)
 
 class MappingImpl(Mapping):
     mapping = {}
@@ -212,3 +215,63 @@ class TestNPSNPSHUWMapping(TestCase):
             **expected,
         }
         self.assertIsNone(mapping.filter(mapped_object))
+
+
+class TestNPSNPSOudMapping(TestCase):
+
+    @patch("gobstuf.stuf.brp.response_mapping.get_auth_url", lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
+    def test_get_links(self):
+        mapping = NPSNPSOUDMapping()
+        mapped_object = {
+            'burgerservicenummer': 'digitdigitdigit',
+        }
+
+        self.assertEqual({
+            'ingeschrevenPersoon': {
+                'href': 'http(s)://thishost/brp_ingeschrevenpersonen_bsn/digitdigitdigit'
+            }
+        }, mapping.get_links(mapped_object))
+
+        mapped_object = {}
+        self.assertEqual({}, mapping.get_links(mapped_object))
+
+    def test_filter(self):
+        mapping = NPSNPSOUDMapping()
+
+        keys = [
+            'aanduidingStrijdigheidNietigheid',
+            'datumIngangFamilierechtelijkeBetrekkingRaw',
+            'datumEindeFamilierechtelijkeBetrekking'
+        ]
+        # Assert the necessary keys are present in mapping. Filter relies on these keys.
+        self.assertTrue(all([key in mapping.mapping for key in keys]))
+
+        self.assertIsNone(mapping.filter({'aanduidingStrijdigheidNietigheid': 'true'}))
+
+        with freezegun.freeze_time('20200831'):
+            self.assertIsNone(mapping.filter({'datumIngangFamilierechtelijkeBetrekkingRaw': '20200901'}))
+            self.assertIsNone(mapping.filter({'datumEindeFamilierechtelijkeBetrekking': '20200830'}))
+
+        self.assertIsNone(mapping.filter({'naam': {}}))
+        self.assertIsNotNone(mapping.filter({'naam': {'voornamen': 'Voornaam'}}))
+        self.assertIsNotNone(mapping.filter({'naam': {'geslachtsnaam': 'Geslachtsnaam'}}))
+        self.assertIsNotNone(mapping.filter({'geboorte': {'some': 'thing'}}))
+
+        with freezegun.freeze_time('20200831'):
+            obj = {
+                'aanduidingStrijdigheidNietigheid': 'not true',
+                'datumIngangFamilierechtelijkeBetrekkingRaw': '202008',  # Smaller precision, should work
+                'datumEindeFamilierechtelijkeBetrekking': '202009',  # Smaller precision, should work
+                'naam': {
+                    'voornamen': 'Voornaam',
+                }
+            }
+            res = mapping.filter(obj)
+
+            deleted_keys = [
+                'aanduidingStrijdigheidNietigheid',
+                'datumIngangFamilierechtelijkeBetrekkingRaw',
+                'datumEindeFamilierechtelijkeBetrekking'
+            ]
+
+            self.assertTrue(all([key not in res for key in deleted_keys]))

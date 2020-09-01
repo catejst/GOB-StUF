@@ -17,7 +17,8 @@ class IngeschrevenpersonenView(StufRestView):
     Use as first parent class
     """
     expand_options = [
-        'partners'
+        'partners',
+        'ouders',
     ]
 
     @property

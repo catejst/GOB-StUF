@@ -275,7 +275,9 @@ class StufMappedResponse(StufResponse):
                     return None
 
             # Initial call. Return mapped dictionary and Mapping class
-            dict_mapping.update(self.get_mapped_object(obj, mapping.mapping))
+            if mapping.mapping:
+                # Do only when mapping is not empty to avoid infinite recursion
+                dict_mapping.update(self.get_mapped_object(obj, mapping.mapping))
             return MappedObjectWrapper(dict_mapping, mapping, obj)
         elif isinstance(mapping, dict):
             # the values are resolved at a nested level by recursively calling this method

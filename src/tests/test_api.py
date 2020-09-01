@@ -3,7 +3,7 @@ from unittest import mock
 
 from gobstuf.api import _health, _routed_url, _update_response, _update_request
 from gobstuf.api import _get_stuf, _post_stuf, _stuf, _handle_stuf_request
-from gobstuf.api import get_app, run
+from gobstuf.api import get_flask_app
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
 class MockResponse:
@@ -154,17 +154,9 @@ class TestAPI(unittest.TestCase):
     def test_get_app(self, mock_flask):
         mock_app = mock.MagicMock()
         mock_flask.return_value = mock_app
-        app = get_app()
+        app = get_flask_app()
         mock_flask.assert_called()
         mock_app.route.assert_called()
-
-    @mock.patch("gobstuf.api.GOB_STUF_PORT", 1234)
-    @mock.patch("gobstuf.api.get_app")
-    def test_run(self, mock_get_app):
-        mock_app = mock.MagicMock()
-        mock_get_app.return_value = mock_app
-        run()
-        mock_app.run.assert_called_with(port=1234)
 
 
 class TestAPIMiddleware(unittest.TestCase):
@@ -175,5 +167,5 @@ class TestAPIMiddleware(unittest.TestCase):
     def test_get_app(self, mock_flask, mock_middleware):
         mock_app = mock.MagicMock()
         mock_flask.return_value = mock_app
-        app = get_app()
+        app = get_flask_app()
         mock_middleware.assert_called_with(app)
