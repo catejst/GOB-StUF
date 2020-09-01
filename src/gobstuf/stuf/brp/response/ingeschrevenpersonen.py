@@ -1,5 +1,10 @@
 from gobstuf.stuf.brp.base_response import StufMappedResponse
-from gobstuf.stuf.brp.response.filters import PartnersDetailResponseFilter, PartnersListResponseFilter
+from gobstuf.stuf.brp.response.filters import (
+    PartnersDetailResponseFilter,
+    PartnersListResponseFilter,
+    OudersDetailResponseFilter,
+    OudersListResponseFilter
+)
 
 
 class IngeschrevenpersonenStufResponse(StufMappedResponse):
@@ -16,3 +21,11 @@ class IngeschrevenpersonenStufPartnersDetailResponse(IngeschrevenpersonenStufRes
 
 class IngeschrevenpersonenStufPartnersListResponse(IngeschrevenpersonenStufResponse):
     response_filters = [PartnersListResponseFilter]
+
+
+class IngeschrevenpersonenStufOudersDetailResponse(IngeschrevenpersonenStufResponse):
+    response_filters = [OudersDetailResponseFilter]
+
+
+class IngeschrevenpersonenStufOudersListResponse(IngeschrevenpersonenStufResponse):
+    response_filters = [OudersListResponseFilter]

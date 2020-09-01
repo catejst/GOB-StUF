@@ -254,6 +254,42 @@ class NPSMapping(Mapping):
             mapped_object = None
         return super().filter(mapped_object)
 
+    def _add_embedded_objects_enumerated_links(self, mapped_object: dict, links: dict, embedded_type: str, route: str):
+        """Adds links to embedded objects of the form /ingeschrevenpersonen/<bsn>/embedded_type/<n> for each object.
+        Adds links to top level, as well as self links to the embedded objects
+
+        Expects mapped_object to contain a burgerservicenummer (should always be the case for objects in this class).
+
+        :param mapped_object:
+        :param links:
+        :param embedded_type: e.g. ouders, partners
+        :param route: the route name that is used to generate the link. Should accept route parameters 'bsn' and
+        embedded_type_id (e.g. ouders_id, partners_id)
+        :return:
+        """
+        url_param = f"{embedded_type}_id"
+
+        def url_for_object(index):
+            return get_auth_url(route,
+                                bsn=mapped_object['burgerservicenummer'],
+                                **{url_param: index}
+                                )
+
+        if mapped_object.get('_embedded', {}).get(embedded_type):
+            objects = mapped_object['_embedded'][embedded_type]
+
+            # Add the link to all embedded objects
+            links[embedded_type] = [{'href': url_for_object(c)} for c, o in enumerate(objects, 1)]
+
+            # Add the links to the ouders details
+            for c, object in enumerate(objects, 1):
+                object['_links'] = {
+                    **object.get('_links', {}),
+                    'self': {
+                        'href': url_for_object(c)
+                    }
+                }
+
     def get_links(self, mapped_object: dict):
         """
         Return the HAL links that correspond with the mapped and filtered object (data)
@@ -274,23 +310,19 @@ class NPSMapping(Mapping):
                 'href': get_auth_url('brp_ingeschrevenpersonen_bsn', bsn=mapped_object['burgerservicenummer'])
             }
 
-        if mapped_object.get('_embedded', {}).get('partners'):
-            partners = mapped_object['_embedded']['partners']
-            # Add the link to all partners
-            links['partners'] = [{'href': get_auth_url('brp_ingeschrevenpersonen_bsn_partners_detail',
-                                                       bsn=mapped_object['burgerservicenummer'],
-                                                       partners_id=c)} for c, p in enumerate(partners, 1)]
+        self._add_embedded_objects_enumerated_links(
+            mapped_object,
+            links,
+            'partners',
+            'brp_ingeschrevenpersonen_bsn_partners_detail'
+        )
 
-            # Add the links to the partner details
-            for c, partner in enumerate(partners, 1):
-                partner['_links'] = {
-                    **partner.get('_links', {}),
-                    'self': {
-                        'href': get_auth_url('brp_ingeschrevenpersonen_bsn_partners_detail',
-                                             bsn=mapped_object['burgerservicenummer'],
-                                             partners_id=c)
-                    }
-                }
+        self._add_embedded_objects_enumerated_links(
+            mapped_object,
+            links,
+            'ouders',
+            'brp_ingeschrevenpersonen_bsn_ouders_detail'
+        )
 
         return links
 

@@ -6,9 +6,11 @@ from gobstuf.stuf.brp.response_mapping import (
     Mapping, NPSMapping, StufObjectMapping, RelatedMapping, NPSNPSHUWMapping, NPSNPSOUDMapping
 )
 
+
 class MappingImpl(Mapping):
     mapping = {}
     entity_type = 'TST'
+
 
 class MappingImpl2(Mapping):
     mapping = {}
@@ -111,7 +113,58 @@ class TestNPSMapping(TestCase):
         result = mapping.filter(obj)
         self.assertEqual(result, {'verblijfplaats': {'any key': 'any value', 'functieAdres': 'briefadres'}})
 
-    @patch("gobstuf.stuf.brp.response_mapping.get_auth_url", lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
+    @patch("gobstuf.stuf.brp.response_mapping.get_auth_url",
+           lambda name, **kwargs: f"https://theurl/{name}/{kwargs['bsn']}/thetype/{kwargs['thetype_id']}")
+    def test_add_embedded_objects_enumerated_links(self):
+        # _add_embedded_objects_enumerated_links is also indirectly tested by the test_get_links method below.
+        # This method tests the method in isolation
+        mapping = NPSMapping()
+        mapped_object = {
+            'burgerservicenummer': 'digitdigitdigit',
+            '_embedded': {
+                'thetype': [
+                    {'burgerservicenummer': 'digitdigitdigit1'},
+                    {'burgerservicenummer': 'digitdigitdigit2'},
+                ]
+            }
+        }
+        links = {}
+
+        mapping._add_embedded_objects_enumerated_links(mapped_object, links, 'thetype', 'theroute')
+
+        self.assertEqual({
+            'thetype': [
+                {'href': 'https://theurl/theroute/digitdigitdigit/thetype/1'},
+                {'href': 'https://theurl/theroute/digitdigitdigit/thetype/2'},
+            ]
+        }, links)
+
+        self.assertEqual({
+            '_embedded': {
+                'thetype': [
+                    {
+                        '_links': {
+                            'self': {
+                                'href': 'https://theurl/theroute/digitdigitdigit/thetype/1'
+                            }
+                        },
+                        'burgerservicenummer': 'digitdigitdigit1'
+                    },
+                    {
+                        '_links': {
+                            'self': {
+                                'href': 'https://theurl/theroute/digitdigitdigit/thetype/2'
+                            }
+                        },
+                        'burgerservicenummer': 'digitdigitdigit2'
+                    }
+                ]
+            },
+            'burgerservicenummer': 'digitdigitdigit'
+        }, mapped_object)
+
+    @patch("gobstuf.stuf.brp.response_mapping.get_auth_url",
+           lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
     def test_get_links(self):
 
         mapping = NPSMapping()
@@ -144,7 +197,8 @@ class TestNPSMapping(TestCase):
         }, mapping.get_links(mapped_object))
 
         for c, partner in enumerate(mapped_object['_embedded']['partners']):
-            self.assertEqual(partner['_links']['self']['href'], 'http(s)://thishost/brp_ingeschrevenpersonen_bsn_partners_detail/digitdigitdigit')
+            self.assertEqual(partner['_links']['self']['href'],
+                             'http(s)://thishost/brp_ingeschrevenpersonen_bsn_partners_detail/digitdigitdigit')
 
         mapped_object = {}
         self.assertEqual({}, mapping.get_links(mapped_object))
@@ -176,9 +230,9 @@ class TestRelatedMapping(TestCase):
 
 class TestNPSNPSHUWMapping(TestCase):
 
-    @patch("gobstuf.stuf.brp.response_mapping.get_auth_url", lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
+    @patch("gobstuf.stuf.brp.response_mapping.get_auth_url",
+           lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
     def test_get_links(self):
-
         mapping = NPSNPSHUWMapping()
         mapped_object = {
             'burgerservicenummer': 'digitdigitdigit',
@@ -219,7 +273,8 @@ class TestNPSNPSHUWMapping(TestCase):
 
 class TestNPSNPSOudMapping(TestCase):
 
-    @patch("gobstuf.stuf.brp.response_mapping.get_auth_url", lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
+    @patch("gobstuf.stuf.brp.response_mapping.get_auth_url",
+           lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
     def test_get_links(self):
         mapping = NPSNPSOUDMapping()
         mapped_object = {
