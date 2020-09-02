@@ -11,7 +11,12 @@ from gobstuf.rest.brp.views import (
     IngeschrevenpersonenStufPartnersListResponse,
     IngeschrevenpersonenStufPartnersDetailResponse,
     IngeschrevenpersonenBsnStufRequest,
-    IngeschrevenpersonenBsnPartnerStufRequest
+    IngeschrevenpersonenBsnPartnerStufRequest,
+    IngeschrevenpersonenBsnOudersListView,
+    IngeschrevenpersonenBsnOudersDetailView,
+    IngeschrevenpersonenStufOudersDetailResponse,
+    IngeschrevenpersonenStufOudersListResponse,
+    IngeschrevenpersonenBsnOudersStufRequest
 )
 
 
@@ -66,3 +71,24 @@ class TestIngeschrevenpersonenBsnPartnerDetailView(TestCase):
         kwargs = {'bsn': 'BEE ES EN'}
         self.assertEqual('Ingeschreven partner voor persoon niet gevonden met burgerservicenummer BEE ES EN.',
                          IngeschrevenpersonenBsnPartnerDetailView().get_not_found_message(**kwargs))
+
+
+class TestIngeschrevenpersonenBsnOudersListView(TestCase):
+
+    @patch("gobstuf.rest.brp.views.StufRestView", MagicMock())
+    def test_templates_set(self):
+        self.assertEqual(IngeschrevenpersonenStufOudersListResponse, IngeschrevenpersonenBsnOudersListView.response_template)
+        self.assertEqual(IngeschrevenpersonenBsnStufRequest, IngeschrevenpersonenBsnOudersListView.request_template)
+
+
+class TestIngeschrevenpersonenBsnOudersDetailView(TestCase):
+
+    @patch("gobstuf.rest.brp.views.StufRestView", MagicMock())
+    def test_templates_set(self):
+        self.assertEqual(IngeschrevenpersonenStufOudersDetailResponse, IngeschrevenpersonenBsnOudersDetailView.response_template)
+        self.assertEqual(IngeschrevenpersonenBsnOudersStufRequest, IngeschrevenpersonenBsnOudersDetailView.request_template)
+
+    def test_get_not_found_message(self):
+        kwargs = {'bsn': 'BEE ES EN'}
+        self.assertEqual('Ingeschreven ouder voor persoon niet gevonden met burgerservicenummer BEE ES EN.',
+                         IngeschrevenpersonenBsnOudersDetailView().get_not_found_message(**kwargs))

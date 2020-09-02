@@ -7,3 +7,11 @@ class PartnersDetailResponseFilter(RelatedDetailResponseFilter):
 
 class PartnersListResponseFilter(RelatedListResponseFilter):
     related_type = 'partners'
+
+
+class OudersDetailResponseFilter(RelatedDetailResponseFilter):
+    related_type = 'ouders'
+
+
+class OudersListResponseFilter(RelatedListResponseFilter):
+    related_type = 'ouders'
