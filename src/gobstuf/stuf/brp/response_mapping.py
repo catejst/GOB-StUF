@@ -237,10 +237,26 @@ class NPSMapping(Mapping):
         :return:
         """
         geslachtsaanduiding_order = ['vrouw', 'man', 'onbekend']
+
+        # Use Python sorted function with key argument. The lambda function returns a tuple that determines the
+        # ordering, where lower numbers are sorted first. First the first element of the tuple is evaluated, and only
+        # if values for the first element are equal, the second element of the tuple is compared.
+        #
+        # For example: For three ouders, the lambda function below evaluates to the following tuples:
+        # ouder 1: (-20200501, 1, 'geslachtsnaam', 'voornamen')
+        # ouder 2: (-20200403, 1, 'geslachtsnaam', 'voornamen')
+        # ouder 3: (-20200403, 0, 'geslachtsnaam', 'voornamen')
+        #
+        # The ordering will be: ouder 1, ouder 3, ouder 2, because ouder 1 has the lowest first element of the tuple.
+        # Ouder 2 and 3 match on the first element, so are sorted on the second element.
         sorted_ouders = sorted(ouders, key=lambda o: (
+            # Convert geboortedatum of form '2020-01-05' to a negative integer value -20200105. 0 if no geboortedatum
+            # This way younger persons are listed first.
             -(int(str(o.get('geboorte', {}).get('datum', {}).get('datum', 0)).replace('-', ''))),
+            # Use geslachtsaanduiding_order list to determine ordering. Vrouw first
             geslachtsaanduiding_order.index(o['geslachtsaanduiding'])
             if o.get('geslachtsaanduiding') in geslachtsaanduiding_order else 99,
+            # Order by name
             o.get('naam', {}).get('geslachtsnaam', 'zzzzzzzzzz').lower(),
             o.get('naam', {}).get('voornamen', 'zzzzzzzzzz').lower(),
         ))
