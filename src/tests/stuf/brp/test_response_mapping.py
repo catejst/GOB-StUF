@@ -73,9 +73,11 @@ class TestNPSMapping(TestCase):
 
         def ensure_ordering(objects: list):
             ordered = mapping.sort_ouders(objects)
-            print(ordered)
             order = [obj['order'] for obj in ordered]
             self.assertTrue(order == sorted(order))
+
+            # Assert ouderAanduiding is assigned correctly
+            self.assertTrue(all([ordered[idx]['ouderAanduiding'] == f'ouder{idx + 1}' for idx in range(len(ordered))]))
 
         ouders = [
             {

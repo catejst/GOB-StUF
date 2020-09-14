@@ -231,17 +231,21 @@ class NPSMapping(Mapping):
         - geslachtsnaam ascending
         - voornamen ascending
 
+        Adds ouderAanduiding attribute based on the ordering (ouder1, ouder2)
+
         :param ouders:
         :return:
         """
         geslachtsaanduiding_order = ['vrouw', 'man', 'onbekend']
-        return sorted(ouders, key=lambda o: (
+        sorted_ouders = sorted(ouders, key=lambda o: (
             -(int(str(o.get('geboorte', {}).get('datum', {}).get('datum', 0)).replace('-', ''))),
             geslachtsaanduiding_order.index(o['geslachtsaanduiding'])
             if o.get('geslachtsaanduiding') in geslachtsaanduiding_order else 99,
             o.get('naam', {}).get('geslachtsnaam', 'zzzzzzzzzz').lower(),
             o.get('naam', {}).get('voornamen', 'zzzzzzzzzz').lower(),
         ))
+
+        return [{**ouder, 'ouderAanduiding': f'ouder{idx + 1}'} for idx, ouder in enumerate(sorted_ouders)]
 
     def filter(self, mapped_object: dict, **kwargs):
         """
