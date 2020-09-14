@@ -3,7 +3,7 @@ from unittest import TestCase
 import datetime
 
 from gobstuf.mks_utils import AanduidingNaamgebruik, Geslachtsaanduiding
-from gobstuf.lib.communicatie import Communicatie, Persoon, Partner, _get_value, _datum_to_date
+from gobstuf.lib.communicatie import Communicatie, Persoon, Partner, get_value, _datum_to_date
 
 class TestCommunicatie(TestCase):
 
@@ -367,18 +367,8 @@ class TestPartner(TestCase):
         blaauw['aangaanHuwelijkPartnerschap']['datum']['dag'] = None
         self.assertEqual(partner.aangaan_huwelijk_partnerschap_date, None)
 
-class TestUtils(TestCase):
 
-    def test_get_value(self):
-        dict = {
-            'a': {
-                'b': {
-                    'c': 'd'
-                }
-            }
-        }
-        self.assertEqual(_get_value(dict, 'a', 'b', 'c'), 'd')
-        self.assertEqual(_get_value(dict, 'a', 'b', 'c', 'd'), None)
+class TestUtils(TestCase):
 
     def test_datum_to_date(self):
         self.assertEqual(_datum_to_date(None), None)

@@ -8,30 +8,8 @@ Functionaliteit: Als gemeente wil ik de juiste en consistente briefaanhef in com
 import datetime
 
 from typing import List
-from functools import reduce
-from operator import getitem
-
 from gobstuf.indications import AanduidingNaamgebruik, Geslachtsaanduiding
-
-
-def _get_value(dict, *args):
-    """
-    Get a dictionary value by path (a list of keys).
-
-    Example:
-        given a dict { 'a': { 'b': 'c' } }
-        in order to access dict['a']['b'] without being sure that keys a en b exist
-        you normally would program dict.get('a', {}).get('b')
-
-        with this function you will have the same result using _get_value(dict, 'a', 'b')
-    :param dict:
-    :param *args: list of key values
-    :return:
-    """
-    try:
-        return reduce(getitem, args, dict)
-    except (KeyError, TypeError):
-        pass
+from gobstuf.lib.utils import get_value
 
 
 def _datum_to_date(datum):
@@ -65,12 +43,12 @@ class Persoon():
         :param persoonsgegevens:
         """
 
-        self.voorvoegsel_geslachtsnaam = _get_value(persoonsgegevens, 'naam', 'voorvoegsel') or ''
-        self.voorletters = _get_value(persoonsgegevens, 'naam', 'voorletters') or ''
-        self.geslachtsnaam = _get_value(persoonsgegevens, 'naam', 'geslachtsnaam') or ''
+        self.voorvoegsel_geslachtsnaam = get_value(persoonsgegevens, 'naam', 'voorvoegsel') or ''
+        self.voorletters = get_value(persoonsgegevens, 'naam', 'voorletters') or ''
+        self.geslachtsnaam = get_value(persoonsgegevens, 'naam', 'geslachtsnaam') or ''
         self.adellijke_titel_predikaat = None
-        self._geslachtsaanduiding = _get_value(persoonsgegevens, 'geslachtsaanduiding') or ''
-        self._aanduiding_naamgebruik = _get_value(persoonsgegevens, 'naam', 'aanduidingNaamgebruik') or ''
+        self._geslachtsaanduiding = get_value(persoonsgegevens, 'geslachtsaanduiding') or ''
+        self._aanduiding_naamgebruik = get_value(persoonsgegevens, 'naam', 'aanduidingNaamgebruik') or ''
 
     @property
     def geslachtsaanduiding(self):

@@ -4,7 +4,9 @@ from typing import Type
 from abc import ABC, abstractmethod
 
 from gobstuf.auth.routes import get_auth_url
+from gobstuf.indications import Geslachtsaanduiding
 from gobstuf.mks_utils import MKSConverter
+from gobstuf.lib.utils import get_value
 
 
 class Mapping(ABC):
@@ -222,6 +224,62 @@ class NPSMapping(Mapping):
             'partners': 'BG:inp.heeftAlsEchtgenootPartner',
             'ouders': 'BG:inp.heeftAlsOuders',
         }
+
+    def sort_ouders(self, ouders: list):
+        """Sorts ouders by:
+
+        - geboortedatum descending
+        - geslachtsaanduiding (vrouw, man, onbekend, ..)
+        - geslachtsnaam ascending
+        - voornamen ascending
+
+        Adds ouderAanduiding attribute based on the ordering (ouder1, ouder2)
+
+        :param ouders:
+        :return:
+        """
+
+        def ouder_sorter(ouder):
+            MAX_NAAM = 'zzzzzzzzzz'  # Value that is expected to compare above any real naam
+            geslachtsaanduiding_order = {
+                Geslachtsaanduiding.VROUW_FULL: 0,
+                Geslachtsaanduiding.MAN_FULL: 1,
+                Geslachtsaanduiding.ONBEKEND_FULL: 2,
+                None: 3
+            }
+
+            # First sort key is geboortedatum descending
+            geboorte = (get_value(ouder, 'geboorte', 'datum', 'datum') or '0000-00-00').replace('-', '')
+            geboorte = -(int(geboorte))  # latest first
+
+            # Second key is geslachtsaanduiding on geslachtsaanduiding_order
+            geslacht = geslachtsaanduiding_order[get_value(ouder, 'geslachtsaanduiding')]
+
+            # Third key is geslachtsnaam ascending
+            geslachtsnaam = get_value(ouder, 'naam', 'geslachtsnaam')
+            geslachtsnaam = geslachtsnaam.lower() if geslachtsnaam else MAX_NAAM
+
+            # Fourth key is voornamen ascending
+            voornamen = get_value(ouder, 'naam', 'voornamen')
+            voornamen = voornamen.lower() if voornamen else MAX_NAAM
+
+            return (geboorte, geslacht, geslachtsnaam, voornamen)
+
+        # Use Python sorted function with key argument. The ouder_sorter function returns a tuple that determines the
+        # ordering, where lower numbers are sorted first.
+        # First the first element of the tuple is evaluated, and only
+        # if values for the first element are equal, the second element of the tuple is compared.
+        #
+        # For example: For three ouders, the lambda function below evaluates to the following tuples:
+        # ouder 1: (-20200501, 1, 'geslachtsnaam', 'voornamen')
+        # ouder 2: (-20200403, 1, 'geslachtsnaam', 'voornamen')
+        # ouder 3: (-20200403, 0, 'geslachtsnaam', 'voornamen')
+        #
+        # The ordering will be: ouder 1, ouder 3, ouder 2, because ouder 1 has the lowest first element of the tuple.
+        # Ouder 2 and 3 match on the first element, so are sorted on the second element.
+        sorted_ouders = sorted(ouders, key=ouder_sorter)
+
+        return [{**ouder, 'ouderAanduiding': f'ouder{idx + 1}'} for idx, ouder in enumerate(sorted_ouders)]
 
     def filter(self, mapped_object: dict, **kwargs):
         """

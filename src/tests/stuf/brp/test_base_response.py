@@ -194,6 +194,25 @@ class StufMappedResponseTest(TestCase):
         resp.b = 'B'
         self.assertEqual({'a': 'A', 'b': 'B', 'c': None}, resp._get_filter_kwargs())
 
+    def test_sort_embedded_objects(self):
+        class MockedMapping(Mapping):
+            entity_type = 'ENT'
+            mapping = {}
+            related = {}
+
+            def sort_sometype(self, objects: list):
+                return reversed(objects)
+
+        resp = StufMappedResponseImpl('msg')
+
+        # Should find and use sort_sometype method
+        res = resp._sort_embedded_objects(['objA', 'objB'], 'sometype', MockedMapping())
+        self.assertEqual(['objB', 'objA'], list(res))
+
+        # sort_someothertype does not exist. Original list is returned.
+        res = resp._sort_embedded_objects(['objA', 'objB'], 'someothertype', MockedMapping())
+        self.assertEqual(['objA', 'objB'], res)
+
     def test_add_embedded_objects(self):
         class MockedMapping(Mapping):
             entity_type = 'ENT'
@@ -204,8 +223,10 @@ class StufMappedResponseTest(TestCase):
             }
 
         resp = StufMappedResponseImpl('msg')
+        resp._sort_embedded_objects = MagicMock(side_effect = lambda o, t, m: o)
         resp.stuf_message.find_all_elms = lambda x, y: x
         resp.create_objects_from_elements = lambda x: 'THE OBJECTS AT ' + x
+        resp.expand = ['partners', 'ouders']
 
         mapped_object = MappedObjectWrapper({}, MockedMapping(), 'some element')
         resp._add_embedded_objects(mapped_object)
@@ -216,6 +237,28 @@ class StufMappedResponseTest(TestCase):
                 'ouders': 'THE OBJECTS AT SOME OTHER PATH TO OUDERS',
             }
         }, mapped_object.mapped_object)
+        resp._sort_embedded_objects.assert_has_calls([
+            call('THE OBJECTS AT SOME PATH TO PARTNERS', 'partners', mapped_object.mapping_class),
+            call('THE OBJECTS AT SOME OTHER PATH TO OUDERS', 'ouders', mapped_object.mapping_class),
+        ])
+
+        # Leave out ouders
+        resp.expand = ['partners']
+        mapped_object = MappedObjectWrapper({}, MockedMapping(), 'some element')
+        resp._add_embedded_objects(mapped_object)
+
+        self.assertEqual({
+            '_embedded': {
+                'partners': 'THE OBJECTS AT SOME PATH TO PARTNERS',
+            }
+        }, mapped_object.mapped_object)
+
+        # Expand nothing
+        resp.expand = []
+        mapped_object = MappedObjectWrapper({}, MockedMapping(), 'some element')
+        resp._add_embedded_objects(mapped_object)
+
+        self.assertEqual({}, mapped_object.mapped_object)
 
     def test_get_answer_object(self):
         resp = StufMappedResponseImpl('msg')
@@ -251,26 +294,6 @@ class StufMappedResponseTest(TestCase):
         self.assertEqual(resp.response_filters_instances[0].filter_response.return_value, result)
 
         resp.create_object_from_element.assert_called_with(resp.get_object_elm.return_value)
-
-    def test_get_answer_object_related_not_expanded(self):
-        # When expand is not filled, expect the relation to get filtered
-        resp = StufMappedResponseImpl('msg')
-        resp.get_object_elm = MagicMock()
-        resp.create_object_from_element = MagicMock()
-        resp.create_object_from_element.return_value = {'_embedded': {'relation': {}}}
-
-        result = resp.get_answer_object()
-        self.assertEqual({}, result)
-
-    def test_get_answer_object_related_expanded(self):
-        # When expand is filled, expect the relation to be present
-        resp = StufMappedResponseImpl('msg', **{'expand': 'relation'})
-        resp.get_object_elm = MagicMock()
-        resp.create_object_from_element = MagicMock()
-        resp.create_object_from_element.return_value = {'_embedded': {'relation': {}}}
-
-        result = resp.get_answer_object()
-        self.assertEqual({'_embedded': {'relation': {}}}, result)
 
     def test_create_object_from_element(self):
         resp = StufMappedResponseImpl('msg')
