@@ -73,6 +73,7 @@ class TestNPSMapping(TestCase):
 
         def ensure_ordering(objects: list):
             ordered = mapping.sort_ouders(objects)
+            print(ordered)
             order = [obj['order'] for obj in ordered]
             self.assertTrue(order == sorted(order))
 

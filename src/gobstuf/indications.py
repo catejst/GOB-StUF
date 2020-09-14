@@ -43,6 +43,10 @@ class Geslachtsaanduiding(Indication):
     MAN = 'M'
     ONBEKEND = 'O'
 
+    VROUW_FULL = 'vrouw'
+    MAN_FULL = 'man'
+    ONBEKEND_FULL = 'onbekend'
+
     @property
     def no_value(self):
         return {
@@ -53,9 +57,9 @@ class Geslachtsaanduiding(Indication):
     @property
     def indications(self):
         return {
-            self.VROUW: 'vrouw',
-            self.MAN: 'man',
-            self.ONBEKEND: 'onbekend'
+            self.VROUW: self.VROUW_FULL,
+            self.MAN: self.MAN_FULL,
+            self.ONBEKEND: self.ONBEKEND_FULL,
         }
 
 
