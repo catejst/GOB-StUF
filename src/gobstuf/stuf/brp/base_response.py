@@ -162,6 +162,16 @@ class StufMappedResponse(StufResponse):
 
         mapped_object.mapped_object['_embedded'] = embedded
 
+        # Filter embedded values not in expand, this is done now to include the links
+        filtered_embedded = {key: value for key, value in mapped_object.mapped_object.get('_embedded', {}).items()
+                             if key in self.expand}
+
+        # Replace the embedded values with the filtered embedded or remove if empty
+        if filtered_embedded:
+            mapped_object.mapped_object['_embedded'] = filtered_embedded
+        else:
+            mapped_object.mapped_object.pop('_embedded', None)
+
     def get_answer_object(self):
         """
         The answer object is created from the StUF response
@@ -183,16 +193,6 @@ class StufMappedResponse(StufResponse):
 
         if not answer_object:
             raise NoStufAnswerException()
-
-        # Filter embedded values not in expand, this is done now to include the links
-        filtered_embedded = {key: value for key, value in answer_object.get('_embedded', {}).items()
-                             if key in self.expand}
-
-        # Replace the embedded values with the filtered embedded or remove if empty
-        if filtered_embedded:
-            answer_object['_embedded'] = filtered_embedded
-        else:
-            answer_object.pop('_embedded', None)
 
         return answer_object
 
