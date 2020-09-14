@@ -68,6 +68,185 @@ class TestStufObjectMapping(TestCase):
 
 class TestNPSMapping(TestCase):
 
+    def test_sort_ouders(self):
+        mapping = NPSMapping()
+
+        def ensure_ordering(objects: list):
+            ordered = mapping.sort_ouders(objects)
+            print(ordered)
+            order = [obj['order'] for obj in ordered]
+            self.assertTrue(order == sorted(order))
+
+        ouders = [
+            {
+                'order': 3,
+            },
+            {
+                'order': 0,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2000-06-01',
+                    }
+                }
+            },
+            {
+                'order': 2,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2000-05',
+                    }
+                }
+            },
+            {
+                'order': 1,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2000-05-01',
+                    }
+                }
+            },
+        ]
+        # Test only geboortedatum
+        ensure_ordering(ouders)
+
+        ouders = [
+            {
+                'order': 1,
+                'geslachtsaanduiding': 'man',
+            },
+            {
+                'order': 0,
+                'geslachtsaanduiding': 'vrouw',
+            },
+            {
+                'order': 3,
+            },
+            {
+                'order': 2,
+                'geslachtsaanduiding': 'onbekend',
+            },
+        ]
+
+        # Test only geslachtsaanduiding
+        ensure_ordering(ouders)
+
+        ouders = [
+            {
+                'order': 1,
+                'naam': {
+                    'geslachtsnaam': 'B'
+                }
+            },
+            {
+                'order': 3,
+            },
+            {
+                'order': 2,
+                'naam': {
+                    'geslachtsnaam': 'Z'
+                }
+            },
+            {
+                'order': 0,
+                'naam': {
+                    'geslachtsnaam': 'A'
+                }
+            },
+        ]
+        # Test only geslachtsnaam
+        ensure_ordering(ouders)
+
+        ouders = [
+            {
+                'order': 1,
+                'naam': {
+                    'voornamen': 'B'
+                }
+            },
+            {
+                'order': 3,
+            },
+            {
+                'order': 2,
+                'naam': {
+                    'voornamen': 'Z'
+                }
+            },
+            {
+                'order': 0,
+                'naam': {
+                    'voornamen': 'A'
+                }
+            },
+        ]
+        # Test only voornamen
+        ensure_ordering(ouders)
+
+        ouders = [
+            {
+                'order': 4,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2020-05-01',
+                    }
+                },
+                'geslachtsaanduiding': 'man',
+                'naam': {
+                    'geslachtsnaam': 'B',
+                    'voornamen': 'B',
+                }
+            },
+            {
+                # Vrouw first
+                'order': 1,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2020-05-01',
+                    }
+                },
+                'geslachtsaanduiding': 'vrouw',
+            },
+            {
+                # First geslachtsnaam
+                'order': 2,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2020-05-01',
+                    }
+                },
+                'geslachtsaanduiding': 'man',
+                'naam': {
+                    'geslachtsnaam': 'A',
+                }
+            },
+            {
+                # First voornamen
+                'order': 3,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2020-05-01',
+                    }
+                },
+                'geslachtsaanduiding': 'man',
+                'naam': {
+                    'geslachtsnaam': 'B',
+                    'voornamen': 'A',
+                }
+            },
+            {
+                # Youngest person
+                'order': 0,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2020-06-01',
+                    }
+                }
+            },
+
+        ]
+        # Test all together
+        ensure_ordering(ouders)
+
     def empty_mapping(self, mapping):
         result = {}
         for k, v in mapping.items():

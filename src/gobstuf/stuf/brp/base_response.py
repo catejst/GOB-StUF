@@ -128,6 +128,24 @@ class StufMappedResponse(StufResponse):
         """
         return {prop: getattr(self, prop, None) for prop in self.filter_kwargs}
 
+    def _sort_embedded_objects(self, objects: list, type: str, mapping: Mapping):
+        """Sorts objects from type.
+
+        Looks for a method sort_<type> in mapping to use for sorting. If no such method exists, the original list of
+        objects is returned.
+
+        :param objects:
+        :param type:
+        :param mapping:
+        :return:
+        """
+        sort_method = getattr(mapping, f'sort_{type}', None)
+
+        if sort_method is None or not callable(sort_method):
+            return objects
+
+        return sort_method(objects)
+
     def _add_embedded_objects(self, mapped_object: MappedObjectWrapper):
         """Adds the _embedded objects to :mapped_object:
 
@@ -137,9 +155,10 @@ class StufMappedResponse(StufResponse):
         mapping = mapped_object.mapping_class
         embedded = {}
         for related_attr, root_obj in mapping.related.items():
-            embedded[related_attr] = self.create_objects_from_elements(
+            objects = self.create_objects_from_elements(
                 self.stuf_message.find_all_elms(root_obj, mapped_object.element)
             )
+            embedded[related_attr] = self._sort_embedded_objects(objects, related_attr, mapping)
 
         mapped_object.mapped_object['_embedded'] = embedded
 

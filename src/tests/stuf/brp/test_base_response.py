@@ -194,6 +194,25 @@ class StufMappedResponseTest(TestCase):
         resp.b = 'B'
         self.assertEqual({'a': 'A', 'b': 'B', 'c': None}, resp._get_filter_kwargs())
 
+    def test_sort_embedded_objects(self):
+        class MockedMapping(Mapping):
+            entity_type = 'ENT'
+            mapping = {}
+            related = {}
+
+            def sort_sometype(self, objects: list):
+                return reversed(objects)
+
+        resp = StufMappedResponseImpl('msg')
+
+        # Should find and use sort_sometype method
+        res = resp._sort_embedded_objects(['objA', 'objB'], 'sometype', MockedMapping())
+        self.assertEqual(['objB', 'objA'], list(res))
+
+        # sort_someothertype does not exist. Original list is returned.
+        res = resp._sort_embedded_objects(['objA', 'objB'], 'someothertype', MockedMapping())
+        self.assertEqual(['objA', 'objB'], res)
+
     def test_add_embedded_objects(self):
         class MockedMapping(Mapping):
             entity_type = 'ENT'
@@ -204,6 +223,7 @@ class StufMappedResponseTest(TestCase):
             }
 
         resp = StufMappedResponseImpl('msg')
+        resp._sort_embedded_objects = MagicMock(side_effect = lambda o, t, m: o)
         resp.stuf_message.find_all_elms = lambda x, y: x
         resp.create_objects_from_elements = lambda x: 'THE OBJECTS AT ' + x
 
@@ -216,6 +236,10 @@ class StufMappedResponseTest(TestCase):
                 'ouders': 'THE OBJECTS AT SOME OTHER PATH TO OUDERS',
             }
         }, mapped_object.mapped_object)
+        resp._sort_embedded_objects.assert_has_calls([
+            call('THE OBJECTS AT SOME PATH TO PARTNERS', 'partners', mapped_object.mapping_class),
+            call('THE OBJECTS AT SOME OTHER PATH TO OUDERS', 'ouders', mapped_object.mapping_class),
+        ])
 
     def test_get_answer_object(self):
         resp = StufMappedResponseImpl('msg')

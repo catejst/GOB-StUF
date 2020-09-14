@@ -223,6 +223,26 @@ class NPSMapping(Mapping):
             'ouders': 'BG:inp.heeftAlsOuders',
         }
 
+    def sort_ouders(self, ouders: list):
+        """Sorts ouders by:
+
+        - geboortedatum descending
+        - geslachtsaanduiding (vrouw, man, onbekend, ..)
+        - geslachtsnaam ascending
+        - voornamen ascending
+
+        :param ouders:
+        :return:
+        """
+        geslachtsaanduiding_order = ['vrouw', 'man', 'onbekend']
+        return sorted(ouders, key=lambda o: (
+            -(int(str(o.get('geboorte', {}).get('datum', {}).get('datum', 0)).replace('-', ''))),
+            geslachtsaanduiding_order.index(o['geslachtsaanduiding'])
+            if o.get('geslachtsaanduiding') in geslachtsaanduiding_order else 99,
+            o.get('naam', {}).get('geslachtsnaam', 'zzzzzzzzzz').lower(),
+            o.get('naam', {}).get('voornamen', 'zzzzzzzzzz').lower(),
+        ))
+
     def filter(self, mapped_object: dict, **kwargs):
         """
         Filter the mapped object on overlijdensdatum
