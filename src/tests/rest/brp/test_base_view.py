@@ -234,6 +234,9 @@ class TestStufRestView(TestCase):
         }
         mock_g.get = lambda x: g_attrs.get(x)
         mock_request.args = {}
+        mock_request.headers = {
+            'X-Correlation-ID': 'the correlation id'
+        }
 
         mock_request_template = MagicMock()
 
@@ -250,7 +253,7 @@ class TestStufRestView(TestCase):
 
         # Success response
         self.assertEqual(mock_rest_response.ok.return_value, view._get(a=1, b=2))
-        view.request_template.assert_called_with('user', 'application')
+        view.request_template.assert_called_with('user', 'application', correlation_id='the correlation id')
         view.request_template.return_value.set_values.assert_called_with({'a': 1, 'b': 2})
         view._make_request.assert_called_with(view.request_template.return_value)
 
