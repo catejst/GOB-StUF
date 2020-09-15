@@ -16,7 +16,7 @@ class IngeschrevenpersonenStufRequest(StufRequest, ABC):
 
     template = 'ingeschrevenpersonen.xml'
     content_root_elm = 'soapenv:Body BG:npsLv01'
-    soap_action = 'http://www.egem.nl/StUF/sector/bg/0310/npsLv01Integraal'
+    soap_action = 'http://www.egem.nl/StUF/sector/bg/0310/npsLv01'
 
 
 class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
@@ -30,6 +30,8 @@ class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
         'verblijfplaats__gemeentevaninschrijving': 'BG:gelijk BG:gem.gemeenteCode',
         'geboorte__datum': 'BG:gelijk BG:geboortedatum',
         'naam__geslachtsnaam': 'BG:gelijk BG:geslachtsnaam',
+        'naam__voorvoegsel': 'BG:gelijk BG:voorvoegselGeslachtsnaam',
+        'naam__voornamen': 'BG:gelijk BG:voornamen',
     }
 
     parameter_checks = {

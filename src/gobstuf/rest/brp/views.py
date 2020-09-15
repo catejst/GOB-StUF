@@ -47,6 +47,12 @@ class IngeschrevenpersonenFilterView(IngeschrevenpersonenView, StufRestFilterVie
         ['geboorte__datum', 'naam__geslachtsnaam'],
     ]
 
+    # One or more can be used in combination with the combinations above
+    optional_query_parameters = [
+        'naam__voornamen',
+        'naam__voorvoegsel',
+    ]
+
 
 class IngeschrevenpersonenBsnView(IngeschrevenpersonenView):
     request_template = IngeschrevenpersonenBsnStufRequest

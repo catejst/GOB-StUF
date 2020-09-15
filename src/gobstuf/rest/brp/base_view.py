@@ -311,6 +311,8 @@ class StufRestFilterView(StufRestView):
         (),
     ]
 
+    optional_query_parameters = []
+
     def _request_template_parameters(self, **kwargs):
         """Returns the url path variables and query parameters as request template parameters
 
@@ -399,7 +401,16 @@ class StufRestFilterView(StufRestView):
         for combination in self.query_parameter_combinations:
             args = {arg: self._transform_query_parameter_value(request.args.get(arg)) for arg in combination}
             if all(args.values()):
-                return args
+                # Get all optional query parameters with their values
+                optional_args = {k: v for k, v in {
+                    arg: self._transform_query_parameter_value(request.args.get(arg))
+                    for arg in self.optional_query_parameters
+                }.items() if v}
+
+                return {
+                    **args,
+                    **optional_args,
+                }
 
         detail = "Combinatie van gevulde velden was niet correct. " +\
                  "Geef waarde aan één van de volgende veld combinaties: " + \
