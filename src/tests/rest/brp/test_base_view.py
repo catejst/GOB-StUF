@@ -427,6 +427,19 @@ class TestStufRestFilterView(TestCase):
         with self.assertRaises(view.InvalidQueryParametersException):
             view._get_query_parameters()
 
+        # Case with valid combination, plus two out of three optional query params
+        mock_request.args = {
+            'a': '1',
+            'b': '2',
+            'd': '4',
+            'e': '5'
+        }
+        view.query_parameter_combinations = [
+            ('a', 'b'),
+        ]
+        view.optional_query_parameters = ['c', 'd', 'e']
+        self.assertEqual({'a': '1', 'b': '2', 'd': '4', 'e': '5'}, view._get_query_parameters())
+
     @patch("gobstuf.rest.brp.base_view.RESTResponse")
     def test_argument_check(self, mock_rest_response):
         view = StufRestView()
