@@ -12,7 +12,7 @@ from gobstuf.stuf.brp.base_response import StufMappedResponse
 from gobstuf.stuf.exception import NoStufAnswerException
 from gobstuf.stuf.brp.error_response import StufErrorResponse
 from gobstuf.rest.brp.rest_response import RESTResponse
-from gobstuf.config import ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH_310
+from gobstuf.config import ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH_310, CORRELATION_ID_HEADER
 from gobstuf.rest.brp.argument_checks import ArgumentCheck
 
 
@@ -178,7 +178,8 @@ class StufRestView(MethodView):
         # Request MKS with given request_template
         request_template = self.request_template(
             g.get(MKS_USER_KEY),
-            g.get(MKS_APPLICATION_KEY)
+            g.get(MKS_APPLICATION_KEY),
+            correlation_id=request.headers.get(CORRELATION_ID_HEADER)
         )
         request_template.set_values(self._request_template_parameters(**kwargs))
 

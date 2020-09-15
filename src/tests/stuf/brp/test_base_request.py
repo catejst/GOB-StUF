@@ -105,6 +105,19 @@ class StufRequestTest(TestCase):
             call(req.referentienummer_path, 'GOBTIMESTR_12345'),
         ])
 
+        # With correlation ID passed to constructor
+        req = StufRequestImpl('', '', correlation_id='correlation id')
+        req.stuf_message = MagicMock()
+        req.set_element = MagicMock()
+        req.time_str = MagicMock(return_value='TIMESTR')
+
+        self.assertEqual(req.stuf_message.to_string(), req.to_string())
+
+        req.set_element.assert_has_calls([
+            call(req.tijdstip_bericht_path, req.time_str()),
+            call(req.referentienummer_path, 'correlation id'),
+        ])
+
     def test_str(self):
         req = StufRequestImpl('', '')
         req.to_string = MagicMock(return_value='sttrrrrring')

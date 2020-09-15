@@ -11,10 +11,12 @@ class TestAuditLog(unittest.TestCase):
         log_handler = GOBAuditLogHandler()
         self.assertIsNotNone(log_handler)
 
+    @patch('gobstuf.audit_log.request')
     @patch('gobstuf.audit_log.uuid.uuid4', lambda: 'any uuid')
     @patch('gobstuf.audit_log.AuditLogger')
     @patch('gobstuf.audit_log.on_audit_log_exception')
-    def test_emit(self, mock_on_audit_log_exception, mock_audit_logger):
+    def test_emit(self, mock_on_audit_log_exception, mock_audit_logger, mock_request):
+        mock_request.headers = {}
         log_handler = GOBAuditLogHandler()
 
         log_handler.format = MagicMock()
@@ -46,7 +48,9 @@ class TestAuditLog(unittest.TestCase):
             source="any url",
             destination="any ip",
             extra_data={
-              key: record["audit"][key] for key in ["http_request", "user", "any audit data"]
+                **{key: record["audit"][key] for key in ["http_request", "user", "any audit data"]},
+                'X-Correlation-ID': None,
+                'X-Unique-ID': None,
             },
             request_uuid="any uuid"
         )
@@ -58,6 +62,34 @@ class TestAuditLog(unittest.TestCase):
             },
             request_uuid="any uuid"
         )
+
+        # Test with correlation ID and unique ID set
+        mock_request.headers = {
+            'X-Correlation-ID': 'some correlation id',
+            'X-Unique-ID': 'some unique id'
+        }
+        log_handler.emit(record)
+        mock_audit_logger.get_instance.assert_called_with()
+        audit_logger = mock_audit_logger.get_instance.return_value
+        audit_logger.log_request.assert_called_with(
+            source="any url",
+            destination="any ip",
+            extra_data={
+                **{key: record["audit"][key] for key in ["http_request", "user", "any audit data"]},
+                'X-Correlation-ID': 'some correlation id',
+                'X-Unique-ID': 'some unique id',
+            },
+            request_uuid="some correlation id"
+        )
+        audit_logger.log_response.assert_called_with(
+            source="any url",
+            destination="any ip",
+            extra_data={
+                key: record["audit"][key] for key in ["http_response", "user", "any audit data"]
+            },
+            request_uuid="some correlation id"
+        )
+
 
         mock_on_audit_log_exception.reset_mock()
         audit_logger.log_request.side_effect = Exception("any exception")

@@ -8,6 +8,7 @@ from flask import request
 from flask_audit_log.util import get_client_ip
 
 from gobcore.logging.audit_logger import AuditLogger
+from gobstuf.config import CORRELATION_ID_HEADER, UNIQUE_ID_HEADER
 
 logger = logging.getLogger()
 
@@ -42,13 +43,18 @@ class GOBAuditLogHandler(logging.StreamHandler):
             on_audit_log_exception(exception, record)
             return
 
-        request_uuid = str(uuid.uuid4())
+        request_uuid = request.headers.get(CORRELATION_ID_HEADER, str(uuid.uuid4()))
         # Get the source and destination from the middleware log message
         source = get_nested_item(msg, 'audit', 'http_request', 'url')
         destination = get_nested_item(msg, 'audit', 'user', 'ip')
         # Strip the response data from the msg to create request only data and vice versa
         request_data = {k: v for k, v in msg.get('audit', {}).items() if k != 'http_response'}
         response_data = {k: v for k, v in msg.get('audit', {}).items() if k != 'http_request'}
+
+        request_data.update({
+            CORRELATION_ID_HEADER: request.headers.get(CORRELATION_ID_HEADER),
+            UNIQUE_ID_HEADER: request.headers.get(UNIQUE_ID_HEADER),
+        })
 
         audit_logger = AuditLogger.get_instance()
 

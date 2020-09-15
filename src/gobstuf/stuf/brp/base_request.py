@@ -28,7 +28,7 @@ class StufRequest(ABC):
     parameter_checks = {}
     parameters = []
 
-    def __init__(self, gebruiker: str, applicatie: str):
+    def __init__(self, gebruiker: str, applicatie: str, correlation_id: str = None):
         """
 
         :param gebruiker: MKS gebruiker
@@ -36,6 +36,7 @@ class StufRequest(ABC):
         """
         self.gebruiker = gebruiker
         self.applicatie = applicatie
+        self.correlation_id = correlation_id
         self.stuf_message = None
 
         self._load()
@@ -129,7 +130,10 @@ class StufRequest(ABC):
         timestr = self.time_str(datetime.datetime.utcnow().astimezone(tz=pytz.timezone(self.default_tz)))
 
         self.set_element(self.tijdstip_bericht_path, timestr)
-        self.set_element(self.referentienummer_path, f"GOB{timestr}_{random.randint(0, sys.maxsize)}")
+        self.set_element(
+            self.referentienummer_path,
+            self.correlation_id or f"GOB{timestr}_{random.randint(0, sys.maxsize)}"
+        )
 
         return self.stuf_message.to_string()
 
