@@ -3,7 +3,7 @@ import freezegun
 from unittest import TestCase
 from unittest.mock import patch
 from gobstuf.stuf.brp.response_mapping import (
-    Mapping, NPSMapping, StufObjectMapping, RelatedMapping, NPSNPSHUWMapping, NPSNPSOUDMapping
+    Mapping, NPSMapping, StufObjectMapping, RelatedMapping, NPSNPSHUWMapping, NPSNPSOUDMapping, NPSNPSKNDMapping, NPSFamilieRelatedMapping
 )
 
 
@@ -73,7 +73,6 @@ class TestNPSMapping(TestCase):
 
         def ensure_ordering(objects: list):
             ordered = mapping.sort_ouders(objects)
-            print(ordered)
             order = [obj['order'] for obj in ordered]
             self.assertTrue(order == sorted(order))
 
@@ -453,12 +452,18 @@ class TestNPSNPSHUWMapping(TestCase):
         self.assertIsNone(mapping.filter(mapped_object))
 
 
-class TestNPSNPSOudMapping(TestCase):
+class TestNPSFamilieRelatedMapping(TestCase):
+
+    class NPSFamilieRelatedMappingImpl(NPSFamilieRelatedMapping):
+
+        @property
+        def entity_type(self):
+            return 'ImplEntityType'
 
     @patch("gobstuf.stuf.brp.response_mapping.get_auth_url",
            lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
     def test_get_links(self):
-        mapping = NPSNPSOUDMapping()
+        mapping = self.NPSFamilieRelatedMappingImpl()
         mapped_object = {
             'burgerservicenummer': 'digitdigitdigit',
         }
@@ -473,7 +478,7 @@ class TestNPSNPSOudMapping(TestCase):
         self.assertEqual({}, mapping.get_links(mapped_object))
 
     def test_filter(self):
-        mapping = NPSNPSOUDMapping()
+        mapping = self.NPSFamilieRelatedMappingImpl()
 
         keys = [
             'aanduidingStrijdigheidNietigheid',
@@ -512,3 +517,39 @@ class TestNPSNPSOudMapping(TestCase):
             ]
 
             self.assertTrue(all([key not in res for key in deleted_keys]))
+
+
+class TestNPSNPSOUDMapping(TestCase):
+
+    def test_entity_type(self):
+        mapping = NPSNPSOUDMapping()
+        self.assertEqual('NPSNPSOUD', mapping.entity_type)
+
+    def test_mapping(self):
+        self.assertEqual([
+            'aanduidingStrijdigheidNietigheid',
+            'datumIngangFamilierechtelijkeBetrekking',
+            'datumIngangFamilierechtelijkeBetrekkingRaw',
+            'datumEindeFamilierechtelijkeBetrekking',
+            'ouderAanduiding',
+        ], list(NPSNPSOUDMapping().mapping.keys()))
+
+
+class TestNPSNPSKNDMapping(TestCase):
+
+    def test_entity_type(self):
+        mapping = NPSNPSKNDMapping()
+        self.assertEqual('NPSNPSKND', mapping.entity_type)
+
+    def test_include_related(self):
+        mapping = NPSNPSKNDMapping()
+
+        # Test that parent attrs are included
+        self.assertEqual([
+            'burgerservicenummer',
+            'naam',
+            'geboorte',
+            'geslachtsaanduiding',
+            'geheimhoudingPersoonsgegevens',
+            'leeftijd',
+        ], mapping.include_related)
