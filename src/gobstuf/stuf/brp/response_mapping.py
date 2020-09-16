@@ -223,6 +223,7 @@ class NPSMapping(Mapping):
         return {
             'partners': 'BG:inp.heeftAlsEchtgenootPartner',
             'ouders': 'BG:inp.heeftAlsOuders',
+            'kinderen': 'BG:inp.heeftAlsKinderen',
         }
 
     def sort_ouders(self, ouders: list):
@@ -503,11 +504,10 @@ class NPSNPSHUWMapping(RelatedMapping):
 StufObjectMapping.register(NPSNPSHUWMapping)
 
 
-class NPSNPSOUDMapping(RelatedMapping):
-
-    @property
-    def entity_type(self):  # pragma: no cover
-        return 'NPSNPSOUD'
+class NPSFamilieRelatedMapping(RelatedMapping):
+    """Acts as a parent class for family relations NPSNPSOUD and NPSNPSKND. Both classes share a large part of
+    configuration that's placed in this class.
+    """
 
     @property
     def override_related_filters(self):  # pragma: no cover
@@ -530,7 +530,6 @@ class NPSNPSOUDMapping(RelatedMapping):
     @property
     def mapping(self):
         return {
-            'ouderAanduiding': 'BG:ouderAanduiding',
             'aanduidingStrijdigheidNietigheid': 'BG:aanduidingStrijdigheidNietigheid',
             'datumIngangFamilierechtelijkeBetrekking': (
                 MKSConverter.as_datum_broken_down, 'BG:datumIngangFamilierechtelijkeBetrekking'),
@@ -577,4 +576,35 @@ class NPSNPSOUDMapping(RelatedMapping):
         return links
 
 
+class NPSNPSOUDMapping(NPSFamilieRelatedMapping):
+
+    @property
+    def entity_type(self):  # pragma: no cover
+        return 'NPSNPSOUD'
+
+    @property
+    def mapping(self):
+        return {
+            **super().mapping,
+            'ouderAanduiding': 'BG:ouderAanduiding',
+        }
+
+
 StufObjectMapping.register(NPSNPSOUDMapping)
+
+
+class NPSNPSKNDMapping(NPSFamilieRelatedMapping):
+
+    @property
+    def entity_type(self):  # pragma: no cover
+        return 'NPSNPSKND'
+
+    @property
+    def include_related(self):
+        return [
+            *super().include_related,
+            'leeftijd',
+        ]
+
+
+StufObjectMapping.register(NPSNPSKNDMapping)
