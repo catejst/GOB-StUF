@@ -74,3 +74,7 @@ class IngeschrevenpersonenBsnPartnerStufRequest(IngeschrevenpersonenBsnStufReque
 
 class IngeschrevenpersonenBsnOudersStufRequest(IngeschrevenpersonenBsnStufRequest):
     parameters = ['ouders_id']
+
+
+class IngeschrevenpersonenBsnKinderenStufRequest(IngeschrevenpersonenBsnStufRequest):
+    parameters = ['kinderen_id']

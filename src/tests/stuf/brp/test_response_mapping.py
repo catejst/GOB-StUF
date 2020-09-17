@@ -525,6 +525,16 @@ class TestNPSNPSOUDMapping(TestCase):
         mapping = NPSNPSOUDMapping()
         self.assertEqual('NPSNPSOUD', mapping.entity_type)
 
+    def test_include_related(self):
+        mapping = NPSNPSOUDMapping()
+        self.assertEqual([
+            'burgerservicenummer',
+            'naam',
+            'geboorte',
+            'geslachtsaanduiding',
+            'geheimhoudingPersoonsgegevens',
+        ], mapping.include_related)
+
     def test_mapping(self):
         self.assertEqual([
             'aanduidingStrijdigheidNietigheid',
@@ -549,7 +559,5 @@ class TestNPSNPSKNDMapping(TestCase):
             'burgerservicenummer',
             'naam',
             'geboorte',
-            'geslachtsaanduiding',
-            'geheimhoudingPersoonsgegevens',
             'leeftijd',
         ], mapping.include_related)

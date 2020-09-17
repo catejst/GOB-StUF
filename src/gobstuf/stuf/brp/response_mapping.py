@@ -383,6 +383,13 @@ class NPSMapping(Mapping):
             'brp_ingeschrevenpersonen_bsn_ouders_detail'
         )
 
+        self._add_embedded_objects_enumerated_links(
+            mapped_object,
+            links,
+            'kinderen',
+            'brp_ingeschrevenpersonen_bsn_kinderen_detail'
+        )
+
         return links
 
 
@@ -522,8 +529,6 @@ class NPSFamilieRelatedMapping(RelatedMapping):
             'burgerservicenummer',
             'naam',
             'geboorte',
-            'geslachtsaanduiding',
-            'geheimhoudingPersoonsgegevens',
         ]
 
     # And add these attributes
@@ -581,6 +586,14 @@ class NPSNPSOUDMapping(NPSFamilieRelatedMapping):
     @property
     def entity_type(self):  # pragma: no cover
         return 'NPSNPSOUD'
+
+    @property
+    def include_related(self):
+        return [
+            *super().include_related,
+            'geslachtsaanduiding',
+            'geheimhoudingPersoonsgegevens',
+        ]
 
     @property
     def mapping(self):
