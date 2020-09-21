@@ -130,6 +130,11 @@ class BrpRegression:
         self.results = []
 
     def _download_testfiles(self):
+        try:
+            os.makedirs(self.DESTINATION_DIR)
+        except FileExistsError:
+            pass
+
         Objectstore().download_directory(self.OBJECTSTORE_LOCATION, self.DESTINATION_DIR)
 
     def _load_tests(self):

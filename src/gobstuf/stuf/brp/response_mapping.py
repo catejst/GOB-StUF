@@ -282,6 +282,37 @@ class NPSMapping(Mapping):
 
         return [{**ouder, 'ouderAanduiding': f'ouder{idx + 1}'} for idx, ouder in enumerate(sorted_ouders)]
 
+    def sort_kinderen(self, kinderen: list):
+        """Sorts kinderen by:
+
+        - geboortedatum descending
+        - geslachtsnaam ascending
+        - voornamen ascending
+
+        :param kinderen:
+        :return:
+        """
+
+        def kinderen_sorter(kind):
+            MAX_NAAM = 'zzzzzzzzzz'  # Value that is expected to compare above any real naam
+
+            # First sort key is geboortedatum descending
+            geboorte = (get_value(kind, 'geboorte', 'datum', 'datum') or '0000-00-00').replace('-', '')
+            geboorte = -(int(geboorte))  # latest first
+
+            # Second key is geslachtsnaam ascending
+            geslachtsnaam = get_value(kind, 'naam', 'geslachtsnaam')
+            geslachtsnaam = geslachtsnaam.lower() if geslachtsnaam else MAX_NAAM
+
+            # Third key is voornamen ascending
+            voornamen = get_value(kind, 'naam', 'voornamen')
+            voornamen = voornamen.lower() if voornamen else MAX_NAAM
+
+            return (geboorte, geslachtsnaam, voornamen)
+
+        # See comments in sort_ouders for more info on sorted with key
+        return sorted(kinderen, key=kinderen_sorter)
+
     def filter(self, mapped_object: dict, **kwargs):
         """
         Filter the mapped object on overlijdensdatum

@@ -183,8 +183,9 @@ class TestBrpRegressionTest(TestCase):
             'MKS_APPLICATIE': 'TEST_APPLICATION'
         }, regr.headers)
 
+    @patch("gobstuf.regression_tests.brp.os.makedirs")
     @patch("gobstuf.regression_tests.brp.Objectstore")
-    def test_download_testfiles(self, mock_objectstore):
+    def test_download_testfiles(self, mock_objectstore, mock_makedirs):
         regr = BrpRegression(MagicMock())
         location = 'the location'
         dst_dir = 'the dst dir'
@@ -193,6 +194,13 @@ class TestBrpRegressionTest(TestCase):
 
         regr._download_testfiles()
         mock_objectstore().download_directory.assert_called_with(location, dst_dir)
+        mock_makedirs.assert_called_with(dst_dir)
+
+        # Try again, but now the destination dir already exists
+        mock_makedirs.side_effect = FileExistsError
+        regr._download_testfiles()
+        mock_objectstore().download_directory.assert_called_with(location, dst_dir)
+        mock_makedirs.assert_called_with(dst_dir)
 
     @patch("gobstuf.regression_tests.brp.os.path.join", lambda *args: "/".join(args))
     def test_load_tests(self):
