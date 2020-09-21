@@ -249,6 +249,152 @@ class TestNPSMapping(TestCase):
         # Test all together
         ensure_ordering(ouders)
 
+    def test_sort_kinderen(self):
+        mapping = NPSMapping()
+
+        def ensure_ordering(objects: list):
+            ordered = mapping.sort_kinderen(objects)
+            order = [obj['order'] for obj in ordered]
+
+            print(ordered)
+            self.assertTrue(order == sorted(order))
+
+        kinderen = [
+            {
+                'order': 3,
+            },
+            {
+                'order': 0,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2000-06-01',
+                    }
+                }
+            },
+            {
+                'order': 2,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2000-05',
+                    }
+                }
+            },
+            {
+                'order': 1,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2000-05-01',
+                    }
+                }
+            },
+        ]
+        # Test only geboortedatum
+        ensure_ordering(kinderen)
+
+        kinderen = [
+            {
+                'order': 1,
+                'naam': {
+                    'geslachtsnaam': 'B'
+                }
+            },
+            {
+                'order': 3,
+            },
+            {
+                'order': 2,
+                'naam': {
+                    'geslachtsnaam': 'Z'
+                }
+            },
+            {
+                'order': 0,
+                'naam': {
+                    'geslachtsnaam': 'A'
+                }
+            },
+        ]
+        # Test only geslachtsnaam
+        ensure_ordering(kinderen)
+
+        kinderen = [
+            {
+                'order': 1,
+                'naam': {
+                    'voornamen': 'B'
+                }
+            },
+            {
+                'order': 3,
+            },
+            {
+                'order': 2,
+                'naam': {
+                    'voornamen': 'Z'
+                }
+            },
+            {
+                'order': 0,
+                'naam': {
+                    'voornamen': 'A'
+                }
+            },
+        ]
+        # Test only voornamen
+        ensure_ordering(kinderen)
+
+        kinderen = [
+            {
+                'order': 4,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2020-05-01',
+                    }
+                },
+                'naam': {
+                    'geslachtsnaam': 'B',
+                    'voornamen': 'B',
+                }
+            },
+            {
+                # First geslachtsnaam
+                'order': 1,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2020-05-01',
+                    }
+                },
+                'naam': {
+                    'geslachtsnaam': 'A',
+                }
+            },
+            {
+                # First voornamen
+                'order': 2,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2020-05-01',
+                    }
+                },
+                'naam': {
+                    'geslachtsnaam': 'B',
+                    'voornamen': 'A',
+                }
+            },
+            {
+                # Youngest person
+                'order': 0,
+                'geboorte': {
+                    'datum': {
+                        'datum': '2020-06-01',
+                    }
+                }
+            },
+
+        ]
+        # Test all together
+        ensure_ordering(kinderen)
+
     def empty_mapping(self, mapping):
         result = {}
         for k, v in mapping.items():
