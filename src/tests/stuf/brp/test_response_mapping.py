@@ -295,9 +295,9 @@ class TestNPSMapping(TestCase):
         self.assertEqual(result, {'verblijfplaats': {'any key': 'any value', 'functieAdres': 'briefadres'}})
 
     @patch("gobstuf.stuf.brp.response_mapping.get_auth_url",
-           lambda name, **kwargs: f"https://theurl/{name}/{kwargs['bsn']}/thetype/{kwargs['thetype_id']}")
-    def test_add_embedded_objects_enumerated_links(self):
-        # _add_embedded_objects_enumerated_links is also indirectly tested by the test_get_links method below.
+           lambda name, **kwargs: f"https://theurl/{name}/{kwargs['bsn']}/type/{kwargs.get('thetype_id', kwargs.get('theothertype_id'))}")
+    def test_add_related_object_links(self):
+        # _add_related_object_links is also indirectly tested by the test_get_links method below.
         # This method tests the method in isolation
         mapping = NPSMapping()
         mapped_object = {
@@ -307,16 +307,26 @@ class TestNPSMapping(TestCase):
                     {'burgerservicenummer': 'digitdigitdigit1'},
                     {'burgerservicenummer': 'digitdigitdigit2'},
                 ]
+            },
+            '_links': {
+                'thetype': [
+                    {'burgerservicenummer': 'digitdigitdigit1'},
+                    {'burgerservicenummer': 'digitdigitdigit2'},
+                ],
+                'theothertype': [
+                    {'burgerservicenummer': 'digitdigitdigit3'},
+                    {'burgerservicenummer': 'digitdigitdigit4'},
+                ]
             }
         }
         links = {}
 
-        mapping._add_embedded_objects_enumerated_links(mapped_object, links, 'thetype', 'theroute')
+        mapping._add_related_object_links(mapped_object, links, 'thetype', 'theroute')
 
         self.assertEqual({
             'thetype': [
-                {'href': 'https://theurl/theroute/digitdigitdigit/thetype/1'},
-                {'href': 'https://theurl/theroute/digitdigitdigit/thetype/2'},
+                {'href': 'https://theurl/theroute/digitdigitdigit/type/1'},
+                {'href': 'https://theurl/theroute/digitdigitdigit/type/2'},
             ]
         }, links)
 
@@ -326,7 +336,7 @@ class TestNPSMapping(TestCase):
                     {
                         '_links': {
                             'self': {
-                                'href': 'https://theurl/theroute/digitdigitdigit/thetype/1'
+                                'href': 'https://theurl/theroute/digitdigitdigit/type/1'
                             }
                         },
                         'burgerservicenummer': 'digitdigitdigit1'
@@ -334,15 +344,40 @@ class TestNPSMapping(TestCase):
                     {
                         '_links': {
                             'self': {
-                                'href': 'https://theurl/theroute/digitdigitdigit/thetype/2'
+                                'href': 'https://theurl/theroute/digitdigitdigit/type/2'
                             }
                         },
                         'burgerservicenummer': 'digitdigitdigit2'
                     }
                 ]
             },
+            '_links': {
+                'thetype': [
+                    {'burgerservicenummer': 'digitdigitdigit1'},
+                    {'burgerservicenummer': 'digitdigitdigit2'},
+                ],
+                'theothertype': [
+                    {'burgerservicenummer': 'digitdigitdigit3'},
+                    {'burgerservicenummer': 'digitdigitdigit4'},
+                ]
+            },
             'burgerservicenummer': 'digitdigitdigit'
         }, mapped_object)
+
+        # Should add 'theothertype' links as well, without having matching embedded objects
+        mapping._add_related_object_links(mapped_object, links, 'theothertype', 'theroute')
+
+        self.assertEqual({
+            'thetype': [
+                {'href': 'https://theurl/theroute/digitdigitdigit/type/1'},
+                {'href': 'https://theurl/theroute/digitdigitdigit/type/2'},
+            ],
+            'theothertype': [
+                {'href': 'https://theurl/theroute/digitdigitdigit/type/1'},
+                {'href': 'https://theurl/theroute/digitdigitdigit/type/2'},
+            ],
+        }, links)
+
 
     @patch("gobstuf.stuf.brp.response_mapping.get_auth_url",
            lambda name, **kwargs: f'http(s)://thishost/{name}/{kwargs["bsn"]}')
@@ -361,7 +396,13 @@ class TestNPSMapping(TestCase):
                     {'burgerservicenummer': 'digitdigitdigit1'},
                     {'burgerservicenummer': 'digitdigitdigit2'}
                 ]
-            }
+            },
+            '_links': {
+                'partners': [
+                    {'burgerservicenummer': 'digitdigitdigit1'},
+                    {'burgerservicenummer': 'digitdigitdigit2'},
+                ]
+            },
         }
 
         self.assertEqual({

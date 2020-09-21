@@ -235,6 +235,10 @@ class StufMappedResponseTest(TestCase):
             '_embedded': {
                 'partners': 'THE OBJECTS AT SOME PATH TO PARTNERS',
                 'ouders': 'THE OBJECTS AT SOME OTHER PATH TO OUDERS',
+            },
+            '_links': {
+                'partners': 'THE OBJECTS AT SOME PATH TO PARTNERS',
+                'ouders': 'THE OBJECTS AT SOME OTHER PATH TO OUDERS',
             }
         }, mapped_object.mapped_object)
         resp._sort_embedded_objects.assert_has_calls([
@@ -242,7 +246,7 @@ class StufMappedResponseTest(TestCase):
             call('THE OBJECTS AT SOME OTHER PATH TO OUDERS', 'ouders', mapped_object.mapping_class),
         ])
 
-        # Leave out ouders
+        # Leave out ouders, but links should always be added
         resp.expand = ['partners']
         mapped_object = MappedObjectWrapper({}, MockedMapping(), 'some element')
         resp._add_embedded_objects(mapped_object)
@@ -250,15 +254,24 @@ class StufMappedResponseTest(TestCase):
         self.assertEqual({
             '_embedded': {
                 'partners': 'THE OBJECTS AT SOME PATH TO PARTNERS',
+            },
+            '_links': {
+                'partners': 'THE OBJECTS AT SOME PATH TO PARTNERS',
+                'ouders': 'THE OBJECTS AT SOME OTHER PATH TO OUDERS',
             }
         }, mapped_object.mapped_object)
 
-        # Expand nothing
+        # Expand nothing. Links should always be added
         resp.expand = []
         mapped_object = MappedObjectWrapper({}, MockedMapping(), 'some element')
         resp._add_embedded_objects(mapped_object)
 
-        self.assertEqual({}, mapped_object.mapped_object)
+        self.assertEqual({
+            '_links': {
+                'partners': 'THE OBJECTS AT SOME PATH TO PARTNERS',
+                'ouders': 'THE OBJECTS AT SOME OTHER PATH TO OUDERS',
+            }
+        }, mapped_object.mapped_object)
 
     def test_get_answer_object(self):
         resp = StufMappedResponseImpl('msg')
