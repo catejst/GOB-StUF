@@ -15,3 +15,11 @@ class OudersDetailResponseFilter(RelatedDetailResponseFilter):
 
 class OudersListResponseFilter(RelatedListResponseFilter):
     related_type = 'ouders'
+
+
+class KinderenDetailResponseFilter(RelatedDetailResponseFilter):
+    related_type = 'kinderen'
+
+
+class KinderenListResponseFilter(RelatedListResponseFilter):
+    related_type = 'kinderen'

@@ -166,6 +166,12 @@ class StufMappedResponse(StufResponse):
         filtered_embedded = {key: value for key, value in mapped_object.mapped_object.get('_embedded', {}).items()
                              if key in self.expand}
 
+        # Place all related objects in links for further processing
+        links = mapped_object.mapped_object.get('_embedded', {})
+
+        if links:
+            mapped_object.mapped_object['_links'] = links
+
         # Replace the embedded values with the filtered embedded or remove if empty
         if filtered_embedded:
             mapped_object.mapped_object['_embedded'] = filtered_embedded

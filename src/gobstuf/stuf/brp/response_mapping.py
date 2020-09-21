@@ -313,7 +313,7 @@ class NPSMapping(Mapping):
             mapped_object = None
         return super().filter(mapped_object)
 
-    def _add_embedded_objects_enumerated_links(self, mapped_object: dict, links: dict, embedded_type: str, route: str):
+    def _add_related_object_links(self, mapped_object: dict, links: dict, embedded_type: str, route: str):
         """Adds links to embedded objects of the form /ingeschrevenpersonen/<bsn>/embedded_type/<n> for each object.
         Adds links to top level, as well as self links to the embedded objects
 
@@ -334,14 +334,14 @@ class NPSMapping(Mapping):
                                 **{url_param: index}
                                 )
 
-        if mapped_object.get('_embedded', {}).get(embedded_type):
-            objects = mapped_object['_embedded'][embedded_type]
+        if mapped_object.get('_links', {}).get(embedded_type):
+            objects = mapped_object['_links'][embedded_type]
 
             # Add the link to all embedded objects
             links[embedded_type] = [{'href': url_for_object(c)} for c, o in enumerate(objects, 1)]
 
-            # Add the links to the ouders details
-            for c, object in enumerate(objects, 1):
+            # Add the links to the embedded objects, if present
+            for c, object in enumerate(mapped_object.get('_embedded', {}).get(embedded_type, []), 1):
                 object['_links'] = {
                     **object.get('_links', {}),
                     'self': {
@@ -369,18 +369,25 @@ class NPSMapping(Mapping):
                 'href': get_auth_url('brp_ingeschrevenpersonen_bsn', bsn=mapped_object['burgerservicenummer'])
             }
 
-        self._add_embedded_objects_enumerated_links(
+        self._add_related_object_links(
             mapped_object,
             links,
             'partners',
             'brp_ingeschrevenpersonen_bsn_partners_detail'
         )
 
-        self._add_embedded_objects_enumerated_links(
+        self._add_related_object_links(
             mapped_object,
             links,
             'ouders',
             'brp_ingeschrevenpersonen_bsn_ouders_detail'
+        )
+
+        self._add_related_object_links(
+            mapped_object,
+            links,
+            'kinderen',
+            'brp_ingeschrevenpersonen_bsn_kinderen_detail'
         )
 
         return links
@@ -522,8 +529,6 @@ class NPSFamilieRelatedMapping(RelatedMapping):
             'burgerservicenummer',
             'naam',
             'geboorte',
-            'geslachtsaanduiding',
-            'geheimhoudingPersoonsgegevens',
         ]
 
     # And add these attributes
@@ -581,6 +586,14 @@ class NPSNPSOUDMapping(NPSFamilieRelatedMapping):
     @property
     def entity_type(self):  # pragma: no cover
         return 'NPSNPSOUD'
+
+    @property
+    def include_related(self):
+        return [
+            *super().include_related,
+            'geslachtsaanduiding',
+            'geheimhoudingPersoonsgegevens',
+        ]
 
     @property
     def mapping(self):

@@ -3,7 +3,9 @@ from gobstuf.stuf.brp.response.filters import (
     PartnersDetailResponseFilter,
     PartnersListResponseFilter,
     OudersDetailResponseFilter,
-    OudersListResponseFilter
+    OudersListResponseFilter,
+    KinderenDetailResponseFilter,
+    KinderenListResponseFilter
 )
 
 
@@ -29,3 +31,11 @@ class IngeschrevenpersonenStufOudersDetailResponse(IngeschrevenpersonenStufRespo
 
 class IngeschrevenpersonenStufOudersListResponse(IngeschrevenpersonenStufResponse):
     response_filters = [OudersListResponseFilter]
+
+
+class IngeschrevenpersonenStufKinderenDetailResponse(IngeschrevenpersonenStufResponse):
+    response_filters = [KinderenDetailResponseFilter]
+
+
+class IngeschrevenpersonenStufKinderenListResponse(IngeschrevenpersonenStufResponse):
+    response_filters = [KinderenListResponseFilter]
