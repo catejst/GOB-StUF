@@ -11,9 +11,12 @@ from flask_audit_log.middleware import AuditLogMiddleware
 from gobstuf.auth.routes import secure_route, public_route
 from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH_310, ROUTE_PATH_204, \
                            API_BASE_PATH, API_INSECURE_BASE_PATH, AUDIT_LOG_CONFIG
+from gobstuf.logger import get_default_logger
 from gobstuf.certrequest import cert_get, cert_post
 from gobstuf.rest.routes import REST_ROUTES
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, HTTPException
+
+logger = get_default_logger()
 
 
 def _health():
@@ -175,7 +178,7 @@ def _add_route(app, paths, rule, view_func, methods, name=None):
         wrapped_rule = f"{path}{rule}"
         app.add_url_rule(rule=wrapped_rule, methods=methods, view_func=wrapper(wrapped_rule, view_func, name=name))
         # Output the urls on startup
-        print(wrapped_rule)
+        logger.info(wrapped_rule)
 
 
 def get_flask_app():
@@ -191,7 +194,7 @@ def get_flask_app():
     app.config['AUDIT_LOG'] = AUDIT_LOG_CONFIG
     AuditLogMiddleware(app)
 
-    print("Available endpoints:")
+    logger.info("Available endpoints:")
 
     # Health check route
     app.route(rule='/status/health/')(_health)

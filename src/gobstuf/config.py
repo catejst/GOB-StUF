@@ -46,3 +46,6 @@ GOB_OBJECTSTORE = 'GOBObjectstore'
 
 CORRELATION_ID_HEADER = 'X-Correlation-ID'
 UNIQUE_ID_HEADER = 'X-Unique-ID'
+
+GELF_HOST = _getenv("GELF_HOST", is_optional=True)
+GELF_PORT = _getenv("GELF_PORT", is_optional=True)

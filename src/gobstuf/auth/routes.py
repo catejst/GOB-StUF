@@ -1,4 +1,5 @@
 import re
+import logging
 
 from flask import g, request, url_for
 
@@ -85,10 +86,10 @@ def _issue_fraud_warning(rule, *args, **kwargs):
 
     In the future this should be connected to an alert mechanism
     """
-    print(f"ERROR: FRAUD DETECTED FOR RULE: {rule} => {request.url}", args, kwargs)
+    logging.warning(f"ERROR: FRAUD DETECTED FOR RULE: {rule} => {request.url}", args, kwargs)
     dump_attrs = ['method', 'remote_addr', 'remote_user', 'headers']
     for attr in dump_attrs:
-        print(attr, getattr(request, attr))
+        logging.warning(attr, getattr(request, attr))
 
 
 def public_route(rule, func, name=None):

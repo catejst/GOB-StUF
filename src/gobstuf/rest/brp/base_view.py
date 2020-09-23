@@ -1,4 +1,5 @@
 import traceback
+import logging
 
 from flask.views import MethodView
 from flask import g, request, abort, Response
@@ -66,8 +67,8 @@ class StufRestView(MethodView):
         try:
             return self._get(**kwargs)
         except Exception:
-            print(f"ERROR: Request failed:")
-            traceback.print_exc()
+            logging.error(f"ERROR: Request failed:")
+            logging.error(traceback.format_exc())
             return RESTResponse.internal_server_error()
 
     def _validate_request_args(self, **kwargs):
@@ -243,7 +244,7 @@ class StufRestView(MethodView):
             return RESTResponse.forbidden()
 
         # Other unknown code
-        print(f"MKS error {response_obj.get_error_code()}. Code {response_obj.get_error_string()}")
+        logging.error(f"MKS error {response_obj.get_error_code()}. Code {response_obj.get_error_string()}")
 
         return RESTResponse.bad_request()
 

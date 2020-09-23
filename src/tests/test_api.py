@@ -14,6 +14,7 @@ class MockResponse:
 
 
 @mock.patch('gobstuf.api.AuditLogMiddleware', mock.MagicMock())
+@mock.patch('gobstuf.api.logger', mock.MagicMock())
 class TestAPI(unittest.TestCase):
 
     def setUp(self) -> None:

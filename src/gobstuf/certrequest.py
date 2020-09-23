@@ -1,6 +1,10 @@
 from requests_pkcs12 import get, post
 
 from gobstuf.config import PKCS12_FILENAME, PKCS12_PASSWORD
+from gobstuf.logger import get_default_logger
+
+
+logger = get_default_logger()
 
 
 def _add_cert_info(kwargs):
@@ -25,10 +29,10 @@ def cert_get(url, **kwargs):
     :param url: url to get
     :return: request response
     """
-    print(f"GET {url}")
+    logger.info(f"GET {url}")
     kwargs = _add_cert_info(kwargs)
     response = get(url, **kwargs)
-    print(f"RESPONSE {response.status_code}, {response.reason}")
+    logger.info(f"RESPONSE {response.status_code}, {response.reason}")
     return response
 
 
@@ -41,8 +45,8 @@ def cert_post(url, **kwargs):
     :param headers: optional headers
     :return: request response
     """
-    print(f"POST {url}")
+    logger.info(f"POST {url}")
     kwargs = _add_cert_info(kwargs)
     response = post(url, **kwargs)
-    print(f"RESPONSE {response.status_code}, {response.reason}")
+    logger.info(f"RESPONSE {response.status_code}, {response.reason}")
     return response

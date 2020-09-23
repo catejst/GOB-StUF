@@ -119,8 +119,8 @@ class TestAuditLog(unittest.TestCase):
         log_handler = get_log_handler()
         self.assertIsInstance(log_handler, GOBAuditLogHandler)
 
-    @patch("builtins.print")
-    def test_on_audit_log_exception(self, mock_print):
+    @patch("gobstuf.audit_log.logger")
+    def test_on_audit_log_exception(self, mock_logger):
         msg_to_be_logged = 'any message'
         on_audit_log_exception(Exception(), msg_to_be_logged)
-        mock_print.assert_called_with(ANY, msg_to_be_logged)
+        mock_logger.error.assert_called_with(ANY, msg_to_be_logged)
