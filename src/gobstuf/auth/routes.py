@@ -86,7 +86,7 @@ def _issue_fraud_warning(rule, *args, **kwargs):
 
     In the future this should be connected to an alert mechanism
     """
-    logging.warning(f"ERROR: FRAUD DETECTED FOR RULE: {rule} => {request.url}", args, kwargs)
+    logging.warning(f"WARNING: FRAUD DETECTED FOR RULE: {rule} => {request.url}", args, kwargs)
     dump_attrs = ['method', 'remote_addr', 'remote_user', 'headers']
     for attr in dump_attrs:
         logging.warning(attr, getattr(request, attr))
