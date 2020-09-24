@@ -9,8 +9,9 @@ from flask_audit_log.util import get_client_ip
 
 from gobcore.logging.audit_logger import AuditLogger
 from gobstuf.config import CORRELATION_ID_HEADER, UNIQUE_ID_HEADER
+from gobstuf.logger import get_default_logger
 
-logger = logging.getLogger()
+logger = get_default_logger()
 
 
 def get_log_handler():
@@ -84,8 +85,8 @@ def on_audit_log_exception(exception, msg):
     :param msg:
     :return:
     """
-    print(f"ERROR: Audit log request/response failed: {str(exception)}")
-    print("AUDIT LOG", msg)
+    logger.error(f"ERROR: Audit log request/response failed: {str(exception)}")
+    logger.error("AUDIT LOG", msg)
 
 
 def get_user_from_request() -> dict:

@@ -1,6 +1,13 @@
 from unittest import mock
 
-@mock.patch("os.getenv", lambda varname, value=None: varname)
+
+def mock_getenv(varname, value=None):
+    if varname == 'GELF_PORT':
+        return 99
+    return varname
+
+
+@mock.patch("os.getenv", mock_getenv)
 def init():
     """
     Initialize StUF configuration so that every configuration variable

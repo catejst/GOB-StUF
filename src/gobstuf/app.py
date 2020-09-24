@@ -1,4 +1,6 @@
+import os
 import datetime
+
 from gobstuf.api import get_flask_app
 from threading import Thread
 
@@ -40,7 +42,20 @@ SERVICEDEFINITION = {
 
 
 def run_message_thread():
-    messagedriven_service(SERVICEDEFINITION, "StUF")
+    """
+    The connection with GOB is run in a separate service
+
+    If the connection cannot be initialized or breaks during operation
+    the application is killed using os._exit with an exit code that signals unavailability
+
+    :return: None
+    """
+    try:
+        messagedriven_service(SERVICEDEFINITION, "StUF")
+    except:  # noqa: E722 do not use bare 'except'
+        pass
+    print(f"ERROR: no connection with GOB message broker, application is stopped")
+    os._exit(os.EX_UNAVAILABLE)
 
 
 def get_app():

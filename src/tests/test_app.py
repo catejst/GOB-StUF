@@ -32,10 +32,19 @@ class TestApp(TestCase):
             'summary': mock_logger.get_summary()
         }, res)
 
+    @patch("gobstuf.app.os")
     @patch("gobstuf.app.messagedriven_service")
-    def test_run_message_thread(self, mock_messagedriven_service):
+    def test_run_message_thread(self, mock_messagedriven_service, mock_os):
         run_message_thread()
         mock_messagedriven_service.assert_called_with(SERVICEDEFINITION, "StUF")
+        # Call _exit when the message driven service has ended
+        mock_os._exit.assert_called_once()
+
+        mock_os._exit.reset_mock()
+        mock_messagedriven_service.side_effect = Exception()
+        run_message_thread()
+        # Also call _exit when the message driven service has failed
+        mock_os._exit.assert_called_once()
 
     @patch("gobstuf.app.Thread")
     @patch("gobstuf.app.get_flask_app")
