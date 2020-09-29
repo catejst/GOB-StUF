@@ -42,6 +42,10 @@ AUDIT_LOG_CONFIG = {
 CONTAINER_BASE = _getenv("CONTAINER_BASE", default_value="development")
 BRP_REGRESSION_TEST_USER = _getenv("BRP_REGRESSION_TEST_USER")
 BRP_REGRESSION_TEST_APPLICATION = _getenv("BRP_REGRESSION_TEST_APPLICATION")
+
+# The port BRP Regression tests should use to access the API locally.
+# 8001 for when running in Docker. GOB_STUF_PORT (8165 by default) otherwise
+BRP_REGRESSION_TEST_LOCAL_PORT = _getenv("BRP_REGRESSION_TEST_LOCAL_PORT", default_value=8001)
 GOB_OBJECTSTORE = 'GOBObjectstore'
 
 CORRELATION_ID_HEADER = 'X-Correlation-ID'

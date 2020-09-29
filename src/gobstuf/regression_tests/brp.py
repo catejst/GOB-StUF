@@ -9,8 +9,8 @@ from typing import List
 
 from requests import HTTPError
 
-from gobstuf.config import GOB_OBJECTSTORE, CONTAINER_BASE, API_INSECURE_BASE_PATH, GOB_STUF_PORT, \
-    BRP_REGRESSION_TEST_APPLICATION, BRP_REGRESSION_TEST_USER
+from gobstuf.config import GOB_OBJECTSTORE, CONTAINER_BASE, API_INSECURE_BASE_PATH, \
+    BRP_REGRESSION_TEST_APPLICATION, BRP_REGRESSION_TEST_USER, BRP_REGRESSION_TEST_LOCAL_PORT
 from gobstuf.auth.routes import MKS_USER_KEY, MKS_APPLICATION_KEY
 
 from gobconfig.datastore.config import get_datastore_config
@@ -122,7 +122,7 @@ class BrpRegression:
     TESTS_FILE = 'testcases.csv'
     EXPECTED_DIR = 'expected'
     DESTINATION_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'downloaded', 'brp_regression_tests')
-    API_BASE = f'http://localhost:{GOB_STUF_PORT}{API_INSECURE_BASE_PATH}'
+    API_BASE = f'http://localhost:{BRP_REGRESSION_TEST_LOCAL_PORT}{API_INSECURE_BASE_PATH}'
 
     def __init__(self, logger):
         self.headers = {
