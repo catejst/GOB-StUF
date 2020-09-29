@@ -14,7 +14,7 @@ set up, and the tests run quicker during development:
 
 ```bash
 # In this repository
-python -m gobstuf.regression_tests.brp
+python -m gobstuf.regression_tests
 ```
 
 ## How they work

@@ -29,6 +29,7 @@ services:
       UWSGI_HTTP_TIMEOUT: "4000"
       PKCS12_FILENAME: ${PKCS12_FILENAME}
       PKCS12_PASSWORD: ${PKCS12_PASSWORD}
+      BRP_REGRESSION_TEST_LOCAL_PORT: 8001
     env_file: .env
 
 networks:
