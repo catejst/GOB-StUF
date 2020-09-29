@@ -15,6 +15,7 @@ from gobstuf.auth.routes import MKS_USER_KEY, MKS_APPLICATION_KEY
 
 from gobconfig.datastore.config import get_datastore_config
 from gobcore.datastore.factory import DatastoreFactory
+from gobcore.exceptions import GOBException
 from objectstore.objectstore import get_full_container_list, get_object, delete_object, put_object
 
 
@@ -52,6 +53,8 @@ class Objectstore:
                     obj = self._get_object(item)
 
                     save_path = os.path.join(local_directory, relative_path)
+                    dst_directory = '/'.join(save_path.split('/')[:-1])
+                    os.makedirs(dst_directory, exist_ok=True)
                     with open(save_path, 'wb') as f:
                         f.write(obj)
 
@@ -130,25 +133,23 @@ class BrpRegression:
         self.results = []
 
     def _download_testfiles(self):
-        try:
-            os.makedirs(self.DESTINATION_DIR)
-        except FileExistsError:
-            pass
-
+        os.makedirs(self.DESTINATION_DIR, exist_ok=True)
         Objectstore().download_directory(self.OBJECTSTORE_LOCATION, self.DESTINATION_DIR)
 
     def _load_tests(self):
         testcases = []
         with open(os.path.join(self.DESTINATION_DIR, self.TESTS_FILE), 'r') as f:
-            for id, description, endpoint in csv.reader(f):
-                testcase = BrpTestCase(
-                    id,
-                    description,
-                    endpoint,
-                    os.path.join(self.DESTINATION_DIR, self.EXPECTED_DIR, f"{id}.json")
-                )
-
-                testcases.append(testcase)
+            try:
+                for row, (id, description, endpoint) in enumerate(csv.reader(f)):
+                    testcase = BrpTestCase(
+                        id,
+                        description,
+                        endpoint,
+                        os.path.join(self.DESTINATION_DIR, self.EXPECTED_DIR, f"{id}.json")
+                    )
+                    testcases.append(testcase)
+            except ValueError:
+                raise GOBException(f"{self.TESTS_FILE} improperly formatted. Error on line {row + 1}")
         return testcases
 
     def _differences(self, v1, v2, prepend_key: str):

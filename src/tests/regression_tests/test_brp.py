@@ -4,7 +4,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch, call, mock_open
 from requests.exceptions import HTTPError
 
-from gobstuf.regression_tests.brp import BrpRegression, Objectstore, ObjectstoreResultsWriter, BrpTestResult, BrpTestCase
+from gobstuf.regression_tests.brp import BrpRegression, Objectstore, ObjectstoreResultsWriter, BrpTestResult, BrpTestCase, GOBException
 
 
 class TestObjectstoreInit(TestCase):
@@ -60,6 +60,7 @@ class TestObjectStore(TestCase):
             {'name': 'dira/dirc', 'content_type': 'application/directory'},
             {'name': 'dira/dirc/filec.json', 'content_type': 'application/json'},
             {'name': 'dira/dird/filed.json', 'content_type': 'application/json'},
+            {'name': 'dira/dirb/dirf/somefile.json', 'content_type': 'application/json'},
         ])
         store._get_object = lambda x: 'downloaded(' + x['name'] + ')'
 
@@ -68,17 +69,22 @@ class TestObjectStore(TestCase):
         mock_rmtree.assert_called_with('local/directory')
         mock_makedirs.assert_has_calls([
             call('local/directory'),
+            call('local/directory', exist_ok=True),
+            call('local/directory', exist_ok=True),
             call('local/directory/dire', exist_ok=True),
+            call('local/directory/dirf', exist_ok=True),
         ])
 
         mock_open.assert_has_calls([
             call('local/directory/filea.json', 'wb'),
             call('local/directory/fileb.json', 'wb'),
+            call('local/directory/dirf/somefile.json', 'wb'),
         ], any_order=True)
 
         mock_open().__enter__().write.assert_has_calls([
             call('downloaded(dira/dirb/filea.json)'),
             call('downloaded(dira/dirb/fileb.json)'),
+            call('downloaded(dira/dirb/dirf/somefile.json)'),
         ], any_order=True)
 
     def test_clear_directory(self):
@@ -194,13 +200,7 @@ class TestBrpRegressionTest(TestCase):
 
         regr._download_testfiles()
         mock_objectstore().download_directory.assert_called_with(location, dst_dir)
-        mock_makedirs.assert_called_with(dst_dir)
-
-        # Try again, but now the destination dir already exists
-        mock_makedirs.side_effect = FileExistsError
-        regr._download_testfiles()
-        mock_objectstore().download_directory.assert_called_with(location, dst_dir)
-        mock_makedirs.assert_called_with(dst_dir)
+        mock_makedirs.assert_called_with(dst_dir, exist_ok=True)
 
     @patch("gobstuf.regression_tests.brp.os.path.join", lambda *args: "/".join(args))
     def test_load_tests(self):
@@ -228,6 +228,19 @@ id2,"Test case 2",/endpoint/2?someparameter=val&other=val2
             BrpTestCase('id2', 'Test case 2', '/endpoint/2?someparameter=val&other=val2', 'dst/dir/expected/id2.json')
         ]
         self.assertEqual(expected, result)
+
+        # Test with wrongly formatted CSV
+        file = """\
+id1,"Test case 1",/the/endpoint,extracolumn
+id2,"Test case 2",/endpoint/2?someparameter=val&other=val2
+"""
+        open_mock = mock_open(read_data=file)
+        open_mock.return_value.__iter__ = lambda self: self
+        open_mock.return_value.__next__ = lambda self: next(iter(self.readline, ''))
+
+        with patch("builtins.open", open_mock), \
+             self.assertRaisesRegex(GOBException, "tests_file.csv improperly formatted. Error on line 1"):
+            result = regr._load_tests()
 
     def test_dict_differences(self):
         """Testd _dict_differences, _list_differences and _differences
