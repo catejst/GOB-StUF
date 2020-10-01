@@ -28,6 +28,7 @@ class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
         'verblijfplaats__postcode': 'BG:gelijk BG:verblijfsadres BG:aoa.postcode',
         'verblijfplaats__huisnummer': 'BG:gelijk BG:verblijfsadres BG:aoa.huisnummer',
         'verblijfplaats__huisletter': 'BG:gelijk BG:verblijfsadres BG:aoa.huisletter',
+        'verblijfplaats__huisnummertoevoeging': 'BG:gelijk BG:verblijfsadres BG:aoa.huisnummertoevoeging',
         'verblijfplaats__naamopenbareruimte': 'BG:gelijk BG:verblijfsadres BG:gor.openbareRuimteNaam',
         'verblijfplaats__gemeentevaninschrijving': 'BG:gelijk BG:gem.gemeenteCode',
         'geboorte__datum': 'BG:gelijk BG:geboortedatum',

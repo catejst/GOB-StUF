@@ -56,6 +56,7 @@ class IngeschrevenpersonenFilterView(IngeschrevenpersonenView, StufRestFilterVie
         'naam__voornamen',
         'naam__voorvoegsel',
         'verblijfplaats__huisletter',
+        'verblijfplaats__huisnummertoevoeging',
     ]
 
 
