@@ -465,6 +465,7 @@ class TestStufRestFilterView(TestCase):
             'attr2': 'value2',
             'attr3': 'value3',
             'attr4': 'value4',
+            'attr6': 'aa*',
         })
 
         view.request_template.parameter_checks = {
@@ -493,6 +494,8 @@ class TestStufRestFilterView(TestCase):
                 }
             }
         }
+        
+        view.request_template.parameter_wildcards = ['attr6']
 
         self.assertEqual({
             'invalid-params': [

@@ -38,9 +38,9 @@ class StufRequestTestInit(TestCase):
         mock_set_element.assert_has_calls([
             call(req.applicatie_path, 'APPLICATION_NAME'),
             call(req.gebruiker_path, 'USERNAME'),
-            call('PATH TO ATTR1', 'value1'),
+            call('PATH TO ATTR1', 'value1', True),
             # This attribute is converted by convert_param_attr2
-            call('PATH TO ATTR2', 'value2value2'),
+            call('PATH TO ATTR2', 'value2value2', True),
         ])
 
         self.assertEqual(mock_message.return_value, req.stuf_message)
@@ -67,7 +67,7 @@ class StufRequestTest(TestCase):
         req.stuf_message.find_elm.return_value = True
 
         req.set_element('THE PATH', 'the value')
-        req.stuf_message.set_elm_value.assert_called_with('A B C THE PATH', 'the value')
+        req.stuf_message.set_elm_value.assert_called_with('A B C THE PATH', 'the value', True)
         req.stuf_message.create_elm.assert_not_called()
 
         # Assert element is created when it doesn't exist

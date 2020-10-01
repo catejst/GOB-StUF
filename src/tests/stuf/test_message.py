@@ -81,8 +81,15 @@ class StufMessageTest(TestCase):
         self.assertEqual('some value', message.find_elm().text)
 
         mocked_tree = MagicMock()
-        message.set_elm_value('some element', 'some value', mocked_tree)
+        message.set_elm_value('some element', 'some value', exact_match=True, tree=mocked_tree)
         message.find_elm.assert_called_with('some element', mocked_tree)
+
+        # Assert StUF:exact false is set for elements without exact_match to allow for search in MKS
+        message.set_elm_value('some element', 'some value*', exact_match=False, tree=mocked_tree)
+        element = message.find_elm.return_value
+        element.set.assert_called_with('StUF:exact', 'false')
+        # Expect the WILDCARD_CHAR to be replaced with the STUF_WILDCARD_CHAR
+        self.assertEqual('some value%', message.find_elm().text)
 
     def test_get_elm_value(self):
         message = StufMessage('')

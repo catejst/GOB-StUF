@@ -46,6 +46,8 @@ class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
         'burgerservicenummer': IngeschrevenpersonenStufRequest.bsn_check
     }
 
+    parameter_wildcards = ['naam__voornamen', 'naam__geslachtsnaam', 'verblijfplaats__naamopenbareruimte']
+
     def convert_param_geboorte__datum(self, value: str):
         """Transforms the YYYY-MM-DD value to YYYYMMDD
 

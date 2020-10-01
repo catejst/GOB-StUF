@@ -6,6 +6,9 @@ import re
 import datetime
 
 from gobstuf.reference_data.code_resolver import CodeResolver, DataItemNotFoundException
+from gobstuf.stuf.message import WILDCARD_CHAR
+
+MIN_WILDCARD_LENGTH = 2
 
 
 def validate_date(value: str):
@@ -23,6 +26,13 @@ def validate_gemeentecode(value: str):
         CodeResolver.get_gemeente(value)
     except DataItemNotFoundException:
         return False
+    return True
+
+
+def validate_wildcard_value(value: str):
+    # Test is the value is a valid wildcard search when a wildcard is used, meaning it has at least 2 characters
+    if WILDCARD_CHAR in value:
+        return len(re.sub(rf'[\{WILDCARD_CHAR}]', '', value)) >= MIN_WILDCARD_LENGTH
     return True
 
 
@@ -81,6 +91,14 @@ class ArgumentCheck():
         'msg': {
             "code": "invalidGemeente",
             "reason": "Waarde is geen geldige gemeentecode.",
+        }
+    }
+
+    is_valid_wildcard_value = {
+        'check': validate_wildcard_value,
+        'msg': {
+            "code": "invalidWildcardValue",
+            "reason": "Zoeken met een wildcard vereist minimaal 2 karakters exclusief de wildcards.",
         }
     }
 
