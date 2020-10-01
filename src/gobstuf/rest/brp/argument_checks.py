@@ -62,6 +62,14 @@ class ArgumentCheck():
         }
     }
 
+    is_alphabetic = {
+        'check': lambda v: re.match(r'^[A-Za-z]+$', v) is not None,
+        'msg': {
+            "code": "alphabetic",
+            "reason": "Waarde is geen geldige letter."
+        }
+    }
+
     is_positive_integer = {
         'check': lambda v: re.match(r'^[1-9][0-9]*$', v) is not None,
         'msg': {

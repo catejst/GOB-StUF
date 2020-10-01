@@ -25,6 +25,12 @@ class TestArgumentCheck(TestCase):
         for v in ['-1', '', '1.5', 'one']:
             self.assertEqual(ArgumentCheck.validate(check, v), check)
 
+        check = ArgumentCheck.is_alphabetic
+        for v in ['a', 'A', 'z', 'Z']:
+            self.assertIsNone(ArgumentCheck.validate(check, v))
+        for v in ['1', '']:
+            self.assertEqual(ArgumentCheck.validate(check, v), check)
+
         check = ArgumentCheck.is_positive_integer
         for v in ['1', '100']:
             self.assertIsNone(ArgumentCheck.validate(check, v))
