@@ -55,6 +55,8 @@ class IngeschrevenpersonenFilterView(IngeschrevenpersonenView, StufRestFilterVie
     optional_query_parameters = [
         'naam__voornamen',
         'naam__voorvoegsel',
+        'verblijfplaats__huisletter',
+        'verblijfplaats__huisnummertoevoeging',
     ]
 
 

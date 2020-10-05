@@ -21,11 +21,15 @@ class IngeschrevenpersonenStufRequest(StufRequest, ABC):
 
 class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
     GEMEENTECODE_LENGTH = 4
+    HUISLETTER_LENGTH = 1
+    HUISNUMMERTOEVOEGING_LENGTH = 1
 
     parameter_paths = {
         'burgerservicenummer': 'BG:gelijk BG:inp.bsn',
         'verblijfplaats__postcode': 'BG:gelijk BG:verblijfsadres BG:aoa.postcode',
         'verblijfplaats__huisnummer': 'BG:gelijk BG:verblijfsadres BG:aoa.huisnummer',
+        'verblijfplaats__huisletter': 'BG:gelijk BG:verblijfsadres BG:aoa.huisletter',
+        'verblijfplaats__huisnummertoevoeging': 'BG:gelijk BG:verblijfsadres BG:aoa.huisnummertoevoeging',
         'verblijfplaats__naamopenbareruimte': 'BG:gelijk BG:verblijfsadres BG:gor.openbareRuimteNaam',
         'verblijfplaats__gemeentevaninschrijving': 'BG:gelijk BG:gem.gemeenteCode',
         'geboorte__datum': 'BG:gelijk BG:geboortedatum',
@@ -38,6 +42,8 @@ class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
         'inclusiefoverledenpersonen': ArgumentCheck.is_boolean,
         'verblijfplaats__postcode': ArgumentCheck.is_postcode,
         'verblijfplaats__huisnummer': [ArgumentCheck.is_integer, ArgumentCheck.is_positive_integer],
+        'verblijfplaats__huisletter': [ArgumentCheck.is_alphabetic, ArgumentCheck.has_max_length(HUISLETTER_LENGTH)],
+        'verblijfplaats__huisnummertoevoeging': [ArgumentCheck.has_max_length(HUISNUMMERTOEVOEGING_LENGTH)],
         'verblijfplaats__gemeentevaninschrijving': [ArgumentCheck.has_min_length(GEMEENTECODE_LENGTH),
                                                     ArgumentCheck.has_max_length(GEMEENTECODE_LENGTH),
                                                     ArgumentCheck.is_valid_gemeentecode],
