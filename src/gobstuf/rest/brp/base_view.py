@@ -52,6 +52,8 @@ class StufRestView(MethodView):
     # The options for the expand parameter, for example 'partners', 'ouders', ...
     expand_options = []
 
+    WILDCARD_CHECKS = [ArgumentCheck.is_valid_wildcard_value]
+
     def get(self, **kwargs):
         try:
             errors = self._validate(**kwargs)
@@ -110,6 +112,10 @@ class StufRestView(MethodView):
         :return:
         """
         checks = self.request_template.parameter_checks.get(arg)
+
+        # If the argument is allowed to have a wildcard, check if the wildcard search is valid
+        if arg in self.request_template.parameter_wildcards:
+            checks = checks.extend(self.WILDCARD_CHECKS) if checks else self.WILDCARD_CHECKS
 
         if not checks:
             return

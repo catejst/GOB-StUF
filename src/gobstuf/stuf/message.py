@@ -5,6 +5,9 @@ import xml.etree.ElementTree as ET
 
 from xml.dom import minidom
 
+WILDCARD_CHAR = '*'
+STUF_WILDCARD_CHAR = '%'
+
 
 class StufMessage:
     """Workable representation of a StUF message, based on ElementTree.
@@ -75,15 +78,22 @@ class StufMessage:
             return []
         return parent.findall(elements[-1], self.namespaces)
 
-    def set_elm_value(self, elements_str: str, value: str, tree=None):
+    def set_elm_value(self, elements_str: str, value: str, exact_match=True, tree=None):
         """Set the value of the first element identified by elements_str.
 
         :param elements_str: the path to the element relative to tree
         :param value: the new value
+        :param exact_match: match the field exact or use wildcards
         :param tree: defaults to the message root
         :return:
         """
         elm = self.find_elm(elements_str, tree)
+
+        if not exact_match:
+            # Add exact false for wildcard fields
+            elm.set('StUF:exact', 'false')
+            value = value.replace(WILDCARD_CHAR, STUF_WILDCARD_CHAR)
+
         elm.text = value
 
     def create_elm(self, elements_str: str, tree=None):

@@ -6,7 +6,7 @@ import sys
 
 from abc import ABC, abstractmethod
 
-from gobstuf.stuf.message import StufMessage
+from gobstuf.stuf.message import StufMessage, WILDCARD_CHAR
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'request_template')
 
@@ -26,6 +26,7 @@ class StufRequest(ABC):
     referentienummer_path = 'BG:stuurgegevens StUF:referentienummer'
 
     parameter_checks = {}
+    parameter_wildcards = {}
     parameters = []
 
     def __init__(self, gebruiker: str, applicatie: str, correlation_id: str = None):
@@ -63,7 +64,12 @@ class StufRequest(ABC):
         for key, value in values.items():
             # Only set the values of parameters which have a path defined
             if key in self.parameter_paths:
-                self.set_element(self.parameter_paths[key], self._convert_parameter_value(key, value))
+                converted_value = self._convert_parameter_value(key, value)
+
+                # If the field accepts wildcards, check if a wild character is supplied
+                exact_match = False if key in self.parameter_wildcards and WILDCARD_CHAR in converted_value else True
+
+                self.set_element(self.parameter_paths[key], converted_value, exact_match)
 
     def _convert_parameter_value(self, key: str, value: str):
         """Converts parameter value for key before injecting the value in the template.
@@ -108,18 +114,19 @@ class StufRequest(ABC):
         # yyyy mm dd hh mm ss mmm = 4 + 2 + 2 + 2 + 2 + 2 + 3 = 17 characters
         return dt.strftime('%Y%m%d%H%M%S%f')[:17]
 
-    def set_element(self, path: str, value: str):
+    def set_element(self, path: str, value: str, exact_match: bool = True):
         """Sets element value. Creates element if it doesn't exist
 
         :param path:
         :param value:
+        :param exact_match:
         :return:
         """
         full_path = self.content_root_elm + " " + path
 
         if self.stuf_message.find_elm(full_path) is None:
             self.stuf_message.create_elm(full_path)
-        self.stuf_message.set_elm_value(full_path, value)
+        self.stuf_message.set_elm_value(full_path, value, exact_match)
 
     def to_string(self):
         """String (XML) representation of this request. Sets tijdstip_bericht and referentienummer to
