@@ -27,4 +27,6 @@ COPY ./gatekeeper.conf gatekeeper.conf
 RUN chmod 755 keycloak-gatekeeper
 RUN mkdir -p /var/log/gatekeeper
 
+USER datapunt
+
 CMD ["/deploy/docker-run.sh"]
