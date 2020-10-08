@@ -41,7 +41,7 @@ class Logger:
         cls.instance.addFilter(LogContextFilter())
 
         if GELF_HOST and GELF_PORT:
-            # Only add Gelf handler when configured
+            # Only add Gelf handler when configured. Used to test Gelf logger locally
             cls.instance.addHandler(GelfUdpHandler(host=GELF_HOST, port=int(GELF_PORT), include_extra_fields=True))
 
 
