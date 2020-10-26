@@ -30,6 +30,10 @@ COPY ./gatekeeper.conf gatekeeper.conf
 RUN chmod 755 keycloak-gatekeeper
 RUN mkdir -p /var/log/gatekeeper
 
+# Create downloaded dir for regression tests with correct permissions
+RUN mkdir -p /app/gobstuf/regression_tests/downloaded
+RUN chown datapunt /app/gobstuf/regression_tests/downloaded
+
 USER datapunt
 
 CMD ["/deploy/docker-run.sh"]
