@@ -6,7 +6,7 @@ import sys
 
 from abc import ABC, abstractmethod
 
-from gobstuf.stuf.message import StufMessage, WILDCARD_CHAR
+from gobstuf.stuf.message import StufMessage, WILDCARD_CHARS
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'request_template')
 
@@ -67,7 +67,9 @@ class StufRequest(ABC):
                 converted_value = self._convert_parameter_value(key, value)
 
                 # If the field accepts wildcards, check if a wild character is supplied
-                exact_match = False if key in self.parameter_wildcards and WILDCARD_CHAR in converted_value else True
+                exact_match = False if key in self.parameter_wildcards and \
+                    any(wildcard in converted_value for wildcard in WILDCARD_CHARS) \
+                    else True
 
                 self.set_element(self.parameter_paths[key], converted_value, exact_match)
 

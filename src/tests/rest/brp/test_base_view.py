@@ -257,7 +257,7 @@ class TestStufRestView(TestCase):
         view.request_template.return_value.set_values.assert_called_with({'a': 1, 'b': 2})
         view._make_request.assert_called_with(view.request_template.return_value)
 
-        view.response_template.assert_called_with(view._make_request.return_value.text, a=1, b=2, funcparam=True)
+        view.response_template.assert_called_with(view._make_request.return_value.text, a=1, b=2, funcparam=True, wildcards={})
         mock_rest_response.ok.assert_called_with(view.response_template.return_value.get_answer_object.return_value)
 
         # Error response
@@ -466,6 +466,7 @@ class TestStufRestFilterView(TestCase):
             'attr3': 'value3',
             'attr4': 'value4',
             'attr6': 'aa*',
+            'attr7': 'a*',
         })
 
         view.request_template.parameter_checks = {
@@ -492,19 +493,27 @@ class TestStufRestFilterView(TestCase):
                 'msg': {
                     'the msg': 'If this error shows up, all request args that are not request_template_parameters are correctly validated',
                 }
-            }
+            },
+            'attr7': [{
+                'check': lambda v: True,
+                'msg': {
+                    'the msg': 'this one will not be shown',
+                }
+            }]
         }
-        
-        view.request_template.parameter_wildcards = ['attr6']
+
+        # attr6 receives the wildcard check, for attr7 the check will be appended to the current checks
+        view.request_template.parameter_wildcards = ['attr6', 'attr7']
 
         self.assertEqual({
             'invalid-params': [
                 {'name': 'attr1', 'the msg': 'oh oh'},
                 {'name': 'attr4', 'the msg': 'foute boel'},
+                {'name': 'attr7', 'code': 'invalidWildcardValue', 'reason': 'Zoeken met een wildcard vereist minimaal 2 karakters exclusief de wildcards.'},
                 {'name': 'attr5', 'the msg': 'If this error shows up, all request args that are not request_template_parameters are correctly validated'}
             ],
             'title': 'Een of meerdere parameters zijn niet correct.',
-            'detail': 'De foutieve parameter(s) zijn: attr1, attr4, attr5.',
+            'detail': 'De foutieve parameter(s) zijn: attr1, attr4, attr7, attr5.',
             'code': 'paramsValidation',
         }, view._validate_request_args(some='kwargs'))
         view._request_template_parameters.assert_called_with(some='kwargs')

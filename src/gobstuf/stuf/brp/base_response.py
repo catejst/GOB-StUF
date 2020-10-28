@@ -1,8 +1,11 @@
+import re
+
 from abc import ABC, abstractmethod
 from flask import request
 from typing import List, Optional
 from xml.etree.ElementTree import Element
 
+from gobstuf.lib.utils import get_value
 from gobstuf.stuf.message import StufMessage
 from gobstuf.stuf.exception import NoStufAnswerException
 from gobstuf.stuf.brp.response_mapping import StufObjectMapping, Mapping, RelatedMapping
@@ -84,8 +87,13 @@ class StufMappedResponse(StufResponse):
         else:
             self.expand = []
 
+        self.wildcards = kwargs['wildcards'] if 'wildcards' in kwargs else {}
+
         # Initialize a response filter if one is provided to allow them to add expand properties
         self.response_filters_instances = [filter(self, **kwargs) for filter in self.response_filters]
+
+        if 'wildcards' in kwargs:
+            self.response_filters_instances.append(WildcardSearchResponseFilter(self, **kwargs['wildcards']))
 
         super().__init__(msg, **kwargs)
 
@@ -235,7 +243,17 @@ class StufMappedResponse(StufResponse):
 
         :return:
         """
-        return self.create_objects_from_elements(self.get_all_object_elms())
+        answer_objects = self.create_objects_from_elements(self.get_all_object_elms())
+
+        filtered_answer_objects = []
+        for answer_object in answer_objects:
+            # Filter the response if a response type is defined
+            for filter in self.response_filters_instances:
+                answer_object = filter.filter_response(answer_object)
+
+            filtered_answer_objects += [answer_object] if answer_object is not None else []
+
+        return filtered_answer_objects
 
     def _get_mapping(self, element: Element) -> Mapping:
         """Finds the mapping for the given XML Element, based on the value of StUF:entiteittype
@@ -450,3 +468,56 @@ class RelatedDetailResponseFilter(RelatedListResponseFilter):
         }
 
         return response_object
+
+
+class WildcardSearchResponseFilter(ResponseFilter):
+
+    def __init__(self, response: StufMappedResponse, **kwargs):
+        self.wildcards = {**kwargs}
+
+        super().__init__(response, **kwargs)
+
+    def filter_response(self, response_object: dict):
+        """Filter the response object to only return if it matches the wildcard search query
+
+        For example the following results:
+        [
+            {'name': 'Jan'},
+            {'name': 'Jans'},
+            {'name': 'Jansen'},
+            {'name': 'van Jansen'}
+        ]
+
+        and a wildcard search on name 'Jan*' should only return Jan, Jans and Jansen.
+
+        There are two accepted wildcard characters '*' and '?':
+        - '*': Matches with zero or more (non-space) characters
+        - '?': Matches with exactly one (non-space) character
+
+        The '?' wildcard can be used multiple times in a row, so searching for Jan??? wil match any record starting
+        with Jan and being exactly 6 characters (in this case Jansen).
+
+        At least two (non wildcard) characters need to be provided and the wildcard characters can be placed at
+        the beginning or end of a search string:
+
+        'A*', '*A', 'A*n', 'A??n' will all result in an error (handled in ArgumentCheck)
+        """
+        for attribute, value in self.wildcards.items():
+            attribute_path = attribute.split('__')
+            regex = self._convert_wildcard_query(value)
+
+            if not re.match(regex, get_value(response_object, *attribute_path), re.IGNORECASE):
+                return None
+
+        return response_object
+
+    def _convert_wildcard_query(self, query):
+        # Replace * to search for one or more characters
+        query = query.replace('*', '.*')
+
+        # Count the number of ? to replace them for a specific number of chars in the regex
+        match = re.search(r'^(\?*)(.+[^?])+(\?*)$', query)
+        query = f".{{{len(match.group(1))}}}{match.group(2)}" if match.group(1) else query
+        query = f"{query}.{{{len(match.group(3))}}}" if match.group(3) else query
+
+        return f"^{query}$"

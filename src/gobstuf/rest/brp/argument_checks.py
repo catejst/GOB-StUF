@@ -6,7 +6,7 @@ import re
 import datetime
 
 from gobstuf.reference_data.code_resolver import CodeResolver, DataItemNotFoundException
-from gobstuf.stuf.message import WILDCARD_CHAR
+from gobstuf.stuf.message import WILDCARD_CHARS
 
 MIN_WILDCARD_LENGTH = 2
 
@@ -31,8 +31,9 @@ def validate_gemeentecode(value: str):
 
 def validate_wildcard_value(value: str):
     # Test is the value is a valid wildcard search when a wildcard is used, meaning it has at least 2 characters
-    if WILDCARD_CHAR in value:
-        return len(re.sub(rf'[\{WILDCARD_CHAR}]', '', value)) >= MIN_WILDCARD_LENGTH
+    if any(wildcard in value for wildcard in WILDCARD_CHARS):
+        wildcard_regex = ''.join(WILDCARD_CHARS)
+        return len(re.sub(rf'[\{wildcard_regex}]', '', value)) >= MIN_WILDCARD_LENGTH
     return True
 
 

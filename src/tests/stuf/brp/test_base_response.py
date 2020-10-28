@@ -2,7 +2,7 @@ from unittest import TestCase
 from unittest.mock import patch, MagicMock, call
 
 from gobstuf.stuf.brp.base_response import StufResponse, StufMappedResponse, NoStufAnswerException, Mapping, \
-    MappedObjectWrapper, RelatedDetailResponseFilter, RelatedListResponseFilter
+    MappedObjectWrapper, RelatedDetailResponseFilter, RelatedListResponseFilter, WildcardSearchResponseFilter
 from gobstuf.stuf.brp.response_mapping import RelatedMapping
 
 
@@ -54,6 +54,12 @@ class StufMappedResponseImpl(StufMappedResponse):
 
 
 class MockRelatedResponseFilter(MagicMock):
+    wildcards = {}
+    
+    filter_response = MagicMock()
+
+
+class MockWildcardSearchResponseFilter(MagicMock):
     related_type = 'relation'
     
     filter_response = MagicMock()
@@ -122,6 +128,7 @@ class MappedObjectWrapperTest(TestCase):
 class StufMappedResponseTest(TestCase):
 
     @patch("gobstuf.stuf.brp.base_response.RelatedListResponseFilter", MockRelatedResponseFilter)
+    @patch("gobstuf.stuf.brp.base_response.WildcardSearchResponseFilter", MockWildcardSearchResponseFilter)
     def test_init(self):
         resp = StufMappedResponseImpl('msg', expand='a,b')
         self.assertEqual(['a', 'b'], resp.expand)
@@ -134,6 +141,10 @@ class StufMappedResponseTest(TestCase):
 
         # When a ResponseFilter is defined, expect the filter to be initialized
         resp = StufMappedResponseRelatedImpl('msg', expand=None)
+        self.assertEqual(1, len(resp.response_filters_instances))
+
+        # When a wildcard is defined, expect the wildcard filter to be initialized
+        resp = StufMappedResponseImpl('msg', wildcards={'wildcard': 'any wildcard'})
         self.assertEqual(1, len(resp.response_filters_instances))
 
     def test_get_object_elm(self):
@@ -330,13 +341,33 @@ class StufMappedResponseTest(TestCase):
         result = resp.create_objects_from_elements(['A', 'B', 'C'])
         self.assertEqual(['object A', 'object B'], result)
 
-    def test_get_all_answer_objects(self):
+    def test_get_all_answer_objects_without_filters(self):
         resp = StufMappedResponseImpl('msg')
         resp.get_all_object_elms = MagicMock()
         resp.create_objects_from_elements = MagicMock()
 
+        return_objs = ['obj1', 'obj2']
+        resp.create_objects_from_elements.return_value = return_objs
+
         self.assertEqual(resp.create_objects_from_elements.return_value, resp.get_all_answer_objects())
         resp.create_objects_from_elements.assert_called_with(resp.get_all_object_elms.return_value)
+
+    def test_get_all_answer_objects_with_filters(self):
+        resp = StufMappedResponseImpl('msg')
+        resp.get_all_object_elms = MagicMock()
+        resp.create_objects_from_elements = MagicMock()
+        
+        mock_filter = MockWildcardSearchResponseFilter(resp)
+        mock_filter.filter_response.side_effect = ['obj1', None]
+        resp.response_filters_instances = [mock_filter]
+
+        return_objs = ['obj1', 'obj2']
+        resp.create_objects_from_elements.return_value = return_objs
+
+        result = resp.get_all_answer_objects()
+
+        self.assertEqual(result, ['obj1'])
+        mock_filter.filter_response.assert_has_calls([call('obj1'), call('obj2')])
 
     def test_get_mapped_related_object(self):
         class RelatedMappingImpl(RelatedMapping):
@@ -595,3 +626,85 @@ class TestRelatedListResponseFilter(TestCase):
 
         result = self.resp.filter_response(mapped_object)
         self.assertEqual(result, expected)
+
+
+class WildcardSearchResponseFilterImpl(WildcardSearchResponseFilter):
+    pass
+
+
+class TestWildcardSearchResponseFilter(TestCase):
+    mock_response = MagicMock()
+
+    def test_init(self):
+        wildcards = {'attr': 'any value'}
+        resp = WildcardSearchResponseFilterImpl(self.mock_response, **wildcards)
+        self.assertEqual(resp.wildcards, wildcards)
+
+    def test_filter_response(self):
+        mock_response_objects = [
+            {'naam': {'geslachtsnaam': 'Jan'}},
+            {'naam': {'geslachtsnaam': 'Jans'}},
+            {'naam': {'geslachtsnaam': 'Chans'}},
+            {'naam': {'geslachtsnaam': 'Jansen'}},
+            {'naam': {'geslachtsnaam': 'van Jansen'}},
+        ]
+
+        # Test naam* wildcard
+        wildcards = {'naam__geslachtsnaam': 'Jan*'}
+        results = []
+        for obj in mock_response_objects:
+            filter = WildcardSearchResponseFilterImpl(self.mock_response, **wildcards)
+            res = filter.filter_response(obj)
+            results += [res['naam']['geslachtsnaam']] if res is not None else []
+        self.assertEqual(['Jan', 'Jans', 'Jansen'], results)
+
+        # Test *naam wildcard
+        wildcards = {'naam__geslachtsnaam': '*Jansen'}
+        results = []
+        for obj in mock_response_objects:
+            filter = WildcardSearchResponseFilterImpl(self.mock_response, **wildcards)
+            res = filter.filter_response(obj)
+            results += [res['naam']['geslachtsnaam']] if res is not None else []
+        self.assertEqual(['Jansen', 'van Jansen'], results)
+        
+        # Test naam? wildcard
+        wildcards = {'naam__geslachtsnaam': 'Jans??'}
+        results = []
+        for obj in mock_response_objects:
+            filter = WildcardSearchResponseFilterImpl(self.mock_response, **wildcards)
+            res = filter.filter_response(obj)
+            results += [res['naam']['geslachtsnaam']] if res is not None else []
+        self.assertEqual(['Jansen'], results)
+        
+        # Test ?naam wildcard
+        wildcards = {'naam__geslachtsnaam': '?ans'}
+        results = []
+        for obj in mock_response_objects:
+            filter = WildcardSearchResponseFilterImpl(self.mock_response, **wildcards)
+            res = filter.filter_response(obj)
+            results += [res['naam']['geslachtsnaam']] if res is not None else []
+        self.assertEqual(['Jans'], results)
+        
+        # Test *naam? wildcard
+        wildcards = {'naam__geslachtsnaam': '*Jans??'}
+        results = []
+        for obj in mock_response_objects:
+            filter = WildcardSearchResponseFilterImpl(self.mock_response, **wildcards)
+            res = filter.filter_response(obj)
+            results += [res['naam']['geslachtsnaam']] if res is not None else []
+        self.assertEqual(['Jansen', 'van Jansen'], results)
+
+    def test_convert_wildcard_query(self):
+        filter = WildcardSearchResponseFilterImpl(self.mock_response)
+
+        cases = [
+            ('query', '^query$'),
+            ('*query', '^.*query$'),
+            ('*query*', '^.*query.*$'),
+            ('?query', '^.{1}query$'),
+            ('??query', '^.{2}query$'),
+            ('??query?', '^.{2}query.{1}$'),
+        ]
+
+        for query, expected in cases:
+            self.assertEqual(expected, filter._convert_wildcard_query(query))

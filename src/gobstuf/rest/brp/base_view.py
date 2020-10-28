@@ -115,7 +115,10 @@ class StufRestView(MethodView):
 
         # If the argument is allowed to have a wildcard, check if the wildcard search is valid
         if arg in self.request_template.parameter_wildcards:
-            checks = checks.extend(self.WILDCARD_CHECKS) if checks else self.WILDCARD_CHECKS
+            if checks:
+                checks.extend(self.WILDCARD_CHECKS)
+            else:
+                checks = self.WILDCARD_CHECKS
 
         if not checks:
             return
@@ -174,6 +177,11 @@ class StufRestView(MethodView):
         return {k: self._transform_query_parameter_value(request.args.get(k, v))
                 for k, v in self.functional_query_parameters.items()}
 
+    def _get_wildcard_query_parameters(self):
+        wildcards = {wildcard: request.args.get(wildcard) for wildcard in self.request_template.parameter_wildcards
+                     if wildcard in request.args}
+        return {'wildcards': wildcards}
+
     def _get(self, **kwargs):
         """kwargs contains the URL parameters, for example {'bsn': xxxx'} when the requested resource is
         /brp/ingeschrevenpersonen/<bsn>
@@ -202,6 +210,7 @@ class StufRestView(MethodView):
         # Map MKS response back to REST response. Include the path parameters to the response
         response_obj = self.response_template(response.text,
                                               **self._get_functional_query_parameters(),
+                                              **self._get_wildcard_query_parameters(),
                                               **kwargs)
 
         return self._build_response(response_obj, **kwargs)
