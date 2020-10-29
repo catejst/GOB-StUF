@@ -52,7 +52,7 @@ class StufRestView(MethodView):
     # The options for the expand parameter, for example 'partners', 'ouders', ...
     expand_options = []
 
-    WILDCARD_CHECKS = [ArgumentCheck.is_valid_wildcard_value]
+    WILDCARD_CHECKS = [ArgumentCheck.has_min_wildcard_length, ArgumentCheck.is_valid_wildcard_position]
 
     def get(self, **kwargs):
         try:

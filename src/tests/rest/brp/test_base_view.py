@@ -509,7 +509,7 @@ class TestStufRestFilterView(TestCase):
             'invalid-params': [
                 {'name': 'attr1', 'the msg': 'oh oh'},
                 {'name': 'attr4', 'the msg': 'foute boel'},
-                {'name': 'attr7', 'code': 'invalidWildcardValue', 'reason': 'Zoeken met een wildcard vereist minimaal 2 karakters exclusief de wildcards.'},
+                {'name': 'attr7', 'code': 'invalidWildcardLength', 'reason': 'Zoeken met een wildcard vereist minimaal 2 karakters exclusief de wildcards.'},
                 {'name': 'attr5', 'the msg': 'If this error shows up, all request args that are not request_template_parameters are correctly validated'}
             ],
             'title': 'Een of meerdere parameters zijn niet correct.',

@@ -29,11 +29,19 @@ def validate_gemeentecode(value: str):
     return True
 
 
-def validate_wildcard_value(value: str):
-    # Test is the value is a valid wildcard search when a wildcard is used, meaning it has at least 2 characters
+def validate_wildcard_length(value: str):
+    # Test if the value is a valid wildcard search when a wildcard is used, meaning it has at least 2 characters
     if any(wildcard in value for wildcard in WILDCARD_CHARS):
         wildcard_regex = ''.join(WILDCARD_CHARS)
-        return len(re.sub(rf'[\{wildcard_regex}]', '', value)) >= MIN_WILDCARD_LENGTH
+        return len(re.sub(rf'[{wildcard_regex}]', '', value)) >= MIN_WILDCARD_LENGTH
+    return True
+
+
+def validate_wildcard_position(value: str):
+    # Test if wildcards are at the beginning or end of the search string
+    if any(wildcard in value for wildcard in WILDCARD_CHARS):
+        wildcard_regex = ''.join(WILDCARD_CHARS)
+        return re.match(rf'^[{wildcard_regex}]*[^{wildcard_regex}]+[{wildcard_regex}]*$', value)
     return True
 
 
@@ -103,11 +111,19 @@ class ArgumentCheck():
         }
     }
 
-    is_valid_wildcard_value = {
-        'check': validate_wildcard_value,
+    has_min_wildcard_length = {
+        'check': validate_wildcard_length,
         'msg': {
-            "code": "invalidWildcardValue",
+            "code": "invalidWildcardLength",
             "reason": "Zoeken met een wildcard vereist minimaal 2 karakters exclusief de wildcards.",
+        }
+    }
+
+    is_valid_wildcard_position = {
+        'check': validate_wildcard_position,
+        'msg': {
+            "code": "invalidWildcardPosition",
+            "reason": "Een wildcard kan alleen aan het begin of eind van een zoekstring geplaatst worden.",
         }
     }
 

@@ -704,6 +704,7 @@ class TestWildcardSearchResponseFilter(TestCase):
             ('?query', '^.{1}query$'),
             ('??query', '^.{2}query$'),
             ('??query?', '^.{2}query.{1}$'),
+            ('query??', '^query.{2}$'),
         ]
 
         for query, expected in cases:
