@@ -64,10 +64,16 @@ class TestArgumentCheck(TestCase):
         for v in [21*'a', 100*'a']:
             self.assertEqual(ArgumentCheck.validate(check, v), check)
 
-        check = ArgumentCheck.is_valid_wildcard_value
+        check = ArgumentCheck.has_min_wildcard_length
         for v in ['aa*', '*aa', '*aa*', 'aa']:
             self.assertIsNone(ArgumentCheck.validate(check, v))
         for v in ['*', 'a*', '*a', '*a*']:
+            self.assertTrue(ArgumentCheck.validate(check, v))
+
+        check = ArgumentCheck.is_valid_wildcard_position
+        for v in ['aa', 'aa*', '*aa', '*aa*', '??aa', '?aa?', 'aa??']:
+            self.assertIsNone(ArgumentCheck.validate(check, v))
+        for v in ['aa*aa', 'aa?aa']:
             self.assertTrue(ArgumentCheck.validate(check, v))
 
     @patch('gobstuf.rest.brp.argument_checks.CodeResolver')
