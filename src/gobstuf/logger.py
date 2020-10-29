@@ -2,8 +2,7 @@ import logging
 
 from flask import request, has_request_context
 
-from gobstuf.config import GELF_HOST, GELF_PORT, CORRELATION_ID_HEADER, UNIQUE_ID_HEADER
-from pygelf import GelfUdpHandler
+from gobstuf.config import CORRELATION_ID_HEADER, UNIQUE_ID_HEADER
 
 
 class LogContextFilter(logging.Filter):
@@ -15,8 +14,10 @@ class LogContextFilter(logging.Filter):
         :return:
         """
         if has_request_context():
-            record.correlationID = request.headers.get(CORRELATION_ID_HEADER)
-            record.uniqueID = request.headers.get(UNIQUE_ID_HEADER)
+            # Keep spaces around correlationID and uniqueID values to make sure it's searchable in the logs.
+            postfix = f"(correlationID: {request.headers.get(CORRELATION_ID_HEADER, '')} / " \
+                      f"uniqueID: {request.headers.get(UNIQUE_ID_HEADER, '')} )"
+            record.msg = f"{record.msg} {postfix}"
         return True
 
 
@@ -24,7 +25,6 @@ class Logger:
     """Singleton class
 
     """
-    GELF_LOGGER = 'gelf'
 
     instance = None
 
@@ -37,12 +37,8 @@ class Logger:
     @classmethod
     def init_logger(cls):
         logging.basicConfig(level=logging.INFO)
-        cls.instance = logging.getLogger(cls.GELF_LOGGER)
+        cls.instance = logging.getLogger()
         cls.instance.addFilter(LogContextFilter())
-
-        if GELF_HOST and GELF_PORT:
-            # Initialise Gelf logger to be able to include extra fields
-            cls.instance.addHandler(GelfUdpHandler(host=GELF_HOST, port=int(GELF_PORT), include_extra_fields=True))
 
 
 def get_default_logger():

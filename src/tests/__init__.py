@@ -2,8 +2,6 @@ from unittest import mock
 
 
 def mock_getenv(varname, value=None):
-    if varname == 'GELF_PORT':
-        return 99
     return varname
 
 

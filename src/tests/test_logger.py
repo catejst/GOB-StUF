@@ -16,29 +16,26 @@ class TestLogContextFilter(TestCase):
         mock_has_request_context.return_value = True
 
         mock_record = MagicMock()
+        mock_record.msg = 'The log message'
 
         # Inside request context
         context_filter = LogContextFilter()
         context_filter.filter(mock_record)
-        self.assertEqual('the correlation id', mock_record.correlationID)
-        self.assertEqual('the unique id', mock_record.uniqueID)
+        self.assertEqual('The log message (correlationID: the correlation id / uniqueID: the unique id )', mock_record.msg)
 
         # Outside request context
         mock_has_request_context.return_value = False
         mock_record = MagicMock()
-        mock_record.correlationID = None
-        mock_record.uniqueID = None
+        mock_record.msg = 'The log message'
         context_filter.filter(mock_record)
-        self.assertIsNone(mock_record.correlationID)
-        self.assertIsNone(mock_record.uniqueID)
+        self.assertEqual('The log message', mock_record.msg)
 
 
 class TestLogger(TestCase):
 
     @patch("gobstuf.logger.LogContextFilter")
-    @patch("gobstuf.logger.GelfUdpHandler")
     @patch("gobstuf.logger.logging")
-    def test_get_instance(self, mock_logging, mock_gelf_handler, mock_context_filter):
+    def test_get_instance(self, mock_logging, mock_context_filter):
         """Testing get_instance and init_logger in same method, because mocking init_logger causes problems in this
         singleton class.
 
@@ -51,9 +48,6 @@ class TestLogger(TestCase):
         self.assertEqual(mock_logging.getLogger(), Logger.instance)
         self.assertEqual(Logger.instance, res)
 
-        # Port 99 is set in __init__.py in the tests root directory
-        mock_gelf_handler.assert_called_with(host='GELF_HOST', port=99, include_extra_fields=True)
-        Logger.instance.addHandler.assert_called_with(mock_gelf_handler())
         Logger.instance.addFilter.assert_called_with(mock_context_filter())
 
         # Should not initialise logger again
@@ -62,14 +56,6 @@ class TestLogger(TestCase):
         mock_logging.getLogger.assert_not_called()
         self.assertEqual(mock_logging.getLogger(), Logger.instance)
         self.assertEqual(Logger.instance, res)
-
-        # Should initialise logger, but without Gelf logger
-        Logger.instance = None
-        with patch("gobstuf.logger.GELF_PORT", None):
-            res = Logger.get_instance()
-        self.assertEqual(mock_logging.getLogger(), Logger.instance)
-        self.assertEqual(Logger.instance, res)
-        Logger.instance.addHandler.assert_not_called()
 
     @patch("gobstuf.logger.Logger")
     def test_get_default_logger(self, mock_logger):
