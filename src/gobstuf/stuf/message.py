@@ -1,11 +1,11 @@
 from io import StringIO
-
+import re
 import os
 import xml.etree.ElementTree as ET
 
 from xml.dom import minidom
 
-WILDCARD_CHAR = '*'
+WILDCARD_CHARS = ['*', '?']
 STUF_WILDCARD_CHAR = '%'
 
 
@@ -92,8 +92,8 @@ class StufMessage:
         if not exact_match:
             # Add exact false for wildcard fields
             elm.set('StUF:exact', 'false')
-            value = value.replace(WILDCARD_CHAR, STUF_WILDCARD_CHAR)
-
+            regex = r'[' + re.escape(''.join(WILDCARD_CHARS)) + ']'
+            value = re.sub(regex, STUF_WILDCARD_CHAR, value)
         elm.text = value
 
     def create_elm(self, elements_str: str, tree=None):
