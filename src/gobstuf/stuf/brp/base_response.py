@@ -517,6 +517,10 @@ class WildcardSearchResponseFilter(ResponseFilter):
 
         # Count the number of ? to replace them for a specific number of chars in the regex
         match = re.search(r'^(\?*)(.+[^?])+(\?*)$', query)
+
+        # Remove the ? wildcard from the query and build according to the regex results
+        query = query.replace('?', '')
+
         query = f".{{{len(match.group(1))}}}{match.group(2)}" if match.group(1) else query
         query = f"{query}.{{{len(match.group(3))}}}" if match.group(3) else query
 
