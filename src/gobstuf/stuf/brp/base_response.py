@@ -6,6 +6,7 @@ from typing import List, Optional
 from xml.etree.ElementTree import Element
 
 from gobstuf.lib.utils import get_value
+from gobstuf.rest.brp.argument_checks import WILDCARD_CHARS
 from gobstuf.stuf.message import StufMessage
 from gobstuf.stuf.exception import NoStufAnswerException
 from gobstuf.stuf.brp.response_mapping import StufObjectMapping, Mapping, RelatedMapping
@@ -87,13 +88,15 @@ class StufMappedResponse(StufResponse):
         else:
             self.expand = []
 
-        self.wildcards = kwargs['wildcards'] if 'wildcards' in kwargs else {}
-
         # Initialize a response filter if one is provided to allow them to add expand properties
         self.response_filters_instances = [filter(self, **kwargs) for filter in self.response_filters]
 
         if 'wildcards' in kwargs:
-            self.response_filters_instances.append(WildcardSearchResponseFilter(self, **kwargs['wildcards']))
+            self.wildcards = {key: value for key, value in kwargs['wildcards'].items()
+                              if any(wildcard in value for wildcard in WILDCARD_CHARS)}
+
+            if self.wildcards:
+                self.response_filters_instances.append(WildcardSearchResponseFilter(self, **self.wildcards))
 
         super().__init__(msg, **kwargs)
 

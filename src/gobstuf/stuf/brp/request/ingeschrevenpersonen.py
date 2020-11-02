@@ -52,7 +52,12 @@ class IngeschrevenpersonenFilterStufRequest(IngeschrevenpersonenStufRequest):
         'burgerservicenummer': IngeschrevenpersonenStufRequest.bsn_check
     }
 
-    parameter_wildcards = ['naam__voornamen', 'naam__geslachtsnaam', 'verblijfplaats__naamopenbareruimte']
+    # Wildcards are defined by their url parameter and the key in the response object
+    parameter_wildcards = {
+        'naam__voornamen': 'naam__voornamen',
+        'naam__geslachtsnaam': 'naam__geslachtsnaam',
+        'verblijfplaats__naamopenbareruimte': 'verblijfplaats__naamOpenbareRuimte'
+    }
 
     def convert_param_geboorte__datum(self, value: str):
         """Transforms the YYYY-MM-DD value to YYYYMMDD
