@@ -143,8 +143,12 @@ class StufMappedResponseTest(TestCase):
         resp = StufMappedResponseRelatedImpl('msg', expand=None)
         self.assertEqual(1, len(resp.response_filters_instances))
 
-        # When a wildcard is defined, expect the wildcard filter to be initialized
+        # When a wildcard is without wildcard char is defined, except no wildcard filters
         resp = StufMappedResponseImpl('msg', wildcards={'wildcard': 'any wildcard'})
+        self.assertEqual(0, len(resp.response_filters_instances))
+
+        # When a wildcard is defined, expect the wildcard filter to be initialized
+        resp = StufMappedResponseImpl('msg', wildcards={'wildcard': '*any wildcard'})
         self.assertEqual(1, len(resp.response_filters_instances))
 
     def test_get_object_elm(self):

@@ -178,8 +178,9 @@ class StufRestView(MethodView):
                 for k, v in self.functional_query_parameters.items()}
 
     def _get_wildcard_query_parameters(self):
-        wildcards = {wildcard: request.args.get(wildcard) for wildcard in self.request_template.parameter_wildcards
-                     if wildcard in request.args}
+        wildcards = {wildcard_mapping: request.args.get(wildcard_arg)
+                     for wildcard_arg, wildcard_mapping in self.request_template.parameter_wildcards.items()
+                     if wildcard_arg in request.args}
         return {'wildcards': wildcards}
 
     def _get(self, **kwargs):
