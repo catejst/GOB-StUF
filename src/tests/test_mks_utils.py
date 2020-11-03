@@ -276,3 +276,41 @@ class TestMKSConverter(TestCase):
 
         self.assertEqual(MKSConverter.get_aanhef(communicatie_parameters), "Geachte heer De Ruyter")
         self.assertEqual(MKSConverter.get_aanschrijfwijze(communicatie_parameters), "M. de Ruyter")
+
+    def test_get_nationaliteit(self):
+        nationaliteit_parameters = {
+            'aanduidingBijzonderNederlanderschap': None,
+            'nationaliteiten': [
+                {
+                    'datumIngangGeldigheid': {
+                        'datum': '2001-04-12',
+                        'jaar': 2001,
+                        'maand': 4,
+                        'dag': 12
+                    },
+                    'datumVerlies': None,
+                    'nationaliteit': {
+                        'code': '0001',
+                        'omschrijving': 'Nederlandse',
+                    }
+                },
+                {
+                    'datumIngangGeldigheid': {
+                        'datum': '2001-04-12',
+                        'jaar': 2001,
+                        'maand': 4,
+                        'dag': 12
+                    },
+                    'datumVerlies': "20020716",
+                    'nationaliteit': {
+                        'code': '0339',
+                        'omschrijving': 'Turkse',
+                    }
+                }
+            ]
+        }
+        nationaliteit = MKSConverter.get_nationaliteit(nationaliteit_parameters)
+
+        # Expect one nationaliteit, Nederlandse
+        self.assertEqual(len(nationaliteit), 1)
+        self.assertEqual(nationaliteit[0]['nationaliteit']['omschrijving'], 'Nederlandse')

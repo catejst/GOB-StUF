@@ -121,6 +121,18 @@ class NPSMapping(Mapping):
             }]
         }
 
+        nationaliteit_parameters = {
+            'aanduidingBijzonderNederlanderschap': 'BG:inp.aanduidingBijzonderNederlanderschap',
+            'nationaliteiten': ['BG:inp.heeftAlsNationaliteit', {
+                'datumIngangGeldigheid': (MKSConverter.as_datum_broken_down, 'BG:inp.datumVerkrijging'),
+                'datumVerlies': 'BG:inp.datumVerlies',
+                'nationaliteit': {
+                    'code': (MKSConverter.as_code(4), 'BG:gerelateerde BG:code'),
+                    'omschrijving': 'BG:gerelateerde BG:omschrijving',
+                }
+            }]
+        }
+
         return {
             'geslachtsaanduiding': (MKSConverter.as_geslachtsaanduiding,
                                     'BG:geslachtsaanduiding',
@@ -215,7 +227,8 @@ class NPSMapping(Mapping):
                     'code': (MKSConverter.as_gemeente_code, 'BG:inp.overlijdenplaats'),
                     'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.overlijdenplaats')
                 }
-            }
+            },
+            'nationaliteit': (MKSConverter.get_nationaliteit, nationaliteit_parameters)
         }
 
     @property
