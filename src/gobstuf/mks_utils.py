@@ -248,3 +248,22 @@ class MKSConverter:
     def get_aanschrijfwijze(cls, communicatie_parameters):
         communicatie = cls._get_communicatie(communicatie_parameters)
         return communicatie.aanschrijfwijze
+
+    @classmethod
+    def _get_nationaliteit(cls, nationaliteit_parameters):
+        nationaliteiten = []
+        for nationaliteit in nationaliteit_parameters['nationaliteiten']:
+            if not nationaliteit['datumVerlies']:
+                result = {
+                    'aanduidingBijzonderNederlanderschap':
+                        nationaliteit_parameters['aanduidingBijzonderNederlanderschap'],
+                    'datumIngangGeldigheid': nationaliteit['datumIngangGeldigheid'],
+                    'nationaliteit': nationaliteit['nationaliteit']
+                }
+                nationaliteiten.append(result)
+
+        return nationaliteiten
+
+    @classmethod
+    def get_nationaliteit(cls, nationaliteit_parameters):
+        return cls._get_nationaliteit(nationaliteit_parameters)
