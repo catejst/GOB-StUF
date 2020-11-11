@@ -33,7 +33,16 @@ class TestMapping(TestCase):
                 'sub sub2': {
                     'any sub sub': 'any sub sub value'
                 }
-            }
+            },
+            'list': [
+                {
+                    'any sub key': 'any sub value',
+                    'any sub null': None
+                },
+                {
+                    'any sub null': None
+                }
+            ]
         }
         expect = {
             'any key': 'any value',
@@ -42,7 +51,12 @@ class TestMapping(TestCase):
                 'sub sub2': {
                     'any sub sub': 'any sub sub value'
                 }
-            }
+            },
+            'list': [
+                {
+                    'any sub key': 'any sub value'
+                }
+            ]
         }
 
         # Default filtering is return all non null values

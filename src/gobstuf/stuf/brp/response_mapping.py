@@ -32,7 +32,7 @@ class Mapping(ABC):
     def get_links(self, mapped_object) -> dict:
         return {}
 
-    def filter(self, mapped_object: dict, **kwargs):
+    def filter(self, mapped_object: dict, **kwargs):  # noqa: C901
         """
         Filter the mapped object on the mapped attribute values
         Default implementation is to filter out any null values
@@ -57,6 +57,13 @@ class Mapping(ABC):
                     value = filter_none_values(v)
                     if value:
                         result[k] = value
+                elif isinstance(v, list):
+                    result_list = []
+                    for obj in v:
+                        value = filter_none_values(obj)
+                        if value:
+                            result_list.append(value)
+                    result[k] = result_list
                 elif v is not None:
                     result[k] = v
             return result
@@ -122,7 +129,8 @@ class NPSMapping(Mapping):
         }
 
         nationaliteit_parameters = {
-            'aanduidingBijzonderNederlanderschap': 'BG:inp.aanduidingBijzonderNederlanderschap',
+            'aanduidingBijzonderNederlanderschap': (MKSConverter.as_aanduiding_bijzonder_nederlanderschap,
+                                                    'BG:inp.aanduidingBijzonderNederlanderschap'),
             'nationaliteiten': ['BG:inp.heeftAlsNationaliteit', {
                 'datumIngangGeldigheid': (MKSConverter.as_datum_broken_down, 'BG:inp.datumVerkrijging'),
                 'datumVerlies': 'BG:inp.datumVerlies',
