@@ -8,9 +8,9 @@ from urllib.parse import urlsplit, urlunsplit, SplitResult
 
 from flask_audit_log.middleware import AuditLogMiddleware
 
-from gobstuf.auth.routes import secure_route, public_route
+from gobstuf.auth.routes import secure_route
 from gobstuf.config import GOB_STUF_PORT, ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH_310, ROUTE_PATH_204, \
-                           API_BASE_PATH, API_INSECURE_BASE_PATH, AUDIT_LOG_CONFIG
+                           API_BASE_PATH, AUDIT_LOG_CONFIG
 from gobstuf.logger import get_default_logger
 from gobstuf.certrequest import cert_get, cert_post
 from gobstuf.rest.routes import REST_ROUTES
@@ -36,12 +36,9 @@ def _routed_url(url):
     """
     split_result = urlsplit(url)
 
-    # Remove INSECURE_PATH from the url when present
-    path = split_result.path.replace(API_INSECURE_BASE_PATH, '')
-
     split_result = SplitResult(scheme=ROUTE_SCHEME,
                                netloc=ROUTE_NETLOC,
-                               path=path,
+                               path=split_result.path,
                                query=split_result.query,
                                fragment=split_result.fragment)
     routed_url = urlunsplit(split_result)
@@ -155,13 +152,10 @@ def _stuf():
     return Response(text, mimetype="text/xml")
 
 
-def _add_route(app, paths, rule, view_func, methods, name=None):
+def _add_route(app, path, rule, view_func, methods, name=None):
     """
-    For every rule add a public and a secure endpoint
-
-    Both the public and the secure endpoints are protected.
-    The secure endpoint expects the keycloak headers to be present and the endpoint is protected by gatekeeper
-    The public endpoint assures that none of the keycloak headers is present
+    For every rule add a secured endpoint. This endpoint expects the keycloak headers to be present and the endpoint is
+    protected by gatekeeper
 
     :param app:
     :param rule:
@@ -169,16 +163,10 @@ def _add_route(app, paths, rule, view_func, methods, name=None):
     :param methods:
     :return:
     """
-    wrappers = {
-        API_BASE_PATH: secure_route,
-        API_INSECURE_BASE_PATH: public_route
-    }
-    for path in paths:
-        wrapper = wrappers[path]
-        wrapped_rule = f"{path}{rule}"
-        app.add_url_rule(rule=wrapped_rule, methods=methods, view_func=wrapper(wrapped_rule, view_func, name=name))
-        # Output the urls on startup
-        logger.info(wrapped_rule)
+    wrapped_rule = f"{path}{rule}"
+    app.add_url_rule(rule=wrapped_rule, methods=methods, view_func=secure_route(wrapped_rule, view_func, name=name))
+    # Output the urls on startup
+    logger.info(wrapped_rule)
 
 
 def get_flask_app():
@@ -200,17 +188,15 @@ def get_flask_app():
     app.route(rule='/status/health/')(_health)
 
     # Application routes
-    PUBLIC = [API_BASE_PATH, API_INSECURE_BASE_PATH]
-
     ROUTES = [
-        (PUBLIC, f'{ROUTE_PATH_310}', _stuf, ['GET', 'POST'], '310'),
-        (PUBLIC, f'{ROUTE_PATH_204}', _stuf, ['GET', 'POST'], '204'),
+        (API_BASE_PATH, f'{ROUTE_PATH_310}', _stuf, ['GET', 'POST'], '310'),
+        (API_BASE_PATH, f'{ROUTE_PATH_204}', _stuf, ['GET', 'POST'], '204'),
     ]
 
-    for paths, rule, view_func, methods, name in ROUTES:
-        _add_route(app, paths, rule, view_func, methods, name=name)
+    for path, rule, view_func, methods, name in ROUTES:
+        _add_route(app, path, rule, view_func, methods, name=name)
 
     for route, view_func in REST_ROUTES:
-        _add_route(app, PUBLIC, route, view_func, methods)
+        _add_route(app, API_BASE_PATH, route, view_func, ['GET'])
 
     return app
