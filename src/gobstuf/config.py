@@ -43,8 +43,11 @@ BRP_REGRESSION_TEST_APPLICATION = _getenv("BRP_REGRESSION_TEST_APPLICATION")
 
 # The port BRP Regression tests should use to access the API locally.
 # 8001 for when running in Docker. GOB_STUF_PORT (8165 by default) otherwise
-BRP_REGRESSION_TEST_LOCAL_PORT = _getenv("BRP_REGRESSION_TEST_LOCAL_PORT", default_value=8001)
+BRP_REGRESSION_TEST_LOCAL_PORT = _getenv("BRP_REGRESSION_TEST_LOCAL_PORT", default_value=8000)
 GOB_OBJECTSTORE = 'GOBObjectstore'
 
 CORRELATION_ID_HEADER = 'X-Correlation-ID'
 UNIQUE_ID_HEADER = 'X-Unique-ID'
+
+KEYCLOAK_AUTH_URL = _getenv('KEYCLOAK_AUTH_URL')
+KEYCLOAK_CLIENT_ID = _getenv('KEYCLOAK_CLIENT_ID')

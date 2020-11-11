@@ -27,7 +27,7 @@ services:
       UWSGI_HTTP_TIMEOUT: "4000"
       PKCS12_FILENAME: ${PKCS12_FILENAME}
       PKCS12_PASSWORD: ${PKCS12_PASSWORD}
-      BRP_REGRESSION_TEST_LOCAL_PORT: 8001
+      BRP_REGRESSION_TEST_LOCAL_PORT: 8000  # Points to Gatekeeper. Overrides port 8165 defined in the .env file
     env_file: .env
 
 networks:
