@@ -58,12 +58,7 @@ class Mapping(ABC):
                     if value:
                         result[k] = value
                 elif isinstance(v, list):
-                    result_list = []
-                    for obj in v:
-                        value = filter_none_values(obj)
-                        if value:
-                            result_list.append(value)
-                    result[k] = result_list
+                    result[k] = [item for item in [filter_none_values(obj) for obj in v] if item]
                 elif v is not None:
                     result[k] = v
             return result
