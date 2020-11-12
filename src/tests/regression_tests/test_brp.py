@@ -4,7 +4,38 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch, call, mock_open
 from requests.exceptions import HTTPError
 
-from gobstuf.regression_tests.brp import BrpRegression, Objectstore, ObjectstoreResultsWriter, BrpTestResult, BrpTestCase, GOBException
+from gobstuf.regression_tests.brp import BrpRegression, Objectstore, ObjectstoreResultsWriter, BrpTestResult, \
+    BrpTestCase, GOBException, _get_keycloak_token
+
+
+class TestModuleFunctions(TestCase):
+
+    @patch("gobstuf.regression_tests.brp.KEYCLOAK_CLIENT_ID", "keycloak-client-id")
+    @patch("gobstuf.regression_tests.brp.KEYCLOAK_AUTH_URL", 'https://keycloak/auth/url')
+    @patch("gobstuf.regression_tests.brp.requests")
+    @patch("gobstuf.regression_tests.brp.os.getenv")
+    def test_get_keycloak_token(self, mock_getenv, mock_requests):
+        mock_getenv.return_value = None
+
+        with self.assertRaisesRegexp(GOBException, "Missing password for user some_user"):
+            _get_keycloak_token("some_user")
+            mock_getenv.assert_called_with("USER_PASSWORD_SOME_USER")
+
+        mock_getenv.return_value = 'the_password'
+        mock_requests.post.return_value.json.return_value = {
+            'token_type': 'TokenType',
+            'access_token': 'the-access-token',
+        }
+
+        self.assertEqual('TokenType the-access-token', _get_keycloak_token('some_user'))
+
+        mock_requests.post.assert_called_with('https://keycloak/auth/url', data={
+            'username': 'some_user',
+            'password': 'the_password',
+            'grant_type': 'password',
+            'client_id': 'keycloak-client-id',
+        })
+        mock_requests.post.return_value.raise_for_status.assert_called_once()
 
 
 class TestObjectstoreInit(TestCase):
@@ -128,7 +159,8 @@ class TestObjectstoreResultsWriter:
     @patch("gobstuf.regression_tests.brp.Objectstore")
     def test_write(self, mock_objectstore):
         result_list = [
-            ['id1', 'description 1', '/endpoint/1', {'expected': 'result1'}, {'actual': 'result1'}, ['error1', 'error2']],
+            ['id1', 'description 1', '/endpoint/1', {'expected': 'result1'}, {'actual': 'result1'},
+             ['error1', 'error2']],
             ['id2', 'description 2', '/endpoint/2', {'expected': 'result2'}, {'actual': 'result2'}, []],
         ]
 
@@ -136,7 +168,7 @@ class TestObjectstoreResultsWriter:
 
         # Build objects
         for id, description, endpoint, expected, actual, errors in result_list:
-            testcase = BrpTestCase(id, description, endpoint, 'expectedfile')
+            testcase = BrpTestCase(id, description, endpoint, 'username', 'expectedfile')
             result = BrpTestResult(testcase)
             result.expected_result = expected
             result.actual_result = actual
@@ -175,8 +207,6 @@ class TestObjectstoreResultsWriter:
         ])
 
 
-@patch("gobstuf.regression_tests.brp.BRP_REGRESSION_TEST_USER", 'TEST_USER')
-@patch("gobstuf.regression_tests.brp.BRP_REGRESSION_TEST_APPLICATION", 'TEST_APPLICATION')
 class TestBrpRegressionTest(TestCase):
 
     def test_init(self):
@@ -184,10 +214,7 @@ class TestBrpRegressionTest(TestCase):
         regr = BrpRegression(logger)
         self.assertEqual(logger, regr.logger)
         self.assertEqual([], regr.results)
-        self.assertEqual({
-            'MKS_GEBRUIKER': 'TEST_USER',
-            'MKS_APPLICATIE': 'TEST_APPLICATION'
-        }, regr.headers)
+        self.assertEqual({}, regr.tokens)
 
     @patch("gobstuf.regression_tests.brp.os.makedirs")
     @patch("gobstuf.regression_tests.brp.Objectstore")
@@ -202,11 +229,31 @@ class TestBrpRegressionTest(TestCase):
         mock_objectstore().download_directory.assert_called_with(location, dst_dir)
         mock_makedirs.assert_called_with(dst_dir, exist_ok=True)
 
+    @patch("gobstuf.regression_tests.brp._get_keycloak_token")
+    def test_get_token(self, mock_get_keycloak_token):
+        regr = BrpRegression(MagicMock())
+        user1token = MagicMock()
+        regr.tokens = {'user1': user1token}
+
+        self.assertEqual(user1token, regr._get_token('user1'))
+        mock_get_keycloak_token.assert_not_called()
+
+        self.assertEqual(mock_get_keycloak_token.return_value, regr._get_token('user2'))
+        self.assertEqual({
+            'user1': user1token,
+            'user2': mock_get_keycloak_token.return_value,
+        }, regr.tokens)
+
+        mock_get_keycloak_token.reset_mock()
+        regr._get_token('user1')
+        regr._get_token('user2')
+        mock_get_keycloak_token.assert_not_called()
+
     @patch("gobstuf.regression_tests.brp.os.path.join", lambda *args: "/".join(args))
     def test_load_tests(self):
         file = """\
-id1,"Test case 1",/the/endpoint
-id2,"Test case 2",/endpoint/2?someparameter=val&other=val2
+id1,"Test case 1",/the/endpoint,the_user1
+id2,"Test case 2",/endpoint/2?someparameter=val&other=val2,the_user2
 """
 
         open_mock = mock_open(read_data=file)
@@ -224,15 +271,15 @@ id2,"Test case 2",/endpoint/2?someparameter=val&other=val2
         open_mock.assert_called_with("dst/dir/tests_file.csv", "r")
 
         expected = [
-            BrpTestCase('id1', 'Test case 1', '/the/endpoint', 'dst/dir/expected/id1.json'),
-            BrpTestCase('id2', 'Test case 2', '/endpoint/2?someparameter=val&other=val2', 'dst/dir/expected/id2.json')
+            BrpTestCase('id1', 'Test case 1', '/the/endpoint', 'the_user1', 'dst/dir/expected/id1.json'),
+            BrpTestCase('id2', 'Test case 2', '/endpoint/2?someparameter=val&other=val2', 'the_user2', 'dst/dir/expected/id2.json')
         ]
         self.assertEqual(expected, result)
 
         # Test with wrongly formatted CSV
         file = """\
-id1,"Test case 1",/the/endpoint,extracolumn
-id2,"Test case 2",/endpoint/2?someparameter=val&other=val2
+id1,"Test case 1",/the/endpoint,the_user,extracolumn
+id2,"Test case 2",/endpoint/2?someparameter=val&other=val2,the_user
 """
         open_mock = mock_open(read_data=file)
         open_mock.return_value.__iter__ = lambda self: self
@@ -319,12 +366,16 @@ id2,"Test case 2",/endpoint/2?someparameter=val&other=val2
 
         # 1. No errors, no differences
         regr = BrpRegression(MagicMock())
+        regr.API_BASE = 'http://apibase'
+        regr._get_token = MagicMock()
         regr._dict_differences = MagicMock(return_value=[])
-        testcase = BrpTestCase('id', 'the description', '/the/endpoint', 'expected_result.json')
+        testcase = BrpTestCase('id', 'the description', '/the/endpoint', 'user1', 'expected_result.json')
         with patch("builtins.open", open_mock):
             res = regr._run_test(testcase)
             open_mock.assert_called_with('expected_result.json', 'r')
         regr._dict_differences.assert_called_with(request_result.json.return_value, request_result.json.return_value)
+        regr._get_token.assert_called_with('user1')
+        mock_requests.get.assert_called_with('http://apibase/the/endpoint', headers={'Authorization': regr._get_token()})
         self.assertEqual(request_result.json.return_value, res.expected_result)
         self.assertEqual(request_result.json.return_value, res.actual_result)
         self.assertEqual([], res.errors)
@@ -364,8 +415,8 @@ id2,"Test case 2",/endpoint/2?someparameter=val&other=val2
         regr._run_test = lambda testcase: BrpTestResult(testcase)
 
         cases = [
-            BrpTestCase('1', '', '', ''),
-            BrpTestCase('2', '', '', ''),
+            BrpTestCase('1', '', '', '', ''),
+            BrpTestCase('2', '', '', '', ''),
         ]
 
         def create_result(testcase, errors):

@@ -30,8 +30,6 @@ PKCS12_FILENAME = _getenv("PKCS12_FILENAME", is_optional=True)
 PKCS12_PASSWORD = _getenv("PKCS12_PASSWORD", is_optional=True)
 
 API_BASE_PATH = _getenv("BASE_PATH", default_value="", is_optional=True)
-INSECURE_PATH = "/insecure"
-API_INSECURE_BASE_PATH = f"{API_BASE_PATH}{INSECURE_PATH}"
 
 AUDIT_LOG_CONFIG = {
     'EXEMPT_URLS': [],
@@ -45,12 +43,11 @@ BRP_REGRESSION_TEST_APPLICATION = _getenv("BRP_REGRESSION_TEST_APPLICATION")
 
 # The port BRP Regression tests should use to access the API locally.
 # 8001 for when running in Docker. GOB_STUF_PORT (8165 by default) otherwise
-BRP_REGRESSION_TEST_LOCAL_PORT = _getenv("BRP_REGRESSION_TEST_LOCAL_PORT", default_value=8001)
+BRP_REGRESSION_TEST_LOCAL_PORT = _getenv("BRP_REGRESSION_TEST_LOCAL_PORT", default_value=8000)
 GOB_OBJECTSTORE = 'GOBObjectstore'
 
 CORRELATION_ID_HEADER = 'X-Correlation-ID'
 UNIQUE_ID_HEADER = 'X-Unique-ID'
 
-# For local use. In cloud environment Gelf logger is added by the infra
-GELF_HOST = _getenv("GELF_HOST", is_optional=True)
-GELF_PORT = _getenv("GELF_PORT", is_optional=True)
+KEYCLOAK_AUTH_URL = _getenv('KEYCLOAK_AUTH_URL')
+KEYCLOAK_CLIENT_ID = _getenv('KEYCLOAK_CLIENT_ID')

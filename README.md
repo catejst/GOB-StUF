@@ -120,10 +120,3 @@ The API is exposed at the same address as for the local installation.
 docker-compose -f src/.jenkins/test/docker-compose.yml build
 docker-compose -f src/.jenkins/test/docker-compose.yml run --rm test
 ```
-
-## Loggers
-GOB-StUF uses two different loggers:
-- The gelf logger found in `logger.py`. This is the default logger. The gelf handler is only initialised when the
-environment variables GELF_HOST and GELF_PORT are set.
-- The logger from GOB-Core. This is the logger that is used throughout GOB to log information about GOB jobs. This 
-logger is used when handling a job (when a message comes in on the queue).

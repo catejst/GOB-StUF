@@ -7,7 +7,8 @@ from calendar import isleap
 
 from gobstuf.reference_data.code_resolver import CodeResolver, DataItemNotFoundException
 from gobstuf.lib.communicatie import Persoon, Partner, Communicatie
-from gobstuf.indications import Geslachtsaanduiding, AanduidingNaamgebruik, IncompleteDateIndicator, SoortVerbintenis
+from gobstuf.indications import Geslachtsaanduiding, AanduidingNaamgebruik, IncompleteDateIndicator, \
+                                SoortVerbintenis, AanduidingBijzonderNederlanderschap
 
 
 def _today():
@@ -140,6 +141,10 @@ class MKSConverter:
     @classmethod
     def as_aanduiding_naamgebruik(cls, mks_aanduiding_naamgebruik):
         return AanduidingNaamgebruik(mks_aanduiding_naamgebruik).description
+
+    @classmethod
+    def as_aanduiding_bijzonder_nederlanderschap(cls, mks_aanduiding_bijzonder_nederlanderschap, no_value=None):
+        return AanduidingBijzonderNederlanderschap(mks_aanduiding_bijzonder_nederlanderschap, no_value).description
 
     @classmethod
     def as_code(cls, length):

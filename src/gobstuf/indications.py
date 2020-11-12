@@ -117,3 +117,15 @@ class IncompleteDateIndicator(Indication):
 
     def is_datum_complete(self):
         return all([self.is_jaar_known(), self.is_maand_known(), self.is_dag_known()])
+
+
+class AanduidingBijzonderNederlanderschap(Indication):
+    BEHANDELD_ALS_NEDERLANDER = 'B'
+    VASTGESTELD_NIET_NEDERLANDER = 'V'
+
+    @property
+    def indications(self):
+        return {
+            self.BEHANDELD_ALS_NEDERLANDER: 'behandeld_als_nederlander',
+            self.VASTGESTELD_NIET_NEDERLANDER: 'vastgesteld_niet_nederlander'
+        }

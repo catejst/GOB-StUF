@@ -203,6 +203,17 @@ class TestMKSConverter(TestCase):
         for aanduiding in ['x', 'X', '', 'anything', None]:
             self.assertIsNone(MKSConverter.as_aanduiding_naamgebruik(aanduiding))
 
+    def test_as_aanduiding_bijzonder_nederlanderschap(self):
+        valid = {
+            'b': 'behandeld_als_nederlander',
+            'v': 'vastgesteld_niet_nederlander',
+        }
+        for code, expected_result in valid.items():
+            for aanduiding in [code.upper(), code.lower()]:
+                self.assertEqual(MKSConverter.as_aanduiding_bijzonder_nederlanderschap(aanduiding), expected_result)
+        for aanduiding in ['x', 'X', '', 'anything', None]:
+            self.assertIsNone(MKSConverter.as_aanduiding_bijzonder_nederlanderschap(aanduiding))
+
     def test_true_if_exists(self):
         self.assertTrue(MKSConverter.true_if_exists('anything'))
         self.assertIsNone(MKSConverter.true_if_exists(None))

@@ -9,14 +9,33 @@ from typing import List
 
 from requests import HTTPError
 
-from gobstuf.config import GOB_OBJECTSTORE, CONTAINER_BASE, API_INSECURE_BASE_PATH, \
-    BRP_REGRESSION_TEST_APPLICATION, BRP_REGRESSION_TEST_USER, BRP_REGRESSION_TEST_LOCAL_PORT
-from gobstuf.auth.routes import MKS_USER_KEY, MKS_APPLICATION_KEY
+from gobstuf.config import GOB_OBJECTSTORE, CONTAINER_BASE, API_BASE_PATH, BRP_REGRESSION_TEST_LOCAL_PORT, \
+    KEYCLOAK_AUTH_URL, KEYCLOAK_CLIENT_ID
 
 from gobconfig.datastore.config import get_datastore_config
 from gobcore.datastore.factory import DatastoreFactory
 from gobcore.exceptions import GOBException
 from objectstore.objectstore import get_full_container_list, get_object, delete_object, put_object
+
+
+def _get_keycloak_token(user: str):
+    password_var = f"USER_PASSWORD_{user.upper()}"
+    password = os.getenv(password_var)
+    if not password:
+        raise GOBException(f"Missing password for user {user}")
+
+    data = {
+        "username": user,
+        "password": password,
+        "grant_type": "password",
+        "client_id": KEYCLOAK_CLIENT_ID
+    }
+
+    resp = requests.post(KEYCLOAK_AUTH_URL, data=data)
+    resp.raise_for_status()
+
+    jsonresp = resp.json()
+    return jsonresp['token_type'] + ' ' + jsonresp['access_token']
 
 
 class Objectstore:
@@ -68,10 +87,11 @@ class Objectstore:
 
 
 class BrpTestCase:
-    def __init__(self, id: str, description: str, endpoint: str, expected_result_file: str):
+    def __init__(self, id: str, description: str, endpoint: str, username: str, expected_result_file: str):
         self.id = id
         self.description = description
         self.endpoint = endpoint
+        self.username = username
         self.expected_result_file = expected_result_file
 
     def __eq__(self, other):
@@ -79,6 +99,7 @@ class BrpTestCase:
                and self.id == other.id \
                and self.description == other.description \
                and self.endpoint == other.endpoint \
+               and self.username == other.username \
                and self.expected_result_file == other.expected_result_file
 
 
@@ -122,15 +143,18 @@ class BrpRegression:
     TESTS_FILE = 'testcases.csv'
     EXPECTED_DIR = 'expected'
     DESTINATION_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'downloaded', 'brp_regression_tests')
-    API_BASE = f'http://localhost:{BRP_REGRESSION_TEST_LOCAL_PORT}{API_INSECURE_BASE_PATH}'
+    API_BASE = f'http://localhost:{BRP_REGRESSION_TEST_LOCAL_PORT}{API_BASE_PATH}'
 
     def __init__(self, logger):
-        self.headers = {
-            MKS_USER_KEY: BRP_REGRESSION_TEST_USER,
-            MKS_APPLICATION_KEY: BRP_REGRESSION_TEST_APPLICATION
-        }
         self.logger = logger
+        self.tokens = {}
         self.results = []
+
+    def _get_token(self, user: str):
+        if user not in self.tokens:
+            self.tokens[user] = _get_keycloak_token(user)
+
+        return self.tokens[user]
 
     def _download_testfiles(self):
         os.makedirs(self.DESTINATION_DIR, exist_ok=True)
@@ -140,11 +164,12 @@ class BrpRegression:
         testcases = []
         with open(os.path.join(self.DESTINATION_DIR, self.TESTS_FILE), 'r') as f:
             try:
-                for row, (id, description, endpoint) in enumerate(csv.reader(f)):
+                for row, (id, description, endpoint, username) in enumerate(csv.reader(f)):
                     testcase = BrpTestCase(
                         id,
                         description,
                         endpoint,
+                        username,
                         os.path.join(self.DESTINATION_DIR, self.EXPECTED_DIR, f"{id}.json")
                     )
                     testcases.append(testcase)
@@ -205,7 +230,10 @@ class BrpRegression:
         # Create new result object. Will be constructed further in this method
         result = BrpTestResult(testcase)
 
-        r = requests.get(self.API_BASE + testcase.endpoint, headers=self.headers)
+        token = self._get_token(testcase.username)
+        headers = {'Authorization': token}
+
+        r = requests.get(self.API_BASE + testcase.endpoint, headers=headers)
 
         try:
             with open(testcase.expected_result_file, 'r') as f:
