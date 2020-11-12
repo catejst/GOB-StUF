@@ -127,7 +127,9 @@ class NPSMapping(Mapping):
             'aanduidingBijzonderNederlanderschap': (MKSConverter.as_aanduiding_bijzonder_nederlanderschap,
                                                     'BG:inp.aanduidingBijzonderNederlanderschap'),
             'nationaliteiten': ['BG:inp.heeftAlsNationaliteit', {
-                'datumIngangGeldigheid': (MKSConverter.as_datum_broken_down, 'BG:inp.datumVerkrijging'),
+                'datumIngangGeldigheid': (MKSConverter.as_datum_broken_down, 
+                                          'BG:inp.datumVerkrijging',
+                                          'BG:inp.datumVerkrijging@StUF:indOnvolledigeDatum'),
                 'datumVerlies': 'BG:inp.datumVerlies',
                 'nationaliteit': {
                     'code': (MKSConverter.as_code(4), 'BG:gerelateerde BG:code'),
@@ -231,7 +233,7 @@ class NPSMapping(Mapping):
                     'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:inp.overlijdenplaats')
                 }
             },
-            'nationaliteit': (MKSConverter.get_nationaliteit, nationaliteit_parameters)
+            'nationaliteiten': (MKSConverter.get_nationaliteit, nationaliteit_parameters)
         }
 
     @property
