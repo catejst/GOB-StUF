@@ -127,7 +127,7 @@ class NPSMapping(Mapping):
             'aanduidingBijzonderNederlanderschap': (MKSConverter.as_aanduiding_bijzonder_nederlanderschap,
                                                     'BG:inp.aanduidingBijzonderNederlanderschap'),
             'nationaliteiten': ['BG:inp.heeftAlsNationaliteit', {
-                'datumIngangGeldigheid': (MKSConverter.as_datum_broken_down, 
+                'datumIngangGeldigheid': (MKSConverter.as_datum_broken_down,
                                           'BG:inp.datumVerkrijging',
                                           'BG:inp.datumVerkrijging@StUF:indOnvolledigeDatum'),
                 'datumVerlies': 'BG:inp.datumVerlies',
