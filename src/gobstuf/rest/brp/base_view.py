@@ -2,7 +2,7 @@ import traceback
 import logging
 
 from flask.views import MethodView
-from flask import g, request, abort, Response
+from flask import g, request
 from requests.exceptions import HTTPError
 from abc import abstractmethod
 
@@ -17,22 +17,6 @@ from gobstuf.config import ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH_310, CORRELATI
 from gobstuf.rest.brp.argument_checks import ArgumentCheck
 
 
-def authentication_required_decorator(keys):
-    """Decorator used in StufRestView to check that MKS authentication is set
-
-    :param headers:
-    :return:
-    """
-    def keys_required(f):
-        def decorator(*args, **kwargs):
-            if not all([g.get(key) for key in keys]):
-                return abort(Response(response='Missing required MKS authentication', status=400))
-
-            return f(*args, **kwargs)
-        return decorator
-    return keys_required
-
-
 class StufRestView(MethodView):
     """StufRestView.
 
@@ -40,9 +24,6 @@ class StufRestView(MethodView):
 
     Should be extended with a request_template and response_template.
     """
-
-    # Decorator makes sure MKS authentication is set
-    decorators = [authentication_required_decorator([MKS_USER_KEY, MKS_APPLICATION_KEY])]
 
     # Passed to the response template. Values are the default values.
     functional_query_parameters = {

@@ -3,73 +3,14 @@ from unittest.mock import patch, MagicMock
 
 from gobstuf.auth.routes import MKS_USER_KEY, MKS_APPLICATION_KEY
 from gobstuf.rest.brp.base_view import (
-    StufRestView, authentication_required_decorator, HTTPError,
+    StufRestView, HTTPError,
     NoStufAnswerException,
     StufRestFilterView
 )
 
 
-class TestDecorator(TestCase):
-
-    @patch("gobstuf.rest.brp.base_view.abort")
-    @patch("gobstuf.rest.brp.base_view.g")
-    @patch("gobstuf.rest.brp.base_view.Response")
-    def test_authentication_required_decorator(self, mock_response, mock_g, mock_abort):
-        g_attrs = {'a': 'A', 'b': 'B'}
-        mock_g.get = lambda x: g_attrs.get(x)
-        decorated_f = MagicMock()
-
-        # Success
-        decorator = authentication_required_decorator(['a', 'b'])
-        inner_decorator = decorator(decorated_f)
-
-        res = inner_decorator('arg1', 'arg2', kw1='kwarg1', kw2='kwarg2')
-        self.assertEqual(decorated_f.return_value, res)
-        decorated_f.assert_called_with('arg1', 'arg2', kw1='kwarg1', kw2='kwarg2')
-        mock_abort.assert_not_called()
-
-        decorated_f.reset_mock()
-
-        # Abort, header 'c' is missing
-        decorator = authentication_required_decorator(['a', 'b', 'c'])
-        inner_decorator = decorator(decorated_f)
-
-        res = inner_decorator('arg1', 'arg2', kw1='kwarg1', kw2='kwarg2')
-
-        # Return from abort is not necessary, but it keeps the code and tests clean
-        self.assertEqual(mock_abort.return_value, res)
-        decorated_f.assert_not_called()
-        mock_abort.assert_called_with(mock_response.return_value)
-        mock_response.assert_called_with(response='Missing required MKS authentication', status=400)
-
-
 class TestStufRestView(TestCase):
 
-    @patch("gobstuf.rest.brp.base_view.abort")
-    @patch("gobstuf.rest.brp.base_view.g")
-    @patch("gobstuf.rest.brp.base_view.Response", MagicMock())
-    def test_decorator_set(self, mock_g, mock_abort):
-        # Tests if view is decorated with the correct required headers.
-
-        # Next line should contain the minimal valid set of headers
-        g_attrs = {MKS_USER_KEY: 'some value', MKS_APPLICATION_KEY: 'some value'}
-
-        set_decorator = StufRestView.decorators[0]
-
-        # Check all headers present
-        mock_g.get = lambda x: g_attrs.get(x)
-        set_decorator(MagicMock())()
-        mock_abort.assert_not_called()
-
-        # Remove headers one by one and expect abort to be called
-        for k in g_attrs.keys():
-            mock_abort.reset_mock()
-            g_attrs_copy = g_attrs.copy()
-            g_attrs_copy.pop(k)
-            mock_g.get = lambda x: g_attrs_copy.get(x)
-
-            set_decorator(MagicMock())()
-            mock_abort.assert_called_once()
 
     def test_validate_inheritance(self):
         """StufRestView sets a control parameter when _validate is called, so it won't happen that a child class
