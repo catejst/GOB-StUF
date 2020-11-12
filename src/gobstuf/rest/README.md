@@ -6,10 +6,6 @@ The BRP endpoints forward the API endpoint request as a StUF message to MKS. The
 a new resource. The child should define a request_template and response_template that define the message formats
 sent to and received from MKS.
 
-A request to a BRP endpoint should always contain the following headers for authorisation with MKS:
-- MKS_GEBRUIKER
-- MKS_APPLICATIE
-
 When a StufRestView child receives a GET request, it:
 1. Creates a StufRequest object, encapsulating the StUF request message.
 2. Makes a request to MKS
@@ -32,7 +28,7 @@ More on the ```StufRequest``` and ```StufResponse``` objects [here](../stuf/brp/
 Returns person for supplied BSN.
 
 ```
-curl -H "MKS_APPLICATIE:<applicatie>" -H "MKS_GEBRUIKER:<gebruiker>" http(s)://<API>/brp/ingeschrevenpersonen/<BSN>
+curl -H "Authorization: xxx xxxx" http(s)://<API>/brp/ingeschrevenpersonen/<BSN>
 ```
 
 The API returns data in the same format as the 
