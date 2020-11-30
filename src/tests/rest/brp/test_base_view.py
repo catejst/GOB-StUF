@@ -7,6 +7,7 @@ from gobstuf.rest.brp.base_view import (
     NoStufAnswerException,
     StufRestFilterView
 )
+from gobstuf.stuf.brp.error_response import UnknownErrorCode
 
 
 class TestStufRestView(TestCase):
@@ -91,24 +92,24 @@ class TestStufRestView(TestCase):
             }
         )
 
+    @patch("gobstuf.rest.brp.base_view.logging")
     @patch("gobstuf.rest.brp.base_view.request")
     @patch("gobstuf.rest.brp.base_view.RESTResponse")
-    def test_error_response(self, mock_rest_response, mock_request):
+    def test_error_response(self, mock_rest_response, mock_request, mock_logging):
         mock_request.url = 'REQUEST_URL'
         view = StufRestView()
         response_arg = MagicMock()
+        response_arg.get_http_response.return_value = MagicMock()
 
-        self.assertEqual(mock_rest_response.bad_request.return_value,
+        # Normal case
+        self.assertEqual(response_arg.get_http_response.return_value,
                          view._error_response(response_arg))
 
-        # Generic error
-        mock_rest_response.bad_request.assert_called_with()
+        # UnknownErrorCode
+        response_arg.get_http_response.side_effect = UnknownErrorCode
+        self.assertEqual(mock_rest_response.bad_request(), view._error_response(response_arg))
 
-        # Fo02 MKS error
-        response_arg.get_error_code.return_value = 'Fo02'
-        view._error_response(response_arg)
-
-        mock_rest_response.forbidden.assert_called_with()
+        self.assertEqual(2, mock_logging.error.call_count)
 
     @patch("gobstuf.rest.brp.base_view.request")
     def test_validate(self, mock_request):
