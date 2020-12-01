@@ -540,7 +540,15 @@ class NPSNPSHUWMapping(RelatedMapping):
             'aangaanHuwelijkPartnerschap': {
                 'datum': (MKSConverter.as_datum_broken_down,
                           'BG:datumSluiting',
-                          'BG:datumSluiting@StUF:indOnvolledigeDatum')
+                          'BG:datumSluiting@StUF:indOnvolledigeDatum'),
+                'plaats': {
+                    'code': (MKSConverter.as_gemeente_code, 'BG:plaatsSluiting'),
+                    'omschrijving': (MKSConverter.get_gemeente_omschrijving, 'BG:plaatsSluiting'),
+                },
+                'land': {
+                    'code': (MKSConverter.as_code(4), 'BG:landSluiting'),
+                    'omschrijving': (MKSConverter.get_land_omschrijving, 'BG:landSluiting'),
+                },
             },
             # datumOntbinding is used to filter out 'ontbonden huwelijken'.
             # Note that this field will never be exposed because its value will be None on exposed objects.
