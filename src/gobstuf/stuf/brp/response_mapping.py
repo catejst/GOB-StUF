@@ -281,8 +281,8 @@ class NPSMapping(Mapping):
             }
 
             # First sort key is geboortedatum descending
-            geboorte = (get_value(ouder, 'geboorte', 'datum', 'datum') or '0000-00-00').replace('-', '')
-            geboorte = -(int(geboorte))  # latest first
+            geboorte = (get_value(ouder, 'geboorte', 'datum', 'datum') or '9999-99-99').replace('-', '')
+            geboorte = int(geboorte)  # oldest first
 
             # Second key is geslachtsaanduiding on geslachtsaanduiding_order
             geslacht = geslachtsaanduiding_order[get_value(ouder, 'geslachtsaanduiding')]
@@ -328,8 +328,8 @@ class NPSMapping(Mapping):
             MAX_NAAM = 'zzzzzzzzzz'  # Value that is expected to compare above any real naam
 
             # First sort key is geboortedatum descending
-            geboorte = (get_value(kind, 'geboorte', 'datum', 'datum') or '0000-00-00').replace('-', '')
-            geboorte = -(int(geboorte))  # latest first
+            geboorte = (get_value(kind, 'geboorte', 'datum', 'datum') or '9999-99-99').replace('-', '')
+            geboorte = int(geboorte)  # oldest first
 
             # Second key is geslachtsnaam ascending
             geslachtsnaam = get_value(kind, 'naam', 'geslachtsnaam')
