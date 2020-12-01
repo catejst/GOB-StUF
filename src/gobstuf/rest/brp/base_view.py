@@ -11,7 +11,7 @@ from gobstuf.auth.routes import MKS_USER_KEY, MKS_APPLICATION_KEY
 from gobstuf.stuf.brp.base_request import StufRequest
 from gobstuf.stuf.brp.base_response import StufMappedResponse
 from gobstuf.stuf.exception import NoStufAnswerException
-from gobstuf.stuf.brp.error_response import StufErrorResponse
+from gobstuf.stuf.brp.error_response import StufErrorResponse, UnknownErrorCode
 from gobstuf.rest.brp.rest_response import RESTResponse
 from gobstuf.config import ROUTE_SCHEME, ROUTE_NETLOC, ROUTE_PATH_310, CORRELATION_ID_HEADER
 from gobstuf.rest.brp.argument_checks import ArgumentCheck
@@ -234,16 +234,15 @@ class StufRestView(MethodView):
         :param response_obj:
         :return:
         """
-        code = response_obj.get_error_code()
-
-        if code == 'Fo02':
-            # Invalid MKS APPLICATIE/GEBRUIKER. Raise 403
-            return RESTResponse.forbidden()
-
-        # Other unknown code
-        logging.error(f"MKS error {response_obj.get_error_code()}. Code {response_obj.get_error_string()}")
-
-        return RESTResponse.bad_request()
+        logging.error(f"MKS Error. "
+                      f"Code {response_obj.get_error_code()}. "
+                      f"Plek: {response_obj.get_error_plek()}. "
+                      f"Omschrijving: {response_obj.get_error_omschrijving()} "
+                      f"Berichtcode: {response_obj.get_berichtcode()}")
+        try:
+            return response_obj.get_http_response()
+        except UnknownErrorCode:
+            return RESTResponse.bad_request()
 
     def _transform_query_parameter_value(self, value: str):
         """Transforms the string value of the query parameter to the corresponding python type for booleans and null
