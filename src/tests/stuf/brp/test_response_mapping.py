@@ -98,7 +98,7 @@ class TestNPSMapping(TestCase):
                 'order': 3,
             },
             {
-                'order': 0,
+                'order': 2,
                 'geboorte': {
                     'datum': {
                         'datum': '2000-06-01',
@@ -106,7 +106,7 @@ class TestNPSMapping(TestCase):
                 }
             },
             {
-                'order': 2,
+                'order': 0,
                 'geboorte': {
                     'datum': {
                         'datum': '2000-05',
@@ -200,7 +200,7 @@ class TestNPSMapping(TestCase):
 
         ouders = [
             {
-                'order': 4,
+                'order': 3,
                 'geboorte': {
                     'datum': {
                         'datum': '2020-05-01',
@@ -214,7 +214,7 @@ class TestNPSMapping(TestCase):
             },
             {
                 # Vrouw first
-                'order': 1,
+                'order': 0,
                 'geboorte': {
                     'datum': {
                         'datum': '2020-05-01',
@@ -224,7 +224,7 @@ class TestNPSMapping(TestCase):
             },
             {
                 # First geslachtsnaam
-                'order': 2,
+                'order': 1,
                 'geboorte': {
                     'datum': {
                         'datum': '2020-05-01',
@@ -237,7 +237,7 @@ class TestNPSMapping(TestCase):
             },
             {
                 # First voornamen
-                'order': 3,
+                'order': 2,
                 'geboorte': {
                     'datum': {
                         'datum': '2020-05-01',
@@ -250,8 +250,8 @@ class TestNPSMapping(TestCase):
                 }
             },
             {
-                # Youngest person
-                'order': 0,
+                # Oldest person
+                'order': 4,
                 'geboorte': {
                     'datum': {
                         'datum': '2020-06-01',
@@ -270,7 +270,6 @@ class TestNPSMapping(TestCase):
             ordered = mapping.sort_kinderen(objects)
             order = [obj['order'] for obj in ordered]
 
-            print(ordered)
             self.assertTrue(order == sorted(order))
 
         kinderen = [
@@ -278,7 +277,7 @@ class TestNPSMapping(TestCase):
                 'order': 3,
             },
             {
-                'order': 0,
+                'order': 2,
                 'geboorte': {
                     'datum': {
                         'datum': '2000-06-01',
@@ -286,7 +285,7 @@ class TestNPSMapping(TestCase):
                 }
             },
             {
-                'order': 2,
+                'order': 0,
                 'geboorte': {
                     'datum': {
                         'datum': '2000-05',
@@ -359,7 +358,7 @@ class TestNPSMapping(TestCase):
 
         kinderen = [
             {
-                'order': 4,
+                'order': 3,
                 'geboorte': {
                     'datum': {
                         'datum': '2020-05-01',
@@ -372,7 +371,7 @@ class TestNPSMapping(TestCase):
             },
             {
                 # First geslachtsnaam
-                'order': 1,
+                'order': 0,
                 'geboorte': {
                     'datum': {
                         'datum': '2020-05-01',
@@ -384,7 +383,7 @@ class TestNPSMapping(TestCase):
             },
             {
                 # First voornamen
-                'order': 2,
+                'order': 1,
                 'geboorte': {
                     'datum': {
                         'datum': '2020-05-01',
@@ -396,8 +395,8 @@ class TestNPSMapping(TestCase):
                 }
             },
             {
-                # Youngest person
-                'order': 0,
+                # Oldest person
+                'order': 3,
                 'geboorte': {
                     'datum': {
                         'datum': '2020-06-01',

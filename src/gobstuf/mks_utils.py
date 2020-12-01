@@ -272,3 +272,15 @@ class MKSConverter:
     @classmethod
     def get_nationaliteit(cls, nationaliteit_parameters):
         return cls._get_nationaliteit(nationaliteit_parameters)
+
+    @classmethod
+    def get_verblijf_buitenland(cls, verblijf_buitenland_parameters):
+        if verblijf_buitenland_parameters['land']['code'] is None:
+            return None
+
+        if verblijf_buitenland_parameters['land']['code'] == '0000':
+            return {
+                'vertrokkenOnbekendWaarheen': True
+            }
+
+        return verblijf_buitenland_parameters
