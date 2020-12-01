@@ -528,6 +528,7 @@ class NPSNPSHUWMapping(RelatedMapping):
     def include_related(self):  # pragma: no cover
         return [
             'burgerservicenummer',
+            'geslachtsaanduiding',
             'geboorte',
             'naam'
         ]
