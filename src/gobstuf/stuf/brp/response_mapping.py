@@ -216,6 +216,19 @@ class NPSMapping(Mapping):
                     'straatnaam': 'BG:sub.correspondentieAdres BG:gor.straatnaam',
                     'naamOpenbareRuimte': 'BG:sub.correspondentieAdres BG:gor.openbareRuimteNaam',
                 },
+                'verblijfBuitenland': (MKSConverter.get_verblijf_buitenland, {
+                    'adresRegel1': 'BG:sub.verblijfBuitenland BG:sub.adresBuitenland1',
+                    'adresRegel2': 'BG:sub.verblijfBuitenland BG:sub.adresBuitenland2',
+                    'adresRegel3': 'BG:sub.verblijfBuitenland BG:sub.adresBuitenland3',
+                    'land': {
+                        'code':
+                            (MKSConverter.as_code(4), 'BG:sub.verblijfBuitenland BG:lnd.landcode'),
+                        # Find omschrijving from codetabel like we do with geboorteland, although MKS does return the
+                        # 'landnaam' in this case (as opposed to geboorteland for example). Just for consistency sake
+                        'omschrijving':
+                            (MKSConverter.get_land_omschrijving, 'BG:sub.verblijfBuitenland BG:lnd.landcode'),
+                    },
+                })
             },
             'overlijden': {
                 'indicatieOverleden': (MKSConverter.true_if_exists, 'BG:overlijdensdatum'),

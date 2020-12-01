@@ -325,3 +325,31 @@ class TestMKSConverter(TestCase):
         # Expect one nationaliteit, Nederlandse
         self.assertEqual(len(nationaliteit), 1)
         self.assertEqual(nationaliteit[0]['nationaliteit']['omschrijving'], 'Nederlandse')
+
+    def test_get_verblijf_buitenland(self):
+        parameters = {
+            'land': {
+                'code': None
+            }
+        }
+        self.assertIsNone(MKSConverter.get_verblijf_buitenland(parameters))
+
+        parameters = {
+            'land': {
+                'code': '0000',
+            }
+        }
+        self.assertEqual({
+            'vertrokkenOnbekendWaarheen': True,
+        }, MKSConverter.get_verblijf_buitenland(parameters))
+
+        parameters = {
+            'land': {
+                'code': '1000',
+                'omschrijving': 'Any Country',
+            },
+            'adresRegel1': '1',
+            'adresRegel2': '2',
+            'adresRegel3': '3',
+        }
+        self.assertEqual(parameters, MKSConverter.get_verblijf_buitenland(parameters))
