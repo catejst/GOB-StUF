@@ -21,7 +21,7 @@ class Indication(ABC):
     @property
     def no_value(self):
         return {
-            self.NIET_GEAUTORISEERD: '',
+            self.NIET_GEAUTORISEERD: None,
         }
 
     @property
