@@ -177,7 +177,7 @@ class TestMKSConverter(TestCase):
             self.assertIsNone(MKSConverter.as_geslachtsaanduiding(a))
 
         self.assertEqual('onbekend', MKSConverter.as_geslachtsaanduiding('something', no_value='waardeOnbekend'))
-        self.assertEqual('', MKSConverter.as_geslachtsaanduiding('something', no_value='nietGeautoriseerd'))
+        self.assertEqual(None, MKSConverter.as_geslachtsaanduiding('something', no_value='nietGeautoriseerd'))
 
     def test_as_soort_verbintenis(self):
         valid = {
