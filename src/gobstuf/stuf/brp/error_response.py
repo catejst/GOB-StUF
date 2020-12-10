@@ -65,6 +65,9 @@ class StufErrorResponse(StufResponse):
             'StUF012': RESTResponse.internal_server_error(),
             # Het vragende systeem is bij het ontvangende systeem niet bekend
             'StUF013': RESTResponse.internal_server_error(),
+            # Het zendende systeem is niet geautoriseerd voor de gevraagde combinatie van berichtcode,
+            # entiteittype en functie
+            'StUF052': RESTResponse.forbidden(),
         }
 
         try:
