@@ -7,28 +7,30 @@ from gobstuf.logger import Logger, get_default_logger, CORRELATION_ID_HEADER, UN
 class TestLogContextFilter(TestCase):
 
     @patch("gobstuf.logger.has_request_context")
-    @patch("gobstuf.logger.request")
-    def test_filter(self, mock_request, mock_has_request_context):
-        mock_request.headers = {
-            CORRELATION_ID_HEADER: 'the correlation id',
-            UNIQUE_ID_HEADER: 'the unique id',
-        }
-        mock_has_request_context.return_value = True
+    def test_filter(self, mock_has_request_context):
+        mock_request = MagicMock()
 
-        mock_record = MagicMock()
-        mock_record.msg = 'The log message'
+        with patch("gobstuf.logger.request", mock_request):
+            mock_request.headers = {
+                CORRELATION_ID_HEADER: 'the correlation id',
+                UNIQUE_ID_HEADER: 'the unique id',
+            }
+            mock_has_request_context.return_value = True
 
-        # Inside request context
-        context_filter = LogContextFilter()
-        context_filter.filter(mock_record)
-        self.assertEqual('The log message (correlationID: the correlation id / uniqueID: the unique id )', mock_record.msg)
+            mock_record = MagicMock()
+            mock_record.msg = 'The log message'
 
-        # Outside request context
-        mock_has_request_context.return_value = False
-        mock_record = MagicMock()
-        mock_record.msg = 'The log message'
-        context_filter.filter(mock_record)
-        self.assertEqual('The log message', mock_record.msg)
+            # Inside request context
+            context_filter = LogContextFilter()
+            context_filter.filter(mock_record)
+            self.assertEqual('The log message (correlationID: the correlation id / uniqueID: the unique id )', mock_record.msg)
+
+            # Outside request context
+            mock_has_request_context.return_value = False
+            mock_record = MagicMock()
+            mock_record.msg = 'The log message'
+            context_filter.filter(mock_record)
+            self.assertEqual('The log message', mock_record.msg)
 
 
 class TestLogger(TestCase):

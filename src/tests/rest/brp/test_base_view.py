@@ -93,47 +93,49 @@ class TestStufRestView(TestCase):
         )
 
     @patch("gobstuf.rest.brp.base_view.logging")
-    @patch("gobstuf.rest.brp.base_view.request")
     @patch("gobstuf.rest.brp.base_view.RESTResponse")
-    def test_error_response(self, mock_rest_response, mock_request, mock_logging):
-        mock_request.url = 'REQUEST_URL'
-        view = StufRestView()
-        response_arg = MagicMock()
-        response_arg.get_http_response.return_value = MagicMock()
+    def test_error_response(self, mock_rest_response, mock_logging):
+        mock_request = MagicMock()
+        with patch("gobstuf.rest.brp.base_view.request", mock_request):
+            mock_request.url = 'REQUEST_URL'
+            view = StufRestView()
+            response_arg = MagicMock()
+            response_arg.get_http_response.return_value = MagicMock()
 
-        # Normal case
-        self.assertEqual(response_arg.get_http_response.return_value,
-                         view._error_response(response_arg))
+            # Normal case
+            self.assertEqual(response_arg.get_http_response.return_value,
+                             view._error_response(response_arg))
 
-        # UnknownErrorCode
-        response_arg.get_http_response.side_effect = UnknownErrorCode
-        self.assertEqual(mock_rest_response.bad_request(), view._error_response(response_arg))
+            # UnknownErrorCode
+            response_arg.get_http_response.side_effect = UnknownErrorCode
+            self.assertEqual(mock_rest_response.bad_request(), view._error_response(response_arg))
 
-        self.assertEqual(2, mock_logging.error.call_count)
+            self.assertEqual(2, mock_logging.error.call_count)
 
-    @patch("gobstuf.rest.brp.base_view.request")
-    def test_validate(self, mock_request):
-        view = StufRestView()
-        view._validate_request_args = MagicMock(return_value=None)
-        view.expand_options = ['a', 'b']
-        self.assertIsNone(getattr(view, '_validate_called', None))
+    def test_validate(self):
+        mock_request = MagicMock()
+        with patch("gobstuf.rest.brp.base_view.request", mock_request):
+            view = StufRestView()
+            view._validate_request_args = MagicMock(return_value=None)
+            view.expand_options = ['a', 'b']
+            self.assertIsNone(getattr(view, '_validate_called', None))
 
-        valid_options = ['a', 'b', 'a,b']
-        invalid_options = ['1', 'c']
+            valid_options = ['a', 'b', 'a,b']
+            invalid_options = ['1', 'c']
 
-        for expand in valid_options:
-            mock_request.args = {'expand': expand}
-            self.assertEqual({}, view._validate())
+            for expand in valid_options:
+                mock_request.args = {'expand': expand}
+                self.assertEqual({}, view._validate())
 
-        error = {
-            'invalid-params': 'expand',
-            'title': 'De waarde van expand wordt niet geaccepteerd',
-            'detail': f'De mogelijke waarden zijn: a,b'
-        }
+            error = {
+                'invalid-params': 'expand',
+                'title': 'De waarde van expand wordt niet geaccepteerd',
+                'detail': f'De mogelijke waarden zijn: a,b'
+            }
 
-        for expand in invalid_options:
-            mock_request.args = {'expand': expand}
-            self.assertEqual(error, view._validate())
+            for expand in invalid_options:
+                mock_request.args = {'expand': expand}
+                self.assertEqual(error, view._validate())
 
     def test_validate_call_request_args(self):
         view = StufRestView()
@@ -142,84 +144,88 @@ class TestStufRestView(TestCase):
         self.assertEqual({'the': 'errors'}, view._validate(kw='arg'))
         view._validate_request_args.assert_called_with(kw='arg')
 
-    @patch("gobstuf.rest.brp.base_view.request")
-    def test_get_functional_query_parameters(self, mock_request):
-        mock_request.args = {
-            'a': 1,
-            'b': '',
-            'c': None,
-            'd': False,
-        }
-        view = StufRestView()
-        view._transform_query_parameter_value = lambda x: x
-        view.functional_query_parameters = {
-            'a': 15,
-            'b': 16,
-            'c': 17,
-            'd': 18,
-            'e': 19
-        }
+    def test_get_functional_query_parameters(self):
+        mock_request = MagicMock()
+        with patch("gobstuf.rest.brp.base_view.request", mock_request):
+            mock_request.args = {
+                'a': 1,
+                'b': '',
+                'c': None,
+                'd': False,
+            }
+            view = StufRestView()
+            view._transform_query_parameter_value = lambda x: x
+            view.functional_query_parameters = {
+                'a': 15,
+                'b': 16,
+                'c': 17,
+                'd': 18,
+                'e': 19
+            }
 
-        self.assertEqual({
-            **mock_request.args,
-            'e': 19,
-        }, view._get_functional_query_parameters())
+            self.assertEqual({
+                **mock_request.args,
+                'e': 19,
+            }, view._get_functional_query_parameters())
 
-    @patch("gobstuf.rest.brp.base_view.g")
-    @patch("gobstuf.rest.brp.base_view.request")
     @patch("gobstuf.rest.brp.base_view.StufErrorResponse")
     @patch("gobstuf.rest.brp.base_view.RESTResponse")
-    def test_get(self, mock_rest_response, mock_response, mock_request, mock_g):
-        g_attrs = {
-            MKS_USER_KEY: 'user',
-            MKS_APPLICATION_KEY: 'application',
-        }
-        mock_g.get = lambda x: g_attrs.get(x)
-        mock_request.args = {}
-        mock_request.headers = {
-            'X-Correlation-ID': 'the correlation id'
-        }
+    def test_get(self, mock_rest_response, mock_response):
+        mock_request = MagicMock()
+        mock_g = MagicMock()
+        with patch("gobstuf.rest.brp.base_view.request", mock_request), \
+             patch("gobstuf.rest.brp.base_view.g", mock_g):
 
-        mock_request_template = MagicMock()
+            g_attrs = {
+                MKS_USER_KEY: 'user',
+                MKS_APPLICATION_KEY: 'application',
+            }
+            mock_g.get = lambda x: g_attrs.get(x)
+            mock_request.args = {}
+            mock_request.headers = {
+                'X-Correlation-ID': 'the correlation id'
+            }
 
-        class StuffRestViewImpl(StufRestView):
-            request_template = mock_request_template
-            response_template = MagicMock()
+            mock_request_template = MagicMock()
 
-        view = StuffRestViewImpl()
-        view._make_request = MagicMock()
-        view._error_response = MagicMock()
-        view._json_response = MagicMock()
-        view._validate_called = True
-        view._get_functional_query_parameters = MagicMock(return_value={'funcparam': True})
+            class StuffRestViewImpl(StufRestView):
+                request_template = mock_request_template
+                response_template = MagicMock()
 
-        # Success response
-        self.assertEqual(mock_rest_response.ok.return_value, view._get(a=1, b=2))
-        view.request_template.assert_called_with('user', 'application', correlation_id='the correlation id')
-        view.request_template.return_value.set_values.assert_called_with({'a': 1, 'b': 2})
-        view._make_request.assert_called_with(view.request_template.return_value)
+            view = StuffRestViewImpl()
+            view._make_request = MagicMock()
+            view._error_response = MagicMock()
+            view._json_response = MagicMock()
+            view._validate_called = True
+            view._get_functional_query_parameters = MagicMock(return_value={'funcparam': True})
 
-        view.response_template.assert_called_with(view._make_request.return_value.text, a=1, b=2, funcparam=True, wildcards={})
-        mock_rest_response.ok.assert_called_with(view.response_template.return_value.get_answer_object.return_value)
+            # Success response
+            self.assertEqual(mock_rest_response.ok.return_value, view._get(a=1, b=2))
+            view.request_template.assert_called_with('user', 'application', correlation_id='the correlation id')
+            view.request_template.return_value.set_values.assert_called_with({'a': 1, 'b': 2})
+            view._make_request.assert_called_with(view.request_template.return_value)
 
-        # Error response
-        view._make_request.return_value.raise_for_status.side_effect = HTTPError
-        self.assertEqual(view._error_response.return_value, view._get(a=1, b=2))
-        mock_response.assert_called_with(view._make_request.return_value.text)
-        view._error_response.assert_called_with(mock_response.return_value)
+            view.response_template.assert_called_with(view._make_request.return_value.text, a=1, b=2, funcparam=True, wildcards={})
+            mock_rest_response.ok.assert_called_with(view.response_template.return_value.get_answer_object.return_value)
 
-        # 404 response
-        view._make_request = MagicMock()
-        view.response_template.return_value.get_answer_object.side_effect = NoStufAnswerException
-        view._not_found_response = MagicMock()
+            # Error response
+            view._make_request.return_value.raise_for_status.side_effect = HTTPError
+            self.assertEqual(view._error_response.return_value, view._get(a=1, b=2))
+            mock_response.assert_called_with(view._make_request.return_value.text)
+            view._error_response.assert_called_with(mock_response.return_value)
 
-        self.assertEqual(mock_rest_response.not_found(), view._get(a=1, b=2))
+            # 404 response
+            view._make_request = MagicMock()
+            view.response_template.return_value.get_answer_object.side_effect = NoStufAnswerException
+            view._not_found_response = MagicMock()
 
-        # Test invalid request
-        view._validate = lambda **kwargs: {'some': 'error'}
-        kwargs = {'kw': 'args'}
-        self.assertEqual(mock_rest_response.bad_request.return_value, view.get(**kwargs))
-        mock_rest_response.bad_request.assert_called_with(some='error')
+            self.assertEqual(mock_rest_response.not_found(), view._get(a=1, b=2))
+
+            # Test invalid request
+            view._validate = lambda **kwargs: {'some': 'error'}
+            kwargs = {'kw': 'args'}
+            self.assertEqual(mock_rest_response.bad_request.return_value, view.get(**kwargs))
+            mock_rest_response.bad_request.assert_called_with(some='error')
 
     @patch("gobstuf.rest.brp.base_view.RESTResponse")
     def test_get_internal_server_error(self, mock_rest_response):
@@ -339,51 +345,52 @@ class TestStufRestFilterView(TestCase):
         for inp, outp in test_cases:
             self.assertEqual(outp, view._transform_query_parameter_value(inp))
 
-    @patch("gobstuf.rest.brp.base_view.request")
-    def test_get_query_parameters(self, mock_request):
-        view = StufRestFilterViewImpl()
+    def test_get_query_parameters(self):
+        mock_request = MagicMock()
+        with patch("gobstuf.rest.brp.base_view.request", mock_request):
+            view = StufRestFilterViewImpl()
 
-        # Default case. All parameters present, return first match
-        mock_request.args = {
-            'a': '1',
-            'b': '2',
-            'c': '3',
-        }
-        view.query_parameter_combinations = [
-            ('a', 'b')
-        ]
-        self.assertEqual({'a': '1', 'b': '2'}, view._get_query_parameters())
+            # Default case. All parameters present, return first match
+            mock_request.args = {
+                'a': '1',
+                'b': '2',
+                'c': '3',
+            }
+            view.query_parameter_combinations = [
+                ('a', 'b')
+            ]
+            self.assertEqual({'a': '1', 'b': '2'}, view._get_query_parameters())
 
-        # Case with no parameters, allowed
-        view.query_parameter_combinations = [()]
-        mock_request.args = {}
-        self.assertEqual({}, view._get_query_parameters())
+            # Case with no parameters, allowed
+            view.query_parameter_combinations = [()]
+            mock_request.args = {}
+            self.assertEqual({}, view._get_query_parameters())
 
-        # Case with no parameters, not allowed
-        view.query_parameter_combinations = []
+            # Case with no parameters, not allowed
+            view.query_parameter_combinations = []
 
-        with self.assertRaises(view.InvalidQueryParametersException):
-            view._get_query_parameters()
+            with self.assertRaises(view.InvalidQueryParametersException):
+                view._get_query_parameters()
 
-        # Case with invalid combination of parameters. B is missing
-        view.query_parameter_combinations = [('a', 'b')]
-        mock_request.args = {'a': '1'}
+            # Case with invalid combination of parameters. B is missing
+            view.query_parameter_combinations = [('a', 'b')]
+            mock_request.args = {'a': '1'}
 
-        with self.assertRaises(view.InvalidQueryParametersException):
-            view._get_query_parameters()
+            with self.assertRaises(view.InvalidQueryParametersException):
+                view._get_query_parameters()
 
-        # Case with valid combination, plus two out of three optional query params
-        mock_request.args = {
-            'a': '1',
-            'b': '2',
-            'd': '4',
-            'e': '5'
-        }
-        view.query_parameter_combinations = [
-            ('a', 'b'),
-        ]
-        view.optional_query_parameters = ['c', 'd', 'e']
-        self.assertEqual({'a': '1', 'b': '2', 'd': '4', 'e': '5'}, view._get_query_parameters())
+            # Case with valid combination, plus two out of three optional query params
+            mock_request.args = {
+                'a': '1',
+                'b': '2',
+                'd': '4',
+                'e': '5'
+            }
+            view.query_parameter_combinations = [
+                ('a', 'b'),
+            ]
+            view.optional_query_parameters = ['c', 'd', 'e']
+            self.assertEqual({'a': '1', 'b': '2', 'd': '4', 'e': '5'}, view._get_query_parameters())
 
     @patch("gobstuf.rest.brp.base_view.RESTResponse")
     def test_argument_check(self, mock_rest_response):
@@ -392,71 +399,72 @@ class TestStufRestFilterView(TestCase):
         self.assertEqual(view.get(), mock_rest_response.bad_request.return_value)
         mock_rest_response.bad_request.assert_called_with(error='any error')
 
-    @patch("gobstuf.rest.brp.base_view.request")
-    def test_validate_request_args(self, mock_request):
-        class StufRestViewImpl(StufRestView):
-            request_template = MagicMock()
+    def test_validate_request_args(self):
+        mock_request = MagicMock()
+        with patch("gobstuf.rest.brp.base_view.request", mock_request):
+            class StufRestViewImpl(StufRestView):
+                request_template = MagicMock()
 
-        mock_request.args = {
-            'attr5': 'value5',
-        }
+            mock_request.args = {
+                'attr5': 'value5',
+            }
 
-        view = StufRestViewImpl()
-        view._request_template_parameters = MagicMock(return_value={
-            'attr1': 'value1',
-            'attr2': 'value2',
-            'attr3': 'value3',
-            'attr4': 'value4',
-            'attr6': 'aa*',
-            'attr7': 'a*',
-        })
+            view = StufRestViewImpl()
+            view._request_template_parameters = MagicMock(return_value={
+                'attr1': 'value1',
+                'attr2': 'value2',
+                'attr3': 'value3',
+                'attr4': 'value4',
+                'attr6': 'aa*',
+                'attr7': 'a*',
+            })
 
-        view.request_template.parameter_checks = {
-            'attr1': {
-                'check': lambda v: False,
-                'msg': {
-                    'the msg': 'oh oh',
-                }
-            },
-            'attr2': {
-                'check': lambda v: True,
-                'msg': {
-                    'the msg': 'this one will not be shown',
-                }
-            },
-            'attr4': {
-                'check': lambda v: False,
-                'msg': {
-                    'the msg': 'foute boel',
-                }
-            },
-            'attr5': {
-                'check': lambda v: False,
-                'msg': {
-                    'the msg': 'If this error shows up, all request args that are not request_template_parameters are correctly validated',
-                }
-            },
-            'attr7': [{
-                'check': lambda v: True,
-                'msg': {
-                    'the msg': 'this one will not be shown',
-                }
-            }]
-        }
+            view.request_template.parameter_checks = {
+                'attr1': {
+                    'check': lambda v: False,
+                    'msg': {
+                        'the msg': 'oh oh',
+                    }
+                },
+                'attr2': {
+                    'check': lambda v: True,
+                    'msg': {
+                        'the msg': 'this one will not be shown',
+                    }
+                },
+                'attr4': {
+                    'check': lambda v: False,
+                    'msg': {
+                        'the msg': 'foute boel',
+                    }
+                },
+                'attr5': {
+                    'check': lambda v: False,
+                    'msg': {
+                        'the msg': 'If this error shows up, all request args that are not request_template_parameters are correctly validated',
+                    }
+                },
+                'attr7': [{
+                    'check': lambda v: True,
+                    'msg': {
+                        'the msg': 'this one will not be shown',
+                    }
+                }]
+            }
 
-        # attr6 receives the wildcard check, for attr7 the check will be appended to the current checks
-        view.request_template.parameter_wildcards = ['attr6', 'attr7']
+            # attr6 receives the wildcard check, for attr7 the check will be appended to the current checks
+            view.request_template.parameter_wildcards = ['attr6', 'attr7']
 
-        self.assertEqual({
-            'invalid-params': [
-                {'name': 'attr1', 'the msg': 'oh oh'},
-                {'name': 'attr4', 'the msg': 'foute boel'},
-                {'name': 'attr7', 'code': 'invalidWildcardLength', 'reason': 'Zoeken met een wildcard vereist minimaal 2 karakters exclusief de wildcards.'},
-                {'name': 'attr5', 'the msg': 'If this error shows up, all request args that are not request_template_parameters are correctly validated'}
-            ],
-            'title': 'Een of meerdere parameters zijn niet correct.',
-            'detail': 'De foutieve parameter(s) zijn: attr1, attr4, attr7, attr5.',
-            'code': 'paramsValidation',
-        }, view._validate_request_args(some='kwargs'))
-        view._request_template_parameters.assert_called_with(some='kwargs')
+            self.assertEqual({
+                'invalid-params': [
+                    {'name': 'attr1', 'the msg': 'oh oh'},
+                    {'name': 'attr4', 'the msg': 'foute boel'},
+                    {'name': 'attr7', 'code': 'invalidWildcardLength', 'reason': 'Zoeken met een wildcard vereist minimaal 2 karakters exclusief de wildcards.'},
+                    {'name': 'attr5', 'the msg': 'If this error shows up, all request args that are not request_template_parameters are correctly validated'}
+                ],
+                'title': 'Een of meerdere parameters zijn niet correct.',
+                'detail': 'De foutieve parameter(s) zijn: attr1, attr4, attr7, attr5.',
+                'code': 'paramsValidation',
+            }, view._validate_request_args(some='kwargs'))
+            view._request_template_parameters.assert_called_with(some='kwargs')
 
