@@ -3,8 +3,8 @@ set -u   # crash on missing env variables
 set -e   # stop on any error
 set -x
 
-# Run gatekeeper to protect secure endpoints
-./keycloak-gatekeeper --config gatekeeper.conf 2>&1 | tee /var/log/gatekeeper/gatekeeper.log &
+# Secure endpoints
+./oauth2-proxy --config oauth2-proxy.cfg 2>&1 | tee /var/log/oauth2-proxy/oauth2proxy.log &
 
 # Start web server
 exec uwsgi

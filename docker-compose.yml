@@ -5,11 +5,11 @@ services:
   gobstuf:
     build: src
     ports:
-      # To use gatekeeper:
+      # To use oauth2-proxy:
       #   Set port to 8000
-      #   Set secure-cookie: false in gatekeeper.conf
       #   Set the variables in .env
-      # Use port 8001 to bypass gatekeeper locally
+      #   Set cookie_secure in oauth2-proxy.cfg to false
+      # Use port 8001 to bypass the OAuth2 Proxy locally
       - "8165:8001"
     container_name: gobstuf
     environment:
@@ -25,9 +25,17 @@ services:
       UWSGI_THREADS: ""
       UWSGI_MAX_WORKER_LIFETIME: "1800"
       UWSGI_HTTP_TIMEOUT: "4000"
+      UWSGI_BUFFER_SIZE: "8192"
+
       PKCS12_FILENAME: ${PKCS12_FILENAME}
       PKCS12_PASSWORD: ${PKCS12_PASSWORD}
       BRP_REGRESSION_TEST_LOCAL_PORT: 8000  # Points to Gatekeeper. Overrides port 8165 defined in the .env file
+
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
+      OAUTH2_PROXY_OIDC_ISSUER_URL: ${OAUTH2_PROXY_OIDC_ISSUER_URL}
+      OAUTH2_PROXY_REDIRECT_URL: ${OAUTH2_PROXY_REDIRECT_URL}
     env_file: .env
 
 networks:

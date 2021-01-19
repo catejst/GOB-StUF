@@ -1,6 +1,6 @@
 from flask import g, request, url_for
 
-from gobcore.secure.config import REQUEST_ROLES, REQUEST_USER
+from gobcore.secure.request import is_secured_request, extract_roles, USER_NAME_HEADER
 
 
 REQUIRED_ROLE_PREFIX = 'fp_'
@@ -19,8 +19,7 @@ def secure_route(rule, func, name=None):
     """
     def wrapper(*args, **kwargs):
         # Check that the endpoint is protected by gatekeeper and check access
-        if request.headers.get(REQUEST_USER) and request.headers.get(REQUEST_ROLES) and \
-                _allows_access(rule, *args, **kwargs):
+        if is_secured_request(request.headers) and _allows_access(rule, *args, **kwargs):
             return func(*args, **kwargs)
         else:
             return "Forbidden", 403
@@ -34,7 +33,7 @@ def _get_roles():
     Gets the user roles from the request headers
     """
     try:
-        return [h for h in request.headers.get(REQUEST_ROLES, "").split(",") if h]
+        return extract_roles(request.headers)
     except AttributeError:
         return []
 
@@ -53,7 +52,7 @@ def _allows_access(rule, *args, **kwargs):
     if role:
         # When a role is found store the MKS USER and APPLICATION in the global object and allow acces
         setattr(g, MKS_APPLICATION_KEY, role)
-        setattr(g, MKS_USER_KEY, request.headers.get(REQUEST_USER, ""))
+        setattr(g, MKS_USER_KEY, request.headers.get(USER_NAME_HEADER, ""))
         return True
     else:
         return False

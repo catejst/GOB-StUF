@@ -213,7 +213,7 @@ class TestXML(TestCase):
 <root xmlns:StUF="http://www.egem.nl/StUF/StUF0301">
 	<elm1 attr="attr">value</elm1>
 	<elm2>
-		<elm2sub StUF:attr="ns2 attr" dummy="dummy value">sub value</elm2sub>
+		<elm2sub dummy="dummy value" StUF:attr="ns2 attr">sub value</elm2sub>
 	</elm2>
 	<elm3>
 		<elm3sub>
