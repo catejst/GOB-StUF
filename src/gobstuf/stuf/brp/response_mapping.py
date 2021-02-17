@@ -530,7 +530,8 @@ class NPSNPSHUWMapping(RelatedMapping):
             'burgerservicenummer',
             'geslachtsaanduiding',
             'geboorte',
-            'naam'
+            'naam',
+            'geheimhoudingPersoonsgegevens'
         ]
 
     # And add these attributes
@@ -600,6 +601,7 @@ class NPSFamilieRelatedMapping(RelatedMapping):
             'burgerservicenummer',
             'naam',
             'geboorte',
+            'geheimhoudingPersoonsgegevens'
         ]
 
     # And add these attributes
@@ -663,7 +665,6 @@ class NPSNPSOUDMapping(NPSFamilieRelatedMapping):
         return [
             *super().include_related,
             'geslachtsaanduiding',
-            'geheimhoudingPersoonsgegevens',
         ]
 
     @property
