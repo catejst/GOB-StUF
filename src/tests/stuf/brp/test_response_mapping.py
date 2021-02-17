@@ -731,8 +731,8 @@ class TestNPSNPSOUDMapping(TestCase):
             'burgerservicenummer',
             'naam',
             'geboorte',
-            'geslachtsaanduiding',
             'geheimhoudingPersoonsgegevens',
+            'geslachtsaanduiding',
         ], mapping.include_related)
 
     def test_mapping(self):
@@ -759,5 +759,6 @@ class TestNPSNPSKNDMapping(TestCase):
             'burgerservicenummer',
             'naam',
             'geboorte',
+            'geheimhoudingPersoonsgegevens',
             'leeftijd',
         ], mapping.include_related)
