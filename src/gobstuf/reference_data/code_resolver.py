@@ -42,10 +42,21 @@ class CodeResolver:
         }
     }
 
+    # Adellijke titel/predikaat
+    ADELLIJKE_TITEL = {
+        'table': 'Tabel38 Adellijke titel predikaat.csv',
+        'fields': {
+            CODE: 0,
+            DESCRIPTION: 1,
+            'soort': 2
+        }
+    }
+
     # Local dictionaries
     _landen = {}
     _gemeenten = {}
     _gemeenten_omschrijving = {}
+    _adellijke_titel = {}
 
     @classmethod
     def initialize(cls):
@@ -57,6 +68,7 @@ class CodeResolver:
         cls._gemeenten = cls._load_data(cls.GEMEENTEN, cls.CODE)
         cls._gemeenten_omschrijving = cls._load_data(cls.GEMEENTEN, cls.DESCRIPTION)
         cls._landen = cls._load_data(cls.LANDEN, cls.CODE)
+        cls._adellijke_titel = cls._load_data(cls.ADELLIJKE_TITEL, cls.DESCRIPTION)
 
     @classmethod
     def _load_data(cls, config, key_field):
@@ -140,6 +152,16 @@ class CodeResolver:
         :return:
         """
         return cls._get_dataitem(cls._gemeenten_omschrijving, omschrijving, cls.CODE)
+
+    @classmethod
+    def get_adellijke_titel_code(cls, omschrijving):
+        """
+        Get the adellijke titel/predikaat code for the given omschrijving.
+
+        :param omschrijving:
+        :return:
+        """
+        return cls._get_dataitem(cls._adellijke_titel, omschrijving, cls.CODE)
 
 
 CodeResolver.initialize()

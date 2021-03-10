@@ -150,6 +150,10 @@ class NPSMapping(Mapping):
                 'voorletters': 'BG:voorletters',
                 'geslachtsnaam': 'BG:geslachtsnaam',
                 'voorvoegsel': 'BG:voorvoegselGeslachtsnaam',
+                'adellijkeTitelPredikaat': {
+                    'code': (MKSConverter.get_adellijke_titel_code, 'BG:adellijkeTitelPredikaat'),
+                    'omschrijving': 'BG:adellijkeTitelPredikaat'
+                }
             },
             'leeftijd': (MKSConverter.as_leeftijd, 'BG:geboortedatum',
                          'BG:geboortedatum@StUF:indOnvolledigeDatum',

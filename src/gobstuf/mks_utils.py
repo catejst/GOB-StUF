@@ -198,6 +198,10 @@ class MKSConverter:
         return cls.resolve_code(resolver, mks_code)
 
     @classmethod
+    def get_adellijke_titel_code(cls, mks_omschrijving):
+        return CodeResolver.get_adellijke_titel_code(mks_omschrijving)
+
+    @classmethod
     def true_if_exists(cls, property):
         """
         Return True if the property has a value, None if the property is empty
