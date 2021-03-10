@@ -353,3 +353,10 @@ class TestMKSConverter(TestCase):
             'adresRegel3': '3',
         }
         self.assertEqual(parameters, MKSConverter.get_verblijf_buitenland(parameters))
+
+    def test_get_adellijke_titel_code(self):
+        self.assertEqual(MKSConverter.get_adellijke_titel_code('Prinses'), 'PS')
+        self.assertIsNone(MKSConverter.get_adellijke_titel_code(None))
+
+        with self.assertRaises(DataItemNotFoundException):
+            MKSConverter.get_adellijke_titel_code('Koning')
