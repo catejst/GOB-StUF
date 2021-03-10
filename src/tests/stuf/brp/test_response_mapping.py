@@ -731,6 +731,7 @@ class TestNPSNPSOUDMapping(TestCase):
             'burgerservicenummer',
             'naam',
             'geboorte',
+            'adellijkeTitelPredikaat',
             'geheimhoudingPersoonsgegevens',
             'geslachtsaanduiding',
         ], mapping.include_related)
@@ -759,6 +760,7 @@ class TestNPSNPSKNDMapping(TestCase):
             'burgerservicenummer',
             'naam',
             'geboorte',
+            'adellijkeTitelPredikaat',
             'geheimhoudingPersoonsgegevens',
             'leeftijd',
         ], mapping.include_related)
