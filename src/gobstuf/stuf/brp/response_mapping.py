@@ -535,6 +535,7 @@ class NPSNPSHUWMapping(RelatedMapping):
             'geslachtsaanduiding',
             'geboorte',
             'naam',
+            'adellijkeTitelPredikaat',
             'geheimhoudingPersoonsgegevens'
         ]
 
@@ -605,6 +606,7 @@ class NPSFamilieRelatedMapping(RelatedMapping):
             'burgerservicenummer',
             'naam',
             'geboorte',
+            'adellijkeTitelPredikaat',
             'geheimhoudingPersoonsgegevens'
         ]
 
