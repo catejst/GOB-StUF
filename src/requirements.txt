@@ -2,7 +2,7 @@
 -e git+https://github.com/Amsterdam/GOB-Core.git@v0.17.3f#egg=gobcore
 -e git+https://github.com/Amsterdam/flask-audit-log.git@v0.1.0a-rc1#egg=datapunt-flask-audit-log
 Flask-API==2.0
-Flask-Cors==3.0.8
+Flask-Cors==4.0.1
 Flask==1.1.1
 flake8==3.7.8
 freezegun==0.3.15
